@@ -41,5 +41,5 @@
 
 ## Links
 
-[Zoho Sprints](https://sprints.zoho.com/team/koliber#plan/P2)
-[Gitlab](https://gitlab.com/ckoliber/kstd)
+1. [Zoho Sprints](https://sprints.zoho.com/team/koliber#plan/P2)
+2. [Gitlab](https://gitlab.com/ckoliber/kstd)
