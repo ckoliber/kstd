@@ -1,69 +1,51 @@
-# Getting Started
+# kstd (KoLiBer Standard Library)
 
-Now we are going to decribe the project
+## Owner
+
+* [KoLiBer](https://koliber.ir)
 
 ## Author
 
-${PROEJCT_NAME} author is [KoLiBer](mailto://koliberr136a1@gmail.com).
+* [KoLiBer](https://koliber.ir)
 
 ## Developers
 
-1. [KoLiBer](mailto://koliberr136a1@gmail.com)
-2. ...
+1. [KoLiBer](https://koliber.ir)
 
-## Date
+## Start Date (UTC)
 
-${PROEJCT_NAME} started at __${PROJECT_DATE}__ UTC date.
+* ${PROJECT_DATE}
 
-## Description
+## Question
 
-${PROEJCT_NAME} or __${PROEJCT_FULLNAME}__ is a ${PROJECT_DESC}.
+* ${PROJECT_QUESTION}
 
-${PROEJCT_NAME} have these base parts :
+## Goal
 
-1. __Server__: That stores informations and interacts with DBMS and manages users.
-2. __Interface Application__: The User Interface for managing informations.
-3. ...
+* ${PROJECT_GOAL}
 
 ## License
 
-${PROEJCT_NAME} is under __MIT__ license. more informations about __MIT License__ is [here](LICENSE.md)
+* Project is under __[MIT](LICENSE.md)__ license
+
 ![MIT License](https://pre00.deviantart.net/4938/th/pre/f/2016/070/3/b/mit_license_logo_by_excaliburzero-d9ur2lg.png)
 
-## Languages
+## Languages and Frameworks
 
-1. [HTML5](#html5)
-2. [CSS3](#css3)
-3. [JavaScript-ES6](#es6)
-4. [Node.JS](#nodejs)
-5. ...
+1. __Client__
+    1. __HTML5__
+    2. __CSS3__
+    3. __JavaScript-ES7__
+    4. __React.js__
+2. __Server__
+    1. __Node.js__
+    2. __Express.js__
 
-## Dependencies
+## SDLC (Software Development Life Cycle)
 
-1. [Git](#git)
-2. [Docker](#docker)
-3. [Python](#python)
-4. [Node.JS](#nodejs)
-5. ...
+* Project is under __`agile`__ sdlc
 
-## Build
+## Links
 
-### `node`
-
-#### Watch
-
-`sudo npm run start`
-
-#### Release
-
-`sudo npm run build`
-
-### `react`
-
-#### Watch
-
-`sudo npm run start`
-
-#### Release
-
-`sudo npm run build`
+[Zoho Sprints]()
+[Gitlab]()

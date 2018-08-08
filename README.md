@@ -1,5 +1,5 @@
-# ${PROJECT_NAME} (${PROJECT_DESC})
+# kstd (KoLiBer Standard Library)
 
-> ${PROJECT_NAME} is a project for ${PROJECT_GOAL}.
+> kstd is a project for standardizing C language in `DSA`, `Network`, `File`, `Security`, etc for __cross platform__ usage (`android`, `ios`, `winapi32`, `linux`).
 
-For more information about project please check [docs](docs/docs/START.md).
+For more information about project please check [docs](docs/docs/README.md).

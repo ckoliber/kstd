@@ -599,13 +599,12 @@ ________________________________________________________________
 4. Project Author
 5. Project Developers
 6. Project Start date
-7. Project Goal
-8. Project Question
+7. Project Question
+8. Project Goal
 9. Project License
-10. Project Languages
+10. Project Languages and Frameworks
 11. Project SDLC
-12. Project `zoho` or etc link
-13. Project gitlab, ... links
+12. Project links (zoho, gitlab, npm, etc)
 
 ### TODO.md
 
