@@ -14,15 +14,15 @@
 
 ## Start Date (UTC)
 
-* ${PROJECT_DATE}
+* __Wed, 08 Aug 2018 11:13:41 GMT__
 
 ## Question
 
-* ${PROJECT_QUESTION}
+* How can we code a cross platform application in standard and simple way in high performance C ?
 
 ## Goal
 
-* ${PROJECT_GOAL}
+* kstd is a project for standardizing C language in `DSA`, `Network`, `File`, `Security`, etc for __cross platform__ usage (`android`, `ios`, `winapi32`, `linux`)
 
 ## License
 
@@ -33,19 +33,13 @@
 ## Languages and Frameworks
 
 1. __Client__
-    1. __HTML5__
-    2. __CSS3__
-    3. __JavaScript-ES7__
-    4. __React.js__
-2. __Server__
-    1. __Node.js__
-    2. __Express.js__
+    1. __C-11__
 
 ## SDLC (Software Development Life Cycle)
 
-* Project is under __`agile`__ sdlc
+* Project is under __`agile`__ SDLC
 
 ## Links
 
-[Zoho Sprints]()
-[Gitlab]()
+[Zoho Sprints](https://sprints.zoho.com/team/koliber#plan/P2)
+[Gitlab](https://gitlab.com/ckoliber/kstd)
