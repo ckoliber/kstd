@@ -1,8 +1,226 @@
 # Application Programming Interface
 
-## RESTFul API
+## Library API
 
-### Peer
+### Low
+
+#### Concurrency
+
+##### Lock
+
+* __Struct__:
+    ```c
+    struct Lock{
+        int lock();
+        int unlock();
+        int trylock(int timeout);
+    }
+    ```
+* __Function__: `Lock* lock_new()`
+* __Function__: `Lock* lock_new(int id)`
+* __Function__: `void lock_free(Lock* lock)`
+
+##### Semaphore
+
+* __Struct__:
+    ```c
+    struct Semaphore{
+        int init(int count);
+        int wait(int count);
+        int post(int count);
+        int get();
+    }
+    ```
+* __Function__: `Semaphore* semaphore_new()`
+* __Function__: `Semaphore* semaphore_new(int id)`
+* __Function__: `void semaphore_free(Semaphore* semaphore)`
+
+##### RWLock
+
+* __Struct__:
+    ```c
+    struct RWLock{
+        int rlock();
+        int wlock();
+        int runlock();
+        int wunlock();
+        int tryrlock(int timeout);
+        int trywlock(int timeout);
+    }
+    ```
+* __Function__: `RWLock* rwlock_new()`
+* __Function__: `RWLock* rwlock_new(int id)`
+* __Function__: `void rwlock_free(RWLock* rwlock)`
+
+#### Process
+
+##### Pool
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+#### DSA
+
+##### ArrayList
+
+* __Struct__:
+    ```c
+    struct ArrayList{
+        int add();
+        int put();
+        int remove();
+        int get();
+        int indexof();
+        int size();
+    }
+    ```
+* __Function__: `ArrayList* arraylist_new(int (*comperator)(void* item1, void* itme2))`
+* __Function__: `void arraylist_free(ArrayList* arraylist)`
+
+##### LinkedList
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+##### Queue
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+##### Stack
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+##### Map
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+##### Hash
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+##### Set
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+##### HashMap
+
+* __Struct__:
+    ```c
+    struct Pool{
+        int start();
+        int post(void (*function)(void* arg), void* arg);
+        int stop();
+    }
+    ```
+* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `void pool_free(Pool* pool)`
+
+#### Security
+
+____________________________________________
+
+### IO
+
+#### Memory
+
+#### File
+
+##### FD
+
+##### Poller
+
+##### Pipe
+
+#### Net
+
+##### TCP
+
+##### UDP
+
+##### TLS
+
+##### HTTP
+
+##### HTTPS
+
+##### WS
+
+##### WSS
+
+##### SSE
+
+
+
+
+
+
+
+
+
+
+
+
 
 * __URL__: http[s]://{CHAM-SERVER}/api/peer/:command
 * __Commands__:
@@ -22,6 +240,18 @@
     | infos           | __iadd__    | Add a peer information              |
     | infos           | __iremove__ | Remove a peer information           |
     | infos           | __iclear__  | Clear a peer information            |
+
+
+
+
+
+
+
+
+
+
+
+
 
 #### code
 
@@ -290,6 +520,27 @@
     | ----------- | ---------------- | -------------------- |
     | __result__  | __[true,false]__ | IClear's result      |
     | __[error]__ | __string__       | IClear's error on no |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### Connection
 

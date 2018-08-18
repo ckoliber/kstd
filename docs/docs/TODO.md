@@ -8,17 +8,10 @@
             1. basic lock implementation (`lock`, `unlock`)
         2. __Semaphore__ -> `0.1.0`
             1. based on `lock`
-        3. __Mutex__ -> `0.1.0`
-            1. based on `lock`
-        4. __RWLock__ -> `0.1.0`
-            1. based on `lock`
-        5. __Barrier__ -> `0.1.0`
+        3. __RWLock__ -> `0.1.0`
             1. based on `lock`
     2. __Process__
-        1. __Fiber__ -> `0.1.0`
-        2. __Thread__ -> `0.1.0`
-        3. __Process__ -> `0.1.0`
-        4. __Pool__ -> `0.1.0`
+        1. __Pool__ -> `0.1.0`
             1. pool of `fiber` and `thread` and `process`
     3. __DSA__: Low
         1. __ArrayList__ -> `0.1.0`
