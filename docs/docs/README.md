@@ -37,9 +37,8 @@
 
 ## SDLC (Software Development Life Cycle)
 
-* Project is under __`agile`__ SDLC
+* Project is under __`iterative`__ SDLC
 
 ## Links
 
-1. [Zoho Sprints](https://sprints.zoho.com/team/koliber#plan/P2)
-2. [Gitlab](https://gitlab.com/ckoliber/kstd)
+1. [Github](https://github.com/koliberr136a1/kstd)
