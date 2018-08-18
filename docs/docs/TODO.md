@@ -46,13 +46,13 @@
     1. __Memory__ -> `0.1.0`
         1. cross platform `malloc`, `calloc`, `realloc`, `free`
     2. __File__
-        1. __FD__
+        1. __FD__ -> `0.1.0`
             1. get fd from `stdio`, `memory`, `socket`, `file`
             2. control (fcntl) operators: `nonblock`, `block`
-        2. __Poller__
+        2. __Poller__ -> `0.1.0`
             1. has fd set for polling array of fd's
             2. set's nonblocking flag on fd
-        3. __Pipe__
+        3. __Pipe__ -> `0.1.0`
             1. filter pipe
             2. map pipe
             3. reduce pipe
