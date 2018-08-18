@@ -1,4 +1,4 @@
-site_name: ${PROJECT_NAME}
+site_name: kstd (KoLiBer Standard Library)
 pages:
   - 'KPS': KPS.md
   - 'Readme': README.md

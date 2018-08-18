@@ -21,7 +21,7 @@ file(GLOB_RECURSE LIBS "${CMAKE_CURRENT_SOURCE_DIR}/lib/*.so*" "${CMAKE_CURRENT_
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBS} ${LINK_LIBS})
 
 # target compiler (-O3, ...)
-set(OPTIONS -Wall -fno-rtti -O0 -g)
+set(OPTIONS -Wall -O0 -g)
 target_compile_options(${PROJECT_NAME} PUBLIC ${OPTIONS})
 
 # enable ctest

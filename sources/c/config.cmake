@@ -45,11 +45,11 @@ include(CPack)
 ########################################################
 
 # MakeFile Targets config
-add_custom_target(build "make -j4")
-add_custom_target(start "./../build/${KPS_PROJECT_NAME}")
-add_custom_target(daemon "nohup ./../build/${KPS_PROJECT_NAME} > ../app.log &")
-add_custom_target(cpack "cpack")
-add_custom_target(ctest "ctest --verbose")
+add_custom_target(build make -j4)
+add_custom_target(start ./modules/app/app)
+add_custom_target(daemon nohup ./modules/app/app > ../app.log &)
+add_custom_target(cpack cpack)
+add_custom_target(ctest ctest --verbose)
 
 ########################################################
 # End Target Configures

@@ -449,10 +449,9 @@ git config core.autocrlf input
 git config credential.helper cache [{timout seconds}]
 [git config --unset credential.helper]
 
+git config --global http.proxy http://127.0.0.1:8123
 git remote add {remote name} [{.git url}]
-git push -u {remote name} --all
-git push -u {remote name} --tags
-git push -u {remote name} master
+git push --set-upstream {remote name} master --all
 ```
 
 ### .gitattributes
