@@ -1,7 +1,7 @@
 typedef struct Lock {
-    int lock();
-    int unlock();
-    int trylock(int timeout);
+    int (*lock)(struct Lock* self);
+    int (*unlock)(struct Lock* self);
+    int (*trylock)(struct Lock* self, int timeout);
 } Lock;
 
 struct Lock* lock_new();

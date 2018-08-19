@@ -1,9 +1,9 @@
 typedef struct Queue {
-    int enqueue(int front, void* item);
-    void* dequeue(int front);
-    void* blockdequeue(int front);
-    void* tryblockdequeue(int front, int timeout);
-    int size();
+    int (*enqueue)(struct Queue* self, int front, void* item);
+    void* (*dequeue)(struct Queue* self, int front);
+    void* (*blockdequeue)(struct Queue* self, int front);
+    void* (*tryblockdequeue)(struct Queue* self, int front, int timeout);
+    int (*size)(struct Queue* self);
 } Queue;
 
 struct Queue* queue_new(int concurrent, int (*comperator)(void* item1, void* item2));

@@ -1,8 +1,8 @@
 typedef struct Semaphore {
-    int init(int count);
-    int wait(int count);
-    int post(int count);
-    int get();
+    int (*init)(struct Semaphore* self, int count);
+    int (*wait)(struct Semaphore* self, int count);
+    int (*post)(struct Semaphore* self, int count);
+    int (*get)(struct Semaphore* self);
 } Semaphore;
 
 struct Semaphore* semaphore_new();

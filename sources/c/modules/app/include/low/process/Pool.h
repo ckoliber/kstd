@@ -1,7 +1,7 @@
 typedef struct Pool {
-    int start();
-    int post(void (*function)(void* arg), void* arg);
-    int stop();
+    int (*start)(struct Pool* self);
+    int (*post)(struct Pool* self, void (*function)(void* arg), void* arg);
+    int (*stop)(struct Pool* self);
 } Pool;
 
 struct Pool* pool_new(int size);
