@@ -17,7 +17,6 @@
     }
     ```
 * __Function__: `Lock* lock_new()`
-* __Function__: `Lock* lock_new(int id)`
 * __Function__: `void lock_free(Lock* lock)`
 
 ##### Semaphore
@@ -32,7 +31,6 @@
     }
     ```
 * __Function__: `Semaphore* semaphore_new()`
-* __Function__: `Semaphore* semaphore_new(int id)`
 * __Function__: `void semaphore_free(Semaphore* semaphore)`
 
 ##### RWLock
@@ -49,7 +47,6 @@
     }
     ```
 * __Function__: `RWLock* rwlock_new()`
-* __Function__: `RWLock* rwlock_new(int id)`
 * __Function__: `void rwlock_free(RWLock* rwlock)`
 
 ##### Barrier
