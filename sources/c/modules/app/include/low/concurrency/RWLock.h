@@ -7,5 +7,5 @@ typedef struct RWLock {
     int trywlock(int timeout);
 } RWLock;
 
-RWLock* rwlock_new();
-void rwlock_free(RWLock* rwlock);
+struct RWLock* rwlock_new();
+void rwlock_free(struct RWLock* rwlock);

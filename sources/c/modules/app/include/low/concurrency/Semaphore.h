@@ -5,5 +5,5 @@ typedef struct Semaphore {
     int get();
 } Semaphore;
 
-Semaphore* semaphore_new();
-void semaphore_free(Semaphore* semaphore);
+struct Semaphore* semaphore_new();
+void semaphore_free(struct Semaphore* semaphore);

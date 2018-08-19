@@ -4,5 +4,5 @@ typedef struct Pool {
     int stop();
 } Pool;
 
-Pool* pool_new(int size);
-void pool_free(Pool* pool);
+struct Pool* pool_new(int size);
+void pool_free(struct Pool* pool);

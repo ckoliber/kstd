@@ -4,5 +4,5 @@ typedef struct Lock {
     int trylock(int timeout);
 } Lock;
 
-Lock* lock_new();
-void lock_free(Lock* lock);
+struct Lock* lock_new();
+void lock_free(struct Lock* lock);

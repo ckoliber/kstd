@@ -97,15 +97,15 @@
 * __Struct__:
     ```c
     struct ArrayList{
-        int add(void *data);
-        void* put(int position, void *data);
+        int add(void *item);
+        void* put(int position, void *item);
         void* remove(int position);
         void* get(int position);
-        int indexof(void *data);
+        int indexof(void *item);
         int size();
     }
     ```
-* __Function__: `ArrayList* arraylist_new(int concurrent, float growth_factor, int (*comperator)(void* item1, void* itme2))`
+* __Function__: `ArrayList* arraylist_new(int concurrent, float factor, int (*comperator)(void* item1, void* itme2))`
 * __Function__: `void arraylist_free(ArrayList* arraylist)`
 
 ##### LinkedList
@@ -113,23 +113,23 @@
 * __Struct__:
     ```c
     struct LinkedList{
-        int add(void *data);
-        void* put(int position, void *data);
+        int add(void *item);
+        void* put(int position, void *item);
         void* remove(int position);
         void* get(int position);
-        int indexof(void *data);
+        int indexof(void *item);
         int size();
     }
     ```
-* __Function__: `ArrayList* arraylist_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
-* __Function__: `void arraylist_free(ArrayList* arraylist)`
+* __Function__: `LinkedList* linkedlist_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
+* __Function__: `void linkedlist_free(LinkedList* linkedlist)`
 
 ##### Queue
 
 * __Struct__:
     ```c
     struct Queue{
-        int enqueue(int front, void* data)
+        int enqueue(int front, void* item);
         void* dequeue(int front);
         void* blockdequeue(int front);
         void* tryblockdequeue(int front, int timeout);
@@ -145,7 +145,7 @@
 * __Struct__:
     ```c
     struct Stack{
-        int push(void* data)
+        int push(void* item);
         void* pop();
         void* blockpop();
         void* tryblockpop(int timeout);
