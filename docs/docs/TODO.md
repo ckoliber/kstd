@@ -10,6 +10,10 @@
             1. based on `lock`
         3. __RWLock__ -> `0.1.0`
             1. based on `lock`
+        4. __Barrier__ -> `0.2.0`
+            1. based on `lock`
+        5. __Latch__ -> `0.2.0`
+            1. based on `lock`
     2. __Process__
         1. __Pool__ -> `0.1.0`
             1. pool of `fiber` and `thread` and `process`
@@ -25,16 +29,11 @@
             1. blocking, concurrent, normal
         4. __Stack__ -> `0.1.0`
             1. blocking, concurrent, normal
-        5. __Map__ -> `0.1.0`
-            1. double array map
-            2. concurrent, normal
-        6. __Hash__ -> `0.1.0`
-            1. simple mathematical hash function generator
-        7. __Set__ -> `0.1.0`
-            1. concurrent, normal
-        8. __HashMap__ -> `0.1.0`
-            1. concurrent, normal
-    4. __Security__ -> `0.2.0`
+        5. __Set__ -> `0.2.0`
+            1. concurrent, normal set (memory, speed optimization)
+        6. __Hash__ -> `0.2.0`
+            1. concurrent, normal hashmap (memory, speed optimization)
+    4. __Security__ -> `0.3.0`
 2. __IO__
     1. __Memory__ -> `0.1.0`
         1. cross platform `malloc`, `calloc`, `realloc`, `free`
@@ -45,24 +44,24 @@
         2. __Poller__ -> `0.1.0`
             1. has fd set for polling array of fd's
             2. set's nonblocking flag on fd
-        3. __Pipe__ -> `0.1.0`
+        3. __Pipe__ -> `0.2.0`
             1. filter pipe
             2. map pipe
             3. reduce pipe
     3. __Net__: DSA, Low
-        1. __TCP__ -> `0.1.0`
+        1. __TCP__ -> `0.2.0`
             1. TCP socket `server` and `client`
-        2. __UDP__ -> `0.1.0`
+        2. __UDP__ -> `0.2.0`
             1. UDP socket `server` and `client`
-        3. __TLS__ -> `0.1.0`
+        3. __TLS__ -> `0.3.0`
             1. TLS socket `server` and `client`
-        4. __HTTP__ -> `0.1.0`
+        4. __HTTP__ -> `0.3.0`
             1. HTTP `server` and `client`
-        5. __HTTPS__ -> `0.1.0`
+        5. __HTTPS__ -> `0.3.0`
             1. HTTPS `server` and `client`
-        6. __WS__ -> `0.1.0`
+        6. __WS__ -> `0.4.0`
             1. WebSocket `server` and `client`
-        7. __WSS__ -> `0.1.0`
+        7. __WSS__ -> `0.4.0`
             1. WebSocketSecure `server` and `client`
-        8. __SSE__ -> `0.1.0`
+        8. __SSE__ -> `0.4.0`
             1. ServerSendEvent `server` and `client`
