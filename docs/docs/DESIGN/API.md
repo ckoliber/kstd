@@ -87,7 +87,7 @@
         int stop();
     }
     ```
-* __Function__: `Pool* pool_new(int size, int type)`
+* __Function__: `Pool* pool_new(int size)`
 * __Function__: `void pool_free(Pool* pool)`
 
 #### DSA
