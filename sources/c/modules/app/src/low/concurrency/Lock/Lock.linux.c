@@ -1,11 +1,18 @@
+#ifdef __unix__
+
 #include <low/concurrency/Lock.h>
-#include <stdatomic.h>
+
+#include <low/local/time/Time.h>
+#include <pthread.h>
+#include <stdint.h>
+#include <time.h>
 
 struct Lock_ {
     struct Lock this;
-    volatile int lock;
+    pthread_mutex_t mutex;
 };
 
+// link methods
 int lock_lock(struct Lock* lock);
 int lock_unlock(struct Lock* lock);
 int lock_trylock(struct Lock* lock, int timeout);
@@ -13,11 +20,17 @@ int lock_trylock(struct Lock* lock, int timeout);
 int lock_lock(struct Lock* lock) {
     struct Lock_* lock_ = lock;
 
+    // lock the pthread mutex
+    pthread_mutex_lock(&(lock_->mutex));
+
     return 0;
 }
 
 int lock_unlock(struct Lock* lock) {
     struct Lock_* lock_ = lock;
+
+    // unlock the pthread mutex
+    pthread_mutex_unlock(&(lock_->mutex));
 
     return 0;
 }
@@ -25,7 +38,16 @@ int lock_unlock(struct Lock* lock) {
 int lock_trylock(struct Lock* lock, int timeout) {
     struct Lock_* lock_ = lock;
 
-    return 0;
+    // get start time
+    uint64_t time = time_micro();
+
+    // try lock until timeout
+    while (time_micro() - time < timeout * 1.0e3) {
+        if (pthread_mutex_trylock(&(lock_->mutex)) == 0) {
+            return 0;
+        }
+    }
+
     return -1;
 }
 
@@ -51,3 +73,5 @@ void lock_free(struct Lock* lock) {
 
     memory_free(lock_);
 }
+
+#endif

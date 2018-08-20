@@ -33,7 +33,11 @@
             1. concurrent, normal set (memory, speed optimization)
         6. __Hash__ -> `0.2.0`
             1. concurrent, normal hashmap (memory, speed optimization)
-    4. __Security__ -> `0.3.0`
+    4. __Local__
+        1. __Time__ -> `0.1.0`
+        2. __Date__ -> `0.4.0`
+        3. __Locale__ -> `0.4.0`
+    5. __Security__ -> `0.3.0`
 2. __IO__
     1. __Memory__ -> `0.1.0`
         1. cross platform `malloc`, `calloc`, `realloc`, `free`
