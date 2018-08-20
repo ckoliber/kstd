@@ -759,3 +759,13 @@ ________________________________________________________________
     1. Create __Release Build__ of project
     2. Launch project
     3. UAT feedback and save into __COMMENT.md__
+
+### Summary
+
+1. __Init__: Git
+2. __Plan__: README.md -> TODO.md -> STORY.md -> COMMENT.md
+3. __Cycle__: README.md -> Agile(backlog, sprints, ...)
+4. __Design__: DESIGN/API.md -> DESIGN/DBMS.md -> DESIGN/UML/... -> DESIGN/UI/...
+5. __Build__: Clean Code
+6. __Test__: Unit Testing
+7. __Deploy__: COMMENT.md

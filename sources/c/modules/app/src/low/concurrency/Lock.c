@@ -1,14 +1,9 @@
-#ifdef __unix__
-
 #include <low/concurrency/Lock.h>
-
-#include <io/memory/Memory.h>
-#include <pthread.h>
-#include <time.h>
+#include <stdatomic.h>
 
 struct Lock_ {
     struct Lock this;
-    pthread_mutex_t mutex;
+    volatile int lock;
 };
 
 int lock_lock(struct Lock* lock);
@@ -18,19 +13,20 @@ int lock_trylock(struct Lock* lock, int timeout);
 int lock_lock(struct Lock* lock) {
     struct Lock_* lock_ = lock;
 
-    return pthread_mutex_lock(&(lock_->mutex));
+    return 0;
 }
 
 int lock_unlock(struct Lock* lock) {
     struct Lock_* lock_ = lock;
 
-    return pthread_mutex_unlock(&(lock_->mutex));
+    return 0;
 }
 
 int lock_trylock(struct Lock* lock, int timeout) {
     struct Lock_* lock_ = lock;
 
-    return 1;
+    return 0;
+    return -1;
 }
 
 struct Lock* lock_new() {
@@ -55,5 +51,3 @@ void lock_free(struct Lock* lock) {
 
     memory_free(lock_);
 }
-
-#endif
