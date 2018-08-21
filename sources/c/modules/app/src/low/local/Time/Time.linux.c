@@ -1,16 +1,10 @@
-#ifdef __unix__
+#include <low/local/Time.h>
 
-#include <low/local/time/Time.h>
-
-#include <stdint.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <time.h>
 
-uint64_t time_micro() {
-    struct timeval time = {0, 0};
+long int time_epochmillis() {
+    struct timeval time;
     gettimeofday(&time, NULL);
-    return time.tv_sec * (uint64_t)1.0e6 + time.tv_usec;
+    return time.tv_sec * 1000 + time.tv_usec / 1000;
 }
-
-#endif
