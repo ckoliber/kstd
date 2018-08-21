@@ -2,7 +2,7 @@ typedef struct Stack {
     int (*push)(struct Stack* self, void* item);
     void* (*pop)(struct Stack* self);
     void* (*blockpop)(struct Stack* self);
-    void* (*tryblockpop)(struct Stack* self, int timeout);
+    void* (*timeblockpop)(struct Stack* self, int timeout);
     int (*size)(struct Stack* self);
 } Stack;
 
