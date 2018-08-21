@@ -4,95 +4,183 @@
 
 ### Low
 
-#### Concurrency
+> Low level important libraries over OS and Hardware
 
-##### Lock
+#### ITC (Inter Thread Communication)
+
+> Thread Level Communication and Synchronization
+
+##### Low
+
+###### Mutex (Mutual Exclusion)
+
+* __Struct__:
+    ```c
+    struct Mutex{
+        int lock();
+        int timelock(int timeout);
+        int unlock();
+    }
+    ```
+* __Function__: `Mutex* mutex_new()`
+* __Function__: `void mutex_free(Mutex* mutex)`
+
+###### Cond (Conditional Variable)
+
+* __Struct__:
+    ```c
+    struct Cond{
+        int wait();
+        int timewait(int timeout);
+        int signal();
+        int broadcast();
+    }
+    ```
+* __Function__: `Cond* cond_new()`
+* __Function__: `void cond_free(Cond* cond)`
+
+##### High
+
+###### Lock
 
 * __Struct__:
     ```c
     struct Lock{
         int lock();
+        int timelock(int timeout);
         int unlock();
-        int trylock(int timeout);
     }
     ```
 * __Function__: `Lock* lock_new()`
 * __Function__: `void lock_free(Lock* lock)`
 
-##### Semaphore
+###### RWLock
 
 * __Struct__:
     ```c
-    struct Semaphore{
-        int init(int count);
-        int wait(int count);
-        int post(int count);
-        int get();
-    }
-    ```
-* __Function__: `Semaphore* semaphore_new()`
-* __Function__: `void semaphore_free(Semaphore* semaphore)`
-
-##### RWLock
-
-* __Struct__:
-    ```c
-    struct RWLock{
-        int rlock();
-        int wlock();
-        int runlock();
-        int wunlock();
-        int tryrlock(int timeout);
-        int trywlock(int timeout);
+    struct Lock{
+        int readlock();
+        int writelock();
+        int timereadlock(int timeout);
+        int timewritelock(int timeout);
+        int readunlock();
+        int writeunlock();
     }
     ```
 * __Function__: `RWLock* rwlock_new()`
 * __Function__: `void rwlock_free(RWLock* rwlock)`
 
-##### Barrier
+###### Semaphore
 
 * __Struct__:
     ```c
-    struct Barrier{
-        int reset();
-        int await();
-        int tryawait(int timeout);
+    struct Semaphore{
+        int wait();
+        int timewait(int timeout);
+        int post();
+        int get();
     }
     ```
-* __Function__: `Barrier* barrier_new(int size)`
-* __Function__: `void barrier_free(Barrier* barrier)`
+* __Function__: `Semaphore* semaphore_new(int value)`
+* __Function__: `void semaphore_free(Semaphore* semaphore)`
 
-##### Latch
+###### Monitor
+
+###### Barrier
+
+###### Latch
+
+_________________________________________
+
+#### IPC (Inter Process Communication)
+
+> Process Level Communication using Socket and Pipe and MessageQueue and ShareMemory
+
+_________________________________________
+
+#### Processor
+
+> OS Thread and Process
+
+##### Low
+
+###### Thread
 
 * __Struct__:
     ```c
-    struct Latch{
-        int count();
-        int await();
-        int tryawait(int timeout);
+    struct Thread{
+        int start(void (*function)(void* arg), void* arg);
+        int join();
+        int id();
+        int stop();
     }
     ```
-* __Function__: `Barrier* barrier_new(int size)`
-* __Function__: `void barrier_free(Barrier* barrier)`
+* __Function__: `Thread* thread_new()`
+* __Function__: `void thread_free(Thread* thread)`
 
-#### Process
-
-##### Pool
+###### Process
 
 * __Struct__:
     ```c
-    struct Pool{
+    struct Process{
+        int start(char* command);
+        int id();
+        int stop();
+    }
+    ```
+* __Function__: `Process* process_new()`
+* __Function__: `void process_free(Process* process)`
+
+##### High
+
+###### ThreadPool
+
+* __Struct__:
+    ```c
+    struct ThreadPool{
         int start();
         int post(void (*function)(void* arg), void* arg);
         int stop();
     }
     ```
-* __Function__: `Pool* pool_new(int size)`
-* __Function__: `void pool_free(Pool* pool)`
+* __Function__: `ThreadPool* threadpool_new(int size)`
+* __Function__: `void threadpool_free(ThreadPool* threadpool)`
+
+###### ProcessPool
+
+* __Struct__:
+    ```c
+    struct ProcessPool{
+        int start();
+        int post(char* command);
+        int stop();
+    }
+    ```
+* __Function__: `ProcessPool* processpool_new(int size)`
+* __Function__: `void processpool_free(ProcessPool* processpool)`
+
+_________________________________________
+
+#### Local
+
+> OS Time and Date and Locale
+
+##### Time
+
+##### Date
+
+##### Locale
+
+_________________________________________
 
 #### DSA
 
+> Important and High Performance Data Structures
+
 ##### ArrayList
+
+* __dynamic array__
+* __concurrent, normal__
 
 * __Struct__:
     ```c
@@ -110,6 +198,9 @@
 
 ##### LinkedList
 
+* __circular doubly linked list__
+* __concurrent, normal__
+
 * __Struct__:
     ```c
     struct LinkedList{
@@ -126,21 +217,25 @@
 
 ##### Queue
 
+* __blocking, concurrent, normal__
+
 * __Struct__:
     ```c
     struct Queue{
         int enqueue(int front, void* item);
         void* dequeue(int front);
         void* blockdequeue(int front);
-        void* tryblockdequeue(int front, int timeout);
+        void* timeblockdequeue(int front, int timeout);
         int size();
     }
     ```
-* __Function__: `Queue* queue_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
 * if `comperator` is not `NULL` queue is a `PriorityQueue`
+* __Function__: `Queue* queue_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
 * __Function__: `void queue_free(Queue* queue)`
 
 ##### Stack
+
+* __blocking, concurrent, normal__
 
 * __Struct__:
     ```c
@@ -148,15 +243,17 @@
         int push(void* item);
         void* pop();
         void* blockpop();
-        void* tryblockpop(int timeout);
+        void* timeblockpop(int timeout);
         int size();
     }
     ```
-* __Function__: `Stack* stack_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
 * if `comperator` is not `NULL` stack is a `PriorityStack`
+* __Function__: `Stack* stack_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
 * __Function__: `void stack_free(Stack* stack)`
 
 ##### Set
+
+* __concurrent, normal set (memory, speed optimization)__
 
 * __Struct__:
     ```c
@@ -178,6 +275,8 @@
 
 ##### Hash -> SparseHash(Memory), DenseHash(Speed)
 
+* __concurrent, normal hashmap (memory, speed optimization)__
+
 * __Struct__:
     ```c
     struct Hash{
@@ -196,11 +295,17 @@
 * __Function__: `HashIterator* hashiterator_new(Hash* hash)`
 * __Function__: `void hashiterator_free(HashIterator* hashiterator)`
 
+_________________________________________
+
 #### Security
 
-____________________________________________
+> Asymmetric and Symmetric encryption and decryption over OpenSSL
+
+_________________________________________
 
 ### IO
+
+> File, Memory, Socket, StandardIO operations
 
 #### Memory
 
@@ -210,6 +315,8 @@ ____________________________________________
 * __Function__: `void memory_free(void* address)`
 
 #### File
+
+> Standard File Read and Write and Poll
 
 ##### FD
 
@@ -244,8 +351,6 @@ ____________________________________________
 * __Function__: `Poller* poller_new(void (*onAccept)(FD* fd), void (*onClose)(FD* fd), void (*onRead)(FD* fd, void* data, int size))`
 * __Function__: `void poller_free(Poller* poller)`
 
-##### Pipe
-
 #### Net
 
 ##### TCP
@@ -263,3 +368,5 @@ ____________________________________________
 ##### WSS
 
 ##### SSE
+
+_________________________________________

@@ -5,7 +5,6 @@
 #include <low/local/time/Time.h>
 #include <pthread.h>
 #include <stdint.h>
-#include <time.h>
 
 struct Lock_ {
     struct Lock this;
@@ -13,12 +12,12 @@ struct Lock_ {
 };
 
 // link methods
-int lock_lock(struct Lock* lock);
-int lock_unlock(struct Lock* lock);
-int lock_trylock(struct Lock* lock, int timeout);
+int lock_lock(struct Lock* self);
+int lock_unlock(struct Lock* self);
+int lock_trylock(struct Lock* self, int timeout);
 
-int lock_lock(struct Lock* lock) {
-    struct Lock_* lock_ = lock;
+int lock_lock(struct Lock* self) {
+    struct Lock_* lock_ = self;
 
     // lock the pthread mutex
     pthread_mutex_lock(&(lock_->mutex));
@@ -26,8 +25,8 @@ int lock_lock(struct Lock* lock) {
     return 0;
 }
 
-int lock_unlock(struct Lock* lock) {
-    struct Lock_* lock_ = lock;
+int lock_unlock(struct Lock* self) {
+    struct Lock_* lock_ = self;
 
     // unlock the pthread mutex
     pthread_mutex_unlock(&(lock_->mutex));
@@ -35,8 +34,8 @@ int lock_unlock(struct Lock* lock) {
     return 0;
 }
 
-int lock_trylock(struct Lock* lock, int timeout) {
-    struct Lock_* lock_ = lock;
+int lock_trylock(struct Lock* self, int timeout) {
+    struct Lock_* lock_ = self;
 
     // get start time
     uint64_t time = time_micro();
