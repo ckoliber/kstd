@@ -28,7 +28,6 @@ int mutex_timelock(struct Mutex* self, int timeout) {
     struct Mutex_* mutex_ = self;
 
     // get start time
-
     long int time = time_epochmillis();
 
     // try lock until timeout

@@ -1,57 +1,68 @@
-#include <low/concurrency/Semaphore.h>
+#include <low/itc/high/Semaphore.h>
 
-#include <low/local/time/Time.h>
+#include <low/itc/low/Cond.h>
 #include <pthread.h>
 #include <stdint.h>
 
-typedef struct Semaphore {
-    int (*wait)(struct Semaphore* self);
-    int (*timewait)(struct Semaphore* self, int timeout);
-    int (*post)(struct Semaphore* self);
-} Semaphore;
-
-struct Semaphore* semaphore_new(int value);
-void semaphore_free(struct Semaphore* semaphore);
-
 struct Semaphore_ {
     struct Semaphore self;
-    pthread_mutex_t mutex;
-    pthread_cond_t cond;
-    int semaphore_value;
+    struct Cond* cond;
+    int value;
+};
+
+struct Arg {
+    struct Semaphore_* semaphore_;
+    int count;
+    int type;
 };
 
 // link methods
 int semaphore_wait(struct Semaphore* self, int count);
+int semaphore_timewait(struct Semaphore* self, int count, int timeout);
 int semaphore_post(struct Semaphore* self, int count);
-int semaphore_trywait(struct Semaphore* self, int count, int timeout);
 int semaphore_get(struct Semaphore* self);
+
+// local methods
+int condition(void* arg);
+void critical(void* arg);
+
+int condition(void* arg) {
+    struct Arg* arg_ = arg;
+    return arg_->semaphore_->value < arg_->count;
+}
+void critical(void* arg) {
+    struct Arg* arg_ = arg;
+    if (arg_->type == 0) {
+        arg_->semaphore_->value -= arg_->count;
+    } else {
+        arg_->semaphore_->value += arg_->count;
+    }
+}
 
 int semaphore_wait(struct Semaphore* self, int count) {
     struct Semaphore_* semaphore_ = self;
 
-    // semaphore decrease value (lock into critical section and wait to decrease)
-    pthread_mutex_lock(&(semaphore_->mutex));
-    while (semaphore_->semaphore_value == 0) {
-        pthread_cond_wait(&(semaphore_->cond), &(semaphore_->mutex));
-    }
-    semaphore_->semaphore_value--;
-    pthread_mutex_unlock(&(semaphore_->mutex));
+    // wait on cond to signal and decrease value
+    struct Arg arg = {semaphore_, count, 0};
+    semaphore_->cond->wait(semaphore_->cond, condition, &arg, critical, &arg);
 
     return 0;
+}
+int semaphore_timewait(struct Semaphore* self, int count, int timeout) {
+    struct Semaphore_* semaphore_ = self;
+
+    // timewait on cond to signal and decrease value
+    struct Arg arg = {semaphore_, count, 0};
+    int result = semaphore_->cond->timewait(semaphore_->cond, condition, &arg, critical, &arg, timeout);
+
+    return result;
 }
 int semaphore_post(struct Semaphore* self, int count) {
     struct Semaphore_* semaphore_ = self;
 
-    // semaphore increase value(lock into critical section and increase then signal)
-    pthread_mutex_lock(&(semaphore_->mutex));
-    semaphore_->semaphore_value++;
-    pthread_cond_signal(&(semaphore_->cond));
-    pthread_mutex_unlock(&(semaphore_->mutex));
-
-    return 0;
-}
-int semaphore_trywait(struct Semaphore* self, int count, int timeout) {
-    struct Semaphore_* semaphore_ = self;
+    // signal on cond and increase value
+    struct Arg arg = {semaphore_, count, 1};
+    semaphore_->cond->signal(semaphore_->cond, critical, &arg);
 
     return 0;
 }
@@ -59,7 +70,7 @@ int semaphore_get(struct Semaphore* self) {
     struct Semaphore_* semaphore_ = self;
 
     // get semaphore value
-    int result = semaphore_->semaphore_value;
+    int result = semaphore_->value;
 
     return result;
 }
@@ -68,15 +79,14 @@ struct Semaphore* semaphore_new(int value) {
     struct Semaphore_* semaphore_ = memory_alloc(sizeof(struct Semaphore_));
 
     // init private methods
-    semaphore_->this.wait = semaphore_wait;
-    semaphore_->this.post = semaphore_post;
-    semaphore_->this.trywait = semaphore_trywait;
-    semaphore_->this.get = semaphore_get;
+    semaphore_->self.wait = semaphore_wait;
+    semaphore_->self.timewait = semaphore_timewait;
+    semaphore_->self.post = semaphore_post;
+    semaphore_->self.get = semaphore_get;
 
-    // init the core of semaphore (mutex and conditional variable)
-    pthread_mutex_init(&(semaphore_->mutex), NULL);
-    pthread_cond_init(&(semaphore_->cond), NULL);
-    semaphore_->semaphore_value = value;
+    // init internal Cond and Default Value
+    semaphore_->cond = cond_new();
+    semaphore_->value = value;
 
     return semaphore_;
 }
@@ -84,9 +94,8 @@ struct Semaphore* semaphore_new(int value) {
 void semaphore_free(struct Semaphore* semaphore) {
     struct Semaphore_* semaphore_ = semaphore;
 
-    // destry mutex and conditional variable
-    pthread_mutex_destroy(&(semaphore_->mutex));
-    pthread_cond_destroy(&(semaphore_->cond));
+    // destry internal Cond
+    cond_free(semaphore_->cond);
 
     memory_free(semaphore_);
 }

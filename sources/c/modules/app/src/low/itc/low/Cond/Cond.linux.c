@@ -4,7 +4,6 @@
 
 #include <low/local/Time.h>
 #include <pthread.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -15,31 +14,37 @@ struct Cond_ {
 };
 
 // link methods
-int cond_wait(struct Cond* self, int (*function)(void* arg), void* arg);
-int cond_timewait(struct Cond* self, int (*function)(void* arg), void* arg, int timeout);
-int cond_signal(struct Cond* self, int (*function)(void* arg), void* arg);
-int cond_broadcast(struct Cond* self, int (*function)(void* arg), void* arg);
+int cond_wait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2);
+int cond_timewait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2, int timeout);
+int cond_signal(struct Cond* self, void (*critical)(void* arg), void* arg);
+int cond_broadcast(struct Cond* self, void (*critical)(void* arg), void* arg);
 
-int cond_wait(struct Cond* self, int (*function)(void* arg), void* arg) {
+int cond_wait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2) {
     struct Cond_* cond_ = self;
 
     // wait on the cond
     pthread_mutex_lock(&(cond_->mutex));
 
-    // run critical loop
-    while (1) {
+    // run conditional wait loop
+    while (condition == NULL || condition(arg1)) {
         pthread_cond_wait(&(cond_->cond), &(cond_->mutex));
-        if (function == NULL || function(arg) == 0) {
+        if (condition == NULL) {
             break;
         }
     }
+
+    // run critical
+    critical(arg2);
 
     pthread_mutex_unlock(&(cond_->mutex));
 
     return 0;
 }
-int cond_timewait(struct Cond* self, int (*function)(void* arg), void* arg, int timeout) {
+int cond_timewait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2, int timeout) {
     struct Cond_* cond_ = self;
+
+    // timedwait on the cond
+    pthread_mutex_lock(&(cond_->mutex));
 
     // get timeout in timespec
     struct timespec time_out;
@@ -47,60 +52,54 @@ int cond_timewait(struct Cond* self, int (*function)(void* arg), void* arg, int 
     time_out.tv_nsec = 0;
 
     // get current time
-    int result = -1;
+    int result = 0;
     long int time = time_epochmillis();
 
-    // timedwait on the cond
-    pthread_mutex_lock(&(cond_->mutex));
-
-    // run critical loop
-    while (1) {
+    // run conditional wait loop
+    while (condition == NULL || condition(arg1)) {
         // set new timeout and timewait
         time_out.tv_nsec = (timeout - (time_epochmillis() - time)) * 1.0e6;
         if (pthread_cond_timedwait(&(cond_->cond), &(cond_->mutex), &time_out) != 0) {
+            result = -1;
             break;
         }
-        if (function == NULL || function(arg) == 0) {
-            result = 0;
+        if (condition == NULL) {
             break;
         }
     }
+
+    // run critical
+    critical(arg2);
 
     pthread_mutex_unlock(&(cond_->mutex));
 
     return result;
 }
-int cond_signal(struct Cond* self, int (*function)(void* arg), void* arg) {
+int cond_signal(struct Cond* self, void (*critical)(void* arg), void* arg) {
     struct Cond_* cond_ = self;
 
-    // signal on the cond
     pthread_mutex_lock(&(cond_->mutex));
 
-    // run critical loop
-    while (1) {
-        pthread_cond_signal(&(cond_->cond));
-        if (function == NULL || function(arg) == 0) {
-            break;
-        }
-    }
+    // signal on the cond
+    pthread_cond_signal(&(cond_->cond));
+
+    // run critical
+    critical(arg);
 
     pthread_mutex_unlock(&(cond_->mutex));
 
     return 0;
 }
-int cond_broadcast(struct Cond* self, int (*function)(void* arg), void* arg) {
+int cond_broadcast(struct Cond* self, void (*critical)(void* arg), void* arg) {
     struct Cond_* cond_ = self;
 
-    // broadcast on the cond
     pthread_mutex_lock(&(cond_->mutex));
 
-    // run critical loop
-    while (1) {
-        pthread_cond_broadcast(&(cond_->cond));
-        if (function == NULL || function(arg) == 0) {
-            break;
-        }
-    }
+    // signal on the cond
+    pthread_cond_broadcast(&(cond_->cond));
+
+    // run critical
+    critical(arg);
 
     pthread_mutex_unlock(&(cond_->mutex));
 

@@ -1,8 +1,8 @@
 typedef struct Cond {
-    int (*wait)(struct Cond* self, int (*function)(void* arg), void* arg);
-    int (*timewait)(struct Cond* self, int (*function)(void* arg), void* arg, int timeout);
-    int (*signal)(struct Cond* self, int (*function)(void* arg), void* arg);
-    int (*broadcast)(struct Cond* self, int (*function)(void* arg), void* arg);
+    int (*wait)(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2);
+    int (*timewait)(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2, int timeout);
+    int (*signal)(struct Cond* self, void (*critical)(void* arg), void* arg);
+    int (*broadcast)(struct Cond* self, void (*critical)(void* arg), void* arg);
 } Cond;
 
 struct Cond* cond_new();
