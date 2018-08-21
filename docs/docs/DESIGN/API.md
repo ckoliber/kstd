@@ -309,6 +309,8 @@ _________________________________________
 
 #### Memory
 
+* __cross platform `malloc`, `calloc`, `realloc`, `free`__
+
 * __Function__: `void* memory_alloc(int size)`
 * __Function__: `void* memory_calloc(int count, int size)`
 * __Function__: `void* memory_realloc(void* address, int size)`
@@ -319,6 +321,9 @@ _________________________________________
 > Standard File Read and Write and Poll
 
 ##### FD
+
+* __get fd from `stdio`, `memory`, `socket`, `file`__
+* __control (fcntl) operators: `nonblock`, `block`__
 
 * __Struct__:
     ```c
@@ -338,6 +343,9 @@ _________________________________________
 * __Function__: `void fd_free(FD* fd)`
 
 ##### Poller
+
+* __has fd set for polling array of fd's__
+* __set's nonblocking flag on fd__
 
 * __Struct__:
     ```c
