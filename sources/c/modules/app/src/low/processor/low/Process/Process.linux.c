@@ -75,7 +75,7 @@ struct Process* process_new() {
 void process_free(struct Process* process) {
     struct Process_* process_ = process;
 
-    // destry internal process
+    // destroy internal process
 
     memory_free(process_);
 }

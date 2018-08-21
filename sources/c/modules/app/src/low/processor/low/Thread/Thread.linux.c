@@ -65,7 +65,7 @@ struct Thread* thread_new() {
 void thread_free(struct Thread* thread) {
     struct Thread_* thread_ = thread;
 
-    // destry internal pthread
+    // destroy internal pthread
 
     memory_free(thread_);
 }
