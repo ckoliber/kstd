@@ -2,10 +2,9 @@
 
 #include <low/itc/low/Mutex.h>
 
+#include <low/local/Time.h>
 #include <pthread.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <sys/time.h>
 
 struct Mutex_ {
     struct Mutex self;
@@ -16,15 +15,6 @@ struct Mutex_ {
 int mutex_lock(struct Mutex* self);
 int mutex_timelock(struct Mutex* self, int timeout);
 int mutex_unlock(struct Mutex* self);
-
-// local methods
-uint64_t micro_time();
-
-uint64_t micro_time() {
-    struct timeval time = {0, 0};
-    gettimeofday(&time, NULL);
-    return time.tv_sec * (uint64_t)1.0e6 + time.tv_usec;
-}
 
 int mutex_lock(struct Mutex* self) {
     struct Mutex_* mutex_ = self;
@@ -39,10 +29,10 @@ int mutex_timelock(struct Mutex* self, int timeout) {
 
     // get start time
 
-    uint64_t time = micro_time();
+    long int time = time_epochmillis();
 
     // try lock until timeout
-    while (micro_time() - time <= timeout * 1.0e3) {
+    while ((time_epochmillis() - time) <= timeout * 1.0e3) {
         if (pthread_mutex_trylock(&(mutex_->mutex)) == 0) {
             return 0;
         }

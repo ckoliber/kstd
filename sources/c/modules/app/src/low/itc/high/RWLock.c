@@ -1,6 +1,7 @@
 #include <low/itc/high/RWLock.h>
 
 #include <low/itc/low/Mutex.h>
+#include <low/local/Time.h>
 
 struct RWLock_ {
     struct RWLock self;
@@ -41,15 +42,31 @@ int rwlock_writelock(struct RWLock* self) {
 int rwlock_timereadlock(struct RWLock* self, int timeout) {
     struct RWLock_* rwlock_ = self;
 
-    // reader timelock (first critical mutex and if first reader then lock writer mutex)
-    rwlock_->critical_mutex->lock(rwlock_->critical_mutex);
-    rwlock_->readers_count++;
-    if (rwlock_->readers_count == 1) {
-        rwlock_->writer_mutex->lock(rwlock_->writer_mutex);
-    }
-    rwlock_->critical_mutex->unlock(rwlock_->critical_mutex);
+    // set default result and current time
+    int result = -1;
+    long int time = time_epochmillis();
 
-    return -1;
+    // reader timelock -> try timelock critical mutex
+    if (rwlock_->critical_mutex->timelock(rwlock_->critical_mutex, timeout) == 0) {
+        rwlock_->readers_count++;
+
+        // if first reader then try lock writer else complete
+        if (rwlock_->readers_count == 1) {
+            // get new timeout
+            long int timeout_new = timeout - (time_epochmillis() - time);
+
+            // try lock write mutex in new timeout
+            if (rwlock_->writer_mutex->timelock(rwlock_->writer_mutex, timeout_new) == 0) {
+                result = 0;
+            }
+
+        } else {
+            result = 0;
+        }
+        rwlock_->critical_mutex->unlock(rwlock_->critical_mutex);
+    }
+
+    return result;
 }
 int rwlock_timewritelock(struct RWLock* self, int timeout) {
     struct RWLock_* rwlock_ = self;
