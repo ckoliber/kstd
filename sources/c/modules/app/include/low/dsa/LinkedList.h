@@ -1,5 +1,6 @@
 typedef struct LinkedList {
     int (*add)(struct LinkedList* self, void* item);
+    int (*addto)(struct LinkedList* self, int position, void* item);
     void* (*put)(struct LinkedList* self, int position, void* item);
     void* (*remove)(struct LinkedList* self, int position);
     void* (*get)(struct LinkedList* self, int position);
