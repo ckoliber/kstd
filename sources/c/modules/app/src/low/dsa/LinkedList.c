@@ -146,6 +146,7 @@ void* linkedlist_remove_normal(struct LinkedList* self, int position) {
     // remove item
     void* result = item_target->item;
     memory_free(item_target);
+    linkedlist_->size--;
 
     return result;
 }
