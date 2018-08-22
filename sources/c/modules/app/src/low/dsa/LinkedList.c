@@ -28,23 +28,125 @@ void* linkedlist_get(struct LinkedList* self, int position);
 int linkedlist_indexof(struct LinkedList* self, void* item);
 int linkedlist_size(struct LinkedList* self);
 
+// local methods
+struct LinkedItem* item_get(struct LinkedList* linkedlist, int position);
+
+struct LinkedItem* item_get(struct LinkedList* linkedlist, int position) {
+    struct LinkedList_* linkedlist_ = linkedlist;
+
+    // check position is valid
+    if (position < 0 || position >= linkedlist_->size) {
+        return NULL;
+    }
+
+    // broke iteration to two way for optimization
+    struct LinkedItem* result = NULL;
+    if (position <= linkedlist_->size / 2) {
+        // iterate from foot to head
+        int index = 0;
+        result = linkedlist_->foot;
+        while (index < position) {
+            result = result->next;
+            index++;
+        }
+    } else {
+        // iterate from head to foot
+        int index = linkedlist_->size - 1;
+        result = linkedlist_->head;
+        while (index > position) {
+            result = result->previews;
+            index--;
+        }
+    }
+
+    return result;
+}
+
 int linkedlist_add(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = self;
 
+    // check array is concurrent then writelock
+    if (linkedlist_->rwlock != NULL) {
+        linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+    }
+
     // allocate new linkeditem and fill it
     struct LinkedItem* linkeditem = memory_alloc(sizeof(struct LinkedItem));
-    linkeditem->next = NULL;
-    linkeditem->previews = linkedlist_->head;
     linkeditem->item = item;
 
     // add linkeditem to head item
-    linkedlist_->head->next = linkeditem;
-    linkedlist_->head = linkeditem;
+    int result = linkedlist_->size;
+    if (linkedlist_->size > 0) {
+        // init linkeditem
+        linkeditem->next = NULL;
+        linkeditem->previews = linkedlist_->head;
 
-    return 0;
+        // add linkeditem
+        linkedlist_->head->next = linkeditem;
+        linkedlist_->head = linkeditem;
+    } else {
+        // init linkeditem
+        linkeditem->next = NULL;
+        linkeditem->previews = linkedlist_->head;
+
+        // add linkeditem
+        linkedlist_->head = linkeditem;
+        linkedlist_->foot = linkeditem;
+    }
+    linkedlist_->size++;
+
+    // check array is concurrent then writeunlock
+    if (linkedlist_->rwlock != NULL) {
+        linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+    }
+
+    return result;
 }
 int linkedlist_addto(struct LinkedList* self, int position, void* item) {
     struct LinkedList_* linkedlist_ = self;
+
+    // check position is valid
+    if (position < 0 || position > linkedlist_->size) {
+        return -1;
+    }
+
+    // check array is concurrent then writelock
+    if (linkedlist_->rwlock != NULL) {
+        linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+    }
+
+    // allocate new linkeditem and fill it
+    struct LinkedItem* linkeditem = memory_alloc(sizeof(struct LinkedItem));
+    linkeditem->item = item;
+
+    // add linkeditem to head item
+    int result = linkedlist_->size;
+    if (linkedlist_->size > 0) {
+        // get target item
+        struct LinkedItem* item_target = item_get(linkedlist_, position);
+
+        // init linkeditem
+        linkeditem->next = item_target;
+        linkeditem->previews = item_target->previews;
+
+        // add linkeditem
+        linkedlist_->head->next = linkeditem;
+        linkedlist_->head = linkeditem;
+    } else {
+        // init linkeditem
+        linkeditem->next = NULL;
+        linkeditem->previews = linkedlist_->head;
+
+        // add linkeditem
+        linkedlist_->head = linkeditem;
+        linkedlist_->foot = linkeditem;
+    }
+    linkedlist_->size++;
+
+    // check array is concurrent then writeunlock
+    if (linkedlist_->rwlock != NULL) {
+        linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+    }
 
     return 0;
 }

@@ -52,6 +52,11 @@ int arraylist_add(struct ArrayList* self, void* item) {
 int arraylist_addto(struct ArrayList* self, int position, void* item) {
     struct ArrayList_* arraylist_ = self;
 
+    // check position is valid
+    if (position < 0 || position > arraylist_->cursor) {
+        return -1;
+    }
+
     // check array is concurrent then writelock
     if (arraylist_->rwlock != NULL) {
         arraylist_->rwlock->writelock(arraylist_->rwlock);
