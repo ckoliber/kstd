@@ -208,7 +208,7 @@ void queue_free(struct Queue* queue) {
         remove_item = queue_->head;
         queue_->head = queue_->head->next;
         memory_free(remove_item);
-    } while (remove_item != NULL);
+    } while (queue_->head != NULL);
 
     // destry internal rwlock
     if (queue_->rwlock != NULL) {

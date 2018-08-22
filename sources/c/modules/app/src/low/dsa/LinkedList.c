@@ -391,7 +391,7 @@ void linkedlist_free(struct LinkedList* linkedlist) {
         remove_item = linkedlist_->head;
         linkedlist_->head = linkedlist_->head->next;
         memory_free(remove_item);
-    } while (remove_item != NULL);
+    } while (linkedlist_->head != NULL);
 
     // destry internal rwlock
     if (linkedlist_->rwlock != NULL) {
