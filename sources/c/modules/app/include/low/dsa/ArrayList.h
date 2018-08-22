@@ -8,5 +8,5 @@ typedef struct ArrayList {
     int (*size)(struct ArrayList* self);
 } ArrayList;
 
-struct ArrayList* arraylist_new(int concurrent, float factor, int (*comperator)(void* item1, void* item2));
+struct ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void* item1, void* item2));
 void arraylist_free(struct ArrayList* arraylist);
