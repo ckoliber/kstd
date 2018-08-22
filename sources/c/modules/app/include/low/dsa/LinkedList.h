@@ -8,5 +8,13 @@ typedef struct LinkedList {
     int (*size)(struct LinkedList* self);
 } LinkedList;
 
+typedef struct LinkedListIterator {
+    int (*hasnext)(struct LinkedListIterator* self);
+    void* (*next)(struct LinkedListIterator* self);
+} LinkedListIterator;
+
 struct LinkedList* linkedlist_new(int concurrent, int (*comperator)(void* item1, void* item2));
 void linkedlist_free(struct LinkedList* linkedlist);
+
+struct LinkedListIterator* linkedlistiterator_new(struct LinkedList* linkedlist);
+void linkedlistiterator_free(struct LinkedListIterator* linkedlistiterator);
