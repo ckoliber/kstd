@@ -1,5 +1,5 @@
 project(app)
-set(LINK_LIBS "")
+set(LINK_LIBS "-lpthread")
 
 ########################################################
 # Don't change area !!!

@@ -115,7 +115,7 @@ int linkedlist_addto(struct LinkedList* self, int position, void* item) {
     }
 
     // get target item
-    struct LinkedItem* item_target = item_get(position);
+    struct LinkedItem* item_target = item_get(self, position);
 
     // allocate new linkeditem and fill it
     struct LinkedItem* linkeditem = memory_alloc(sizeof(struct LinkedItem));
@@ -150,7 +150,7 @@ void* linkedlist_put(struct LinkedList* self, int position, void* item) {
     }
 
     // get target item
-    struct LinkedItem* item_target = item_get(position + 1);
+    struct LinkedItem* item_target = item_get(self, position + 1);
 
     // change item value
     void* result = item_target->item;
@@ -177,7 +177,7 @@ void* linkedlist_remove(struct LinkedList* self, int position) {
     }
 
     // get target item
-    struct LinkedItem* item_target = item_get(position + 1);
+    struct LinkedItem* item_target = item_get(self, position + 1);
 
     // change removable item next and previews
     item_target->next->previews = item_target->previews;
@@ -208,7 +208,7 @@ void* linkedlist_get(struct LinkedList* self, int position) {
     }
 
     // get target item
-    struct LinkedItem* item_target = item_get(position + 1);
+    struct LinkedItem* item_target = item_get(self, position + 1);
 
     // get item value
     void* result = item_target->item;
