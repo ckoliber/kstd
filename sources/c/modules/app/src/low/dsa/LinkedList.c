@@ -25,15 +25,22 @@ struct LinkedListIterator_ {
 };
 
 // link methods
-int linkedlist_add(struct LinkedList* self, void* item);
-int linkedlist_addto(struct LinkedList* self, int position, void* item);
-void* linkedlist_put(struct LinkedList* self, int position, void* item);
-void* linkedlist_remove(struct LinkedList* self, int position);
-void* linkedlist_get(struct LinkedList* self, int position);
-int linkedlist_indexof(struct LinkedList* self, void* item);
-int linkedlist_size(struct LinkedList* self);
+int linkedlist_add_normal(struct LinkedList* self, void* item);
+int linkedlist_addto_normal(struct LinkedList* self, int position, void* item);
+void* linkedlist_put_normal(struct LinkedList* self, int position, void* item);
+void* linkedlist_remove_normal(struct LinkedList* self, int position);
+void* linkedlist_get_normal(struct LinkedList* self, int position);
+int linkedlist_indexof_normal(struct LinkedList* self, void* item);
+int linkedlist_size_normal(struct LinkedList* self);
 
-// iterator linked methods
+int linkedlist_add_concurrent(struct LinkedList* self, void* item);
+int linkedlist_addto_concurrent(struct LinkedList* self, int position, void* item);
+void* linkedlist_put_concurrent(struct LinkedList* self, int position, void* item);
+void* linkedlist_remove_concurrent(struct LinkedList* self, int position);
+void* linkedlist_get_concurrent(struct LinkedList* self, int position);
+int linkedlist_indexof_concurrent(struct LinkedList* self, void* item);
+int linkedlist_size_concurrent(struct LinkedList* self);
+
 int linkedlistiterator_hasnext(struct LinkedListIterator* self);
 void* linkedlistiterator_next(struct LinkedListIterator* self);
 
@@ -71,37 +78,15 @@ struct LinkedItem* item_get(struct LinkedList* linkedlist, int position) {
     return result;
 }
 
-int linkedlist_add(struct LinkedList* self, void* item) {
+int linkedlist_add_normal(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = self;
 
-    // check array is concurrent then writelock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writelock(linkedlist_->rwlock);
-    }
-
-    // get target add position item
-    struct LinkedItem* item_target = linkedlist_->head->previews;
-
-    // allocate new linkeditem and fill it
-    struct LinkedItem* linkeditem = memory_alloc(sizeof(struct LinkedItem));
-    linkeditem->item = item;
-    linkeditem->next = item_target->next;
-    linkeditem->previews = item_target;
-
-    // add item to position
-    int result = linkedlist_->size;
-    item_target->next->previews = linkeditem;
-    item_target->next = linkeditem;
-    linkedlist_->size++;
-
-    // check array is concurrent then writeunlock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
-    }
+    // normal addto
+    int result = linkedlist_addto_normal(self, linkedlist_->size, item);
 
     return result;
 }
-int linkedlist_addto(struct LinkedList* self, int position, void* item) {
+int linkedlist_addto_normal(struct LinkedList* self, int position, void* item) {
     struct LinkedList_* linkedlist_ = self;
 
     // check position is valid
@@ -109,12 +94,7 @@ int linkedlist_addto(struct LinkedList* self, int position, void* item) {
         return -1;
     }
 
-    // check array is concurrent then writelock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writelock(linkedlist_->rwlock);
-    }
-
-    // get target item
+    // get item before target item
     struct LinkedItem* item_target = item_get(self, position);
 
     // allocate new linkeditem and fill it
@@ -129,24 +109,14 @@ int linkedlist_addto(struct LinkedList* self, int position, void* item) {
     item_target->next = linkeditem;
     linkedlist_->size++;
 
-    // check array is concurrent then writeunlock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
-    }
-
     return result;
 }
-void* linkedlist_put(struct LinkedList* self, int position, void* item) {
+void* linkedlist_put_normal(struct LinkedList* self, int position, void* item) {
     struct LinkedList_* linkedlist_ = self;
 
     // check position is valid
     if (position < 0 || position >= linkedlist_->size) {
         return NULL;
-    }
-
-    // check array is concurrent then writelock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writelock(linkedlist_->rwlock);
     }
 
     // get target item
@@ -156,24 +126,14 @@ void* linkedlist_put(struct LinkedList* self, int position, void* item) {
     void* result = item_target->item;
     item_target->item = item;
 
-    // check array is concurrent then writeunlock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
-    }
-
     return result;
 }
-void* linkedlist_remove(struct LinkedList* self, int position) {
+void* linkedlist_remove_normal(struct LinkedList* self, int position) {
     struct LinkedList_* linkedlist_ = self;
 
     // check position is valid
     if (position < 0 || position >= linkedlist_->size) {
         return NULL;
-    }
-
-    // check array is concurrent then writelock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writelock(linkedlist_->rwlock);
     }
 
     // get target item
@@ -187,24 +147,14 @@ void* linkedlist_remove(struct LinkedList* self, int position) {
     void* result = item_target->item;
     memory_free(item_target);
 
-    // check array is concurrent then writeunlock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
-    }
-
     return result;
 }
-void* linkedlist_get(struct LinkedList* self, int position) {
+void* linkedlist_get_normal(struct LinkedList* self, int position) {
     struct LinkedList_* linkedlist_ = self;
 
     // check position is valid
     if (position < 0 || position >= linkedlist_->size) {
         return NULL;
-    }
-
-    // check array is concurrent then writelock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->readlock(linkedlist_->rwlock);
     }
 
     // get target item
@@ -213,20 +163,10 @@ void* linkedlist_get(struct LinkedList* self, int position) {
     // get item value
     void* result = item_target->item;
 
-    // check array is concurrent then writeunlock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
-    }
-
     return result;
 }
-int linkedlist_indexof(struct LinkedList* self, void* item) {
+int linkedlist_indexof_normal(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = self;
-
-    // check array is concurrent then writelock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->readlock(linkedlist_->rwlock);
-    }
 
     // search in items to find item
     int result = -1;
@@ -253,28 +193,132 @@ int linkedlist_indexof(struct LinkedList* self, void* item) {
         result = -1;
     }
 
-    // check array is concurrent then writeunlock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
-    }
-
     return result;
 }
-int linkedlist_size(struct LinkedList* self) {
+int linkedlist_size_normal(struct LinkedList* self) {
     struct LinkedList_* linkedlist_ = self;
-
-    // check array is concurrent then writelock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->readlock(linkedlist_->rwlock);
-    }
 
     // get linkedlist size
     int result = linkedlist_->size;
 
-    // check array is concurrent then writeunlock
-    if (linkedlist_->rwlock != NULL) {
-        linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
+    return result;
+}
+
+int linkedlist_add_concurrent(struct LinkedList* self, void* item) {
+    struct LinkedList_* linkedlist_ = self;
+
+    // concurrent writelock
+    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+
+    // normal add
+    int result = linkedlist_add_normal(self, item);
+
+    // concurrent writeunlock
+    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+
+    return result;
+}
+int linkedlist_addto_concurrent(struct LinkedList* self, int position, void* item) {
+    struct LinkedList_* linkedlist_ = self;
+
+    // check position is valid
+    if (position < 0 || position > linkedlist_->size) {
+        return -1;
     }
+
+    // concurrent writelock
+    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+
+    // normal addto
+    int result = linkedlist_addto_normal(self, position, item);
+
+    // concurrent writeunlock
+    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+
+    return result;
+}
+void* linkedlist_put_concurrent(struct LinkedList* self, int position, void* item) {
+    struct LinkedList_* linkedlist_ = self;
+
+    // check position is valid
+    if (position < 0 || position >= linkedlist_->size) {
+        return NULL;
+    }
+
+    // concurrent writelock
+    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+
+    // normal put
+    void* result = linkedlist_put_normal(self, position, item);
+
+    // concurrent writeunlock
+    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+
+    return result;
+}
+void* linkedlist_remove_concurrent(struct LinkedList* self, int position) {
+    struct LinkedList_* linkedlist_ = self;
+
+    // check position is valid
+    if (position < 0 || position >= linkedlist_->size) {
+        return NULL;
+    }
+
+    // concurrent writelock
+    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+
+    // normal remove
+    void* result = linkedlist_remove_normal(self, position);
+
+    // concurrent writeunlock
+    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+
+    return result;
+}
+void* linkedlist_get_concurrent(struct LinkedList* self, int position) {
+    struct LinkedList_* linkedlist_ = self;
+
+    // check position is valid
+    if (position < 0 || position >= linkedlist_->size) {
+        return NULL;
+    }
+
+    // concurrent writelock
+    linkedlist_->rwlock->readlock(linkedlist_->rwlock);
+
+    // normal get
+    void* result = linkedlist_get_normal(self, position);
+
+    // concurrent writeunlock
+    linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
+
+    return result;
+}
+int linkedlist_indexof_concurrent(struct LinkedList* self, void* item) {
+    struct LinkedList_* linkedlist_ = self;
+
+    // concurrent writelock
+    linkedlist_->rwlock->readlock(linkedlist_->rwlock);
+
+    // normal indexof
+    int result = linkedlist_indexof_normal(self, item);
+
+    // concurrent writeunlock
+    linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
+
+    return result;
+}
+int linkedlist_size_concurrent(struct LinkedList* self) {
+    struct LinkedList_* linkedlist_ = self;
+
+    // concurrent writelock
+    linkedlist_->rwlock->readlock(linkedlist_->rwlock);
+
+    // normal size
+    int result = linkedlist_size_normal(self);
+
+    // concurrent writeunlock
+    linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -297,32 +341,40 @@ void* linkedlistiterator_next(struct LinkedListIterator* self) {
     return result;
 }
 
-struct LinkedList* linkedlist_new(int concurrent, int (*comperator)(void* item1, void* item2)) {
+struct LinkedList* linkedlist_new(int mode, int (*comperator)(void* item1, void* item2)) {
     struct LinkedList_* linkedlist_ = memory_alloc(sizeof(struct LinkedList_));
 
     // init private methods
-    linkedlist_->self.add = linkedlist_add;
-    linkedlist_->self.addto = linkedlist_addto;
-    linkedlist_->self.put = linkedlist_put;
-    linkedlist_->self.remove = linkedlist_remove;
-    linkedlist_->self.get = linkedlist_get;
-    linkedlist_->self.indexof = linkedlist_indexof;
-    linkedlist_->self.size = linkedlist_size;
+    switch (mode) {
+        case 0:
+            linkedlist_->self.add = linkedlist_add_normal;
+            linkedlist_->self.addto = linkedlist_addto_normal;
+            linkedlist_->self.put = linkedlist_put_normal;
+            linkedlist_->self.remove = linkedlist_remove_normal;
+            linkedlist_->self.get = linkedlist_get_normal;
+            linkedlist_->self.indexof = linkedlist_indexof_normal;
+            linkedlist_->self.size = linkedlist_size_normal;
+            linkedlist_->rwlock = NULL;
+            break;
+        case 1:
+            linkedlist_->self.add = linkedlist_add_concurrent;
+            linkedlist_->self.addto = linkedlist_addto_concurrent;
+            linkedlist_->self.put = linkedlist_put_concurrent;
+            linkedlist_->self.remove = linkedlist_remove_concurrent;
+            linkedlist_->self.get = linkedlist_get_concurrent;
+            linkedlist_->self.indexof = linkedlist_indexof_concurrent;
+            linkedlist_->self.size = linkedlist_size_concurrent;
+            linkedlist_->rwlock = rwlock_new();
+            break;
+    }
 
-    // init size and head
+    // init size and head and comperator
     linkedlist_->size = 0;
     linkedlist_->head = memory_alloc(sizeof(struct LinkedItem));
     linkedlist_->head->next = linkedlist_->head;
     linkedlist_->head->previews = linkedlist_->head;
     linkedlist_->head->item = NULL;
-
-    // init comperator and rwlock
     linkedlist_->comperator = comperator;
-    if (concurrent) {
-        linkedlist_->rwlock = rwlock_new();
-    } else {
-        linkedlist_->rwlock = NULL;
-    }
 
     return linkedlist_;
 }
