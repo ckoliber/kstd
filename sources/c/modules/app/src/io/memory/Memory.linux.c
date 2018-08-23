@@ -31,8 +31,5 @@ void memory_free(void* address) {
         free(address);
     }
 }
-void memory_copy(void* address, void* source, int size) {
-    memcpy(address, source, size);
-}
 
 #endif
