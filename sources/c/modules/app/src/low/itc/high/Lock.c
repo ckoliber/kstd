@@ -1,5 +1,6 @@
 #include <low/itc/high/Lock.h>
 
+#include <io/memory/Memory.h>
 #include <low/itc/low/Mutex.h>
 
 struct Lock_ {

@@ -1,5 +1,6 @@
 #include <low/itc/high/Semaphore.h>
 
+#include <io/memory/Memory.h>
 #include <low/itc/low/Cond.h>
 #include <pthread.h>
 #include <stdint.h>

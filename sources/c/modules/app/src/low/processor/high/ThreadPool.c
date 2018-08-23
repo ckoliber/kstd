@@ -1,5 +1,6 @@
 #include <low/processor/high/ThreadPool.h>
 
+#include <io/memory/Memory.h>
 #include <low/processor/low/Thread.h>
 
 struct ThreadPool_ {

@@ -2,7 +2,10 @@
 
 #include <low/processor/low/Thread.h>
 
+#include <io/memory/Memory.h>
 #include <pthread.h>
+
+#include <stdio.h>
 
 struct Thread_ {
     struct Thread self;
@@ -19,16 +22,21 @@ int thread_start(struct Thread* self, void* (*function)(void* arg), void* arg) {
     struct Thread_* thread_ = self;
 
     // start internal pthread
-    pthread_create(&(thread_->id), NULL, function, arg);
+    int result = 0;
+    if (pthread_create(&(thread_->id), NULL, function, arg)) {
+        result = -1;
+    }
 
-    return 0;
+    return result;
 }
 void* thread_join(struct Thread* self) {
     struct Thread_* thread_ = self;
 
     // join internal pthread
     void* result = NULL;
-    pthread_join(&(thread_->id), &result);
+    if (pthread_join(thread_->id, &result)) {
+        result = NULL;
+    }
 
     return result;
 }

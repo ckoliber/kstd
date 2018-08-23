@@ -1,5 +1,6 @@
 #include <low/itc/high/RWLock.h>
 
+#include <io/memory/Memory.h>
 #include <low/itc/low/Mutex.h>
 #include <low/local/Time.h>
 

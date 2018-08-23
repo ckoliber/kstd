@@ -2,6 +2,7 @@
 
 #include <low/itc/low/Mutex.h>
 
+#include <io/memory/Memory.h>
 #include <low/local/Time.h>
 #include <pthread.h>
 #include <stdlib.h>

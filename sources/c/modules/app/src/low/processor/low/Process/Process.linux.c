@@ -2,6 +2,7 @@
 
 #include <low/processor/low/Process.h>
 
+#include <io/memory/Memory.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>

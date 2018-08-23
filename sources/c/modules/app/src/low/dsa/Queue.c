@@ -37,6 +37,7 @@ int queue_enqueue_normal(struct Queue* self, int front, void* item) {
     struct Queue_* queue_ = self;
 
     // get item before target item
+    // if queue_->comperator is not NULL then InsertionSort
     struct QueueItem* item_target = front ? queue_->head->next : queue_->head->previews;
 
     // allocate new queueitem and fill it

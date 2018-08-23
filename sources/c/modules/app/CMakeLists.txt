@@ -6,7 +6,7 @@ set(LINK_LIBS "-lpthread")
 ########################################################
 
 # type of module: <executable|library>
-add_library(${PROJECT_NAME} SHARED "")
+add_executable(${PROJECT_NAME} "")
 
 # target sources (.c, .cpp, .cxx)
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx")
