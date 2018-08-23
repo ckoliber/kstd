@@ -1,17 +1,36 @@
 #include <low/processor/low/Thread.h>
-#include <low/dsa/Dequeue.h>
+#include <low/dsa/Queue.h>
 
 #include <stdio.h>
 #include <io/memory/Memory.h>
+#include <zconf.h>
 
 void* thread1(void* arg){
     Queue* q = arg;
 
     while(q->size(q) > 0){
-//        int* item = q->remove(l, 0);
-//        printf("Thread 1 Remove Item = %d\n", *item);
-//        memory_free(item);
+        int* item = q->dequeue(q, 0);
+        printf("Thread 1 Remove Item = %d\n", *item);
+        memory_free(item);
     }
+
+    printf("Thread 1 End");
+
+//    assert(result == 0);
+
+    return NULL;
+}
+
+void* thread2(void* arg){
+    Queue* q = arg;
+
+    while(q->size(q) > 0){
+        int* item = q->dequeue(q, 0);
+        printf("Thread 2 Remove Item = %d\n", *item);
+        memory_free(item);
+    }
+
+    printf("Thread 2 End");
 
 //    assert(result == 0);
 
@@ -20,32 +39,36 @@ void* thread1(void* arg){
 
 
 int main(int argc, char* argv[]) {
-    Queue* q = queue_new(0, NULL);
+    Queue* q = queue_new(1, -1, NULL);
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();
-    Thread* t3 = thread_new();
-    Thread* t4 = thread_new();
 
-//    t1->start(t1, thread1, l);
-//    t2->start(t2, thread2, l);
-//    t3->start(t3, thread3, l);
-//    t4->start(t4, thread4, l);
+    for(int cursor = 0 ; cursor < 100 ; cursor++){
+        int* item = memory_alloc(sizeof(int));
+        *item = cursor;
+        q->enqueue(q, item);
+    }
 
-//    t1->join(t1);
-//    t2->join(t2);
-//    t3->join(t3);
-//    t4->join(t4);
+    t1->start(t1, thread1, q);
+    t2->start(t2, thread2, q);
 
-//    t1->stop(t1);
-//    t2->stop(t2);
-//    t3->stop(t3);
-//    t4->stop(t4);
+    sleep(3);
+
+    for(int cursor = 0 ; cursor < 10000 ; cursor++){
+        int* item = memory_alloc(sizeof(int));
+        *item = cursor;
+        q->enqueue(q, item);
+    }
+
+    t1->join(t1);
+    t2->join(t2);
+
+    t1->stop(t1);
+    t2->stop(t2);
 
     thread_free(t1);
     thread_free(t2);
-    thread_free(t3);
-    thread_free(t4);
 
     queue_free(q);
 }

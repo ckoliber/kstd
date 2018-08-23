@@ -44,9 +44,9 @@ int linkedlistiterator_hasnext(struct LinkedListIterator* self);
 void* linkedlistiterator_next(struct LinkedListIterator* self);
 
 // local methods
-struct LinkedItem* item_get(struct LinkedList* linkedlist, int position);
+struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position);
 
-struct LinkedItem* item_get(struct LinkedList* linkedlist, int position) {
+struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_ *) linkedlist;
 
     // check position is valid
@@ -94,7 +94,7 @@ int linkedlist_addto_normal(struct LinkedList* self, int position, void* item) {
     }
 
     // get item before target item
-    struct LinkedItem* item_target = item_get(self, position);
+    struct LinkedItem* item_target = linkeditem_get(self, position);
 
     // allocate new linkeditem and fill it
     struct LinkedItem* linkeditem = memory_alloc(sizeof(struct LinkedItem));
@@ -119,7 +119,7 @@ void* linkedlist_put_normal(struct LinkedList* self, int position, void* item) {
     }
 
     // get target item
-    struct LinkedItem* item_target = item_get(self, position + 1);
+    struct LinkedItem* item_target = linkeditem_get(self, position + 1);
 
     // change item value
     void* result = item_target->item;
@@ -136,7 +136,7 @@ void* linkedlist_remove_normal(struct LinkedList* self, int position) {
     }
 
     // get target item
-    struct LinkedItem* item_target = item_get(self, position + 1);
+    struct LinkedItem* item_target = linkeditem_get(self, position + 1);
 
     // change removable item next and previews
     item_target->next->previews = item_target->previews;
@@ -158,7 +158,7 @@ void* linkedlist_get_normal(struct LinkedList* self, int position) {
     }
 
     // get target item
-    struct LinkedItem* item_target = item_get(self, position + 1);
+    struct LinkedItem* item_target = linkeditem_get(self, position + 1);
 
     // get item value
     void* result = item_target->item;

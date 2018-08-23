@@ -37,22 +37,27 @@ void* dequeue_get_blocking(struct Dequeue* self, int front);
 int dequeue_size_blocking(struct Dequeue* self);
 
 // local methods
-struct DequeueItem* item_get(struct Dequeue* dequeue, int front);
+struct DequeueItem* dequeueitem_get(struct Dequeue* dequeue, int front, void* item);
 
-struct DequeueItem* item_get(struct Dequeue* dequeue, int front){
+struct DequeueItem* dequeueitem_get(struct Dequeue* dequeue, int front, void* item){
     struct Dequeue_* dequeue_ = (struct Dequeue_ *) dequeue;
 
     // return item before adding position
-    void* result = NULL;
+    struct DequeueItem* result = NULL;
     if(dequeue_->comperator != NULL){
-        // insertion sort
-
-        while
-
+        // search for item position (insertion sort)
+        result = dequeue_->head->next;
+        while(result != dequeue_->head){
+            if(dequeue_->comperator(item, result->item) <= 0){
+                break;
+            }
+            result = result->next;
+        }
+        result = result->previews;
     }else if(front){
-        return dequeue_->head;
+        result = dequeue_->head;
     }else{
-        return dequeue_->head->previews;
+        result = dequeue_->head->previews;
     }
 
     return result;
@@ -67,7 +72,7 @@ int dequeue_enqueue_normal(struct Dequeue* self, int front, void* item) {
     }
 
     // get item before target item
-    struct DequeueItem* item_target = item_get(self, front);
+    struct DequeueItem* item_target = dequeueitem_get(self, front, item);
 
     // allocate new dequeueitem and fill it
     struct DequeueItem* dequeueitem = memory_alloc(sizeof(struct DequeueItem));
