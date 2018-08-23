@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 
 struct Cond_ {
     struct Cond self;
@@ -15,13 +16,13 @@ struct Cond_ {
 };
 
 // link methods
-int cond_wait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2);
-int cond_timewait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2, int timeout);
-int cond_signal(struct Cond* self, void (*critical)(void* arg), void* arg);
-int cond_broadcast(struct Cond* self, void (*critical)(void* arg), void* arg);
+int cond_wait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2);
+int cond_timewait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2, long int timeout);
+int cond_signal(struct Cond* self, void (*critical)(void*), void* arg);
+int cond_broadcast(struct Cond* self, void (*critical)(void*), void* arg);
 
-int cond_wait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2) {
-    struct Cond_* cond_ = self;
+int cond_wait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2) {
+    struct Cond_* cond_ = (struct Cond_ *) self;
 
     // wait on the cond
     pthread_mutex_lock(&(cond_->mutex));
@@ -35,31 +36,32 @@ int cond_wait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void 
     }
 
     // run critical
-    critical(arg2);
+    if(critical != NULL){
+        critical(arg2);
+    }
 
     pthread_mutex_unlock(&(cond_->mutex));
 
     return 0;
 }
-int cond_timewait(struct Cond* self, int (*condition)(void* arg1), void* arg1, void (*critical)(void* arg2), void* arg2, int timeout) {
-    struct Cond_* cond_ = self;
+int cond_timewait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2, long int timeout) {
+    struct Cond_* cond_ = (struct Cond_ *) self;
 
     // timedwait on the cond
     pthread_mutex_lock(&(cond_->mutex));
 
-    // get timeout in timespec
-    struct timespec time_out;
-    time_out.tv_sec = 0;
-    time_out.tv_nsec = 0;
-
-    // get current time
+    // get timeout in timespec and result
     int result = 0;
-    long int time = time_epochmillis();
+    struct timeval time_now;
+    struct timespec time_out;
+    gettimeofday(&time_now, NULL);
+    time_out.tv_sec = time_now.tv_sec;
+    time_out.tv_nsec = time_now.tv_usec * 1000;
+    time_out.tv_sec += timeout / 1000;
+    time_out.tv_nsec += (timeout % 1000) * 1000000;
 
     // run conditional wait loop
     while (condition == NULL || condition(arg1)) {
-        // set new timeout and timewait
-        time_out.tv_nsec = (timeout - (time_epochmillis() - time)) * 1.0e6;
         if (pthread_cond_timedwait(&(cond_->cond), &(cond_->mutex), &time_out) != 0) {
             result = -1;
             break;
@@ -70,14 +72,18 @@ int cond_timewait(struct Cond* self, int (*condition)(void* arg1), void* arg1, v
     }
 
     // run critical
-    critical(arg2);
+    if(result == 0){
+        if(critical != NULL){
+            critical(arg2);
+        }
+    }
 
     pthread_mutex_unlock(&(cond_->mutex));
 
     return result;
 }
-int cond_signal(struct Cond* self, void (*critical)(void* arg), void* arg) {
-    struct Cond_* cond_ = self;
+int cond_signal(struct Cond* self, void (*critical)(void*), void* arg) {
+    struct Cond_* cond_ = (struct Cond_ *) self;
 
     pthread_mutex_lock(&(cond_->mutex));
 
@@ -85,14 +91,16 @@ int cond_signal(struct Cond* self, void (*critical)(void* arg), void* arg) {
     pthread_cond_signal(&(cond_->cond));
 
     // run critical
-    critical(arg);
+    if(critical != NULL){
+        critical(arg);
+    }
 
     pthread_mutex_unlock(&(cond_->mutex));
 
     return 0;
 }
-int cond_broadcast(struct Cond* self, void (*critical)(void* arg), void* arg) {
-    struct Cond_* cond_ = self;
+int cond_broadcast(struct Cond* self, void (*critical)(void*), void* arg) {
+    struct Cond_* cond_ = (struct Cond_ *) self;
 
     pthread_mutex_lock(&(cond_->mutex));
 
@@ -100,7 +108,9 @@ int cond_broadcast(struct Cond* self, void (*critical)(void* arg), void* arg) {
     pthread_cond_broadcast(&(cond_->cond));
 
     // run critical
-    critical(arg);
+    if(critical != NULL){
+        critical(arg);
+    }
 
     pthread_mutex_unlock(&(cond_->mutex));
 
@@ -120,10 +130,10 @@ struct Cond* cond_new() {
     pthread_cond_init(&(cond_->cond), NULL);
     pthread_mutex_init(&(cond_->mutex), NULL);
 
-    return cond_;
+    return (struct Cond *) cond_;
 }
 void cond_free(struct Cond* cond) {
-    struct Cond_* cond_ = cond;
+    struct Cond_* cond_ = (struct Cond_ *) cond;
 
     // destry internal cond and mutex
     pthread_cond_destroy(&(cond_->cond));

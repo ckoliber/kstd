@@ -19,7 +19,7 @@ struct Arg {
 
 // link methods
 int semaphore_wait(struct Semaphore* self, int count);
-int semaphore_timewait(struct Semaphore* self, int count, int timeout);
+int semaphore_timewait(struct Semaphore* self, int count, long int timeout);
 int semaphore_post(struct Semaphore* self, int count);
 int semaphore_get(struct Semaphore* self);
 
@@ -41,7 +41,7 @@ void critical(void* arg) {
 }
 
 int semaphore_wait(struct Semaphore* self, int count) {
-    struct Semaphore_* semaphore_ = self;
+    struct Semaphore_* semaphore_ = (struct Semaphore_ *) self;
 
     // wait on cond to signal and decrease value
     struct Arg arg = {semaphore_, count, 0};
@@ -49,8 +49,8 @@ int semaphore_wait(struct Semaphore* self, int count) {
 
     return 0;
 }
-int semaphore_timewait(struct Semaphore* self, int count, int timeout) {
-    struct Semaphore_* semaphore_ = self;
+int semaphore_timewait(struct Semaphore* self, int count, long int timeout) {
+    struct Semaphore_* semaphore_ = (struct Semaphore_ *) self;
 
     // timewait on cond to signal and decrease value
     struct Arg arg = {semaphore_, count, 0};
@@ -59,7 +59,7 @@ int semaphore_timewait(struct Semaphore* self, int count, int timeout) {
     return result;
 }
 int semaphore_post(struct Semaphore* self, int count) {
-    struct Semaphore_* semaphore_ = self;
+    struct Semaphore_* semaphore_ = (struct Semaphore_ *) self;
 
     // signal on cond and increase value
     struct Arg arg = {semaphore_, count, 1};
@@ -68,7 +68,7 @@ int semaphore_post(struct Semaphore* self, int count) {
     return 0;
 }
 int semaphore_get(struct Semaphore* self) {
-    struct Semaphore_* semaphore_ = self;
+    struct Semaphore_* semaphore_ = (struct Semaphore_ *) self;
 
     // get semaphore value
     int result = semaphore_->value;
@@ -89,11 +89,11 @@ struct Semaphore* semaphore_new(int value) {
     semaphore_->cond = cond_new();
     semaphore_->value = value;
 
-    return semaphore_;
+    return (struct Semaphore *) semaphore_;
 }
 
 void semaphore_free(struct Semaphore* semaphore) {
-    struct Semaphore_* semaphore_ = semaphore;
+    struct Semaphore_* semaphore_ = (struct Semaphore_ *) semaphore;
 
     // destry internal Cond
     cond_free(semaphore_->cond);

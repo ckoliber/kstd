@@ -1,8 +1,8 @@
 typedef struct RWLock {
     int (*readlock)(struct RWLock* self);
     int (*writelock)(struct RWLock* self);
-    int (*timereadlock)(struct RWLock* self, int timeout);
-    int (*timewritelock)(struct RWLock* self, int timeout);
+    int (*timereadlock)(struct RWLock* self, long int timeout);
+    int (*timewritelock)(struct RWLock* self, long int timeout);
     int (*readunlock)(struct RWLock* self);
     int (*writeunlock)(struct RWLock* self);
 } RWLock;

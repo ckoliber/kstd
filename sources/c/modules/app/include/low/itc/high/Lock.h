@@ -1,6 +1,6 @@
 typedef struct Lock {
     int (*lock)(struct Lock* self);
-    int (*timelock)(struct Lock* self, int timeout);
+    int (*timelock)(struct Lock* self, long int timeout);
     int (*unlock)(struct Lock* self);
 } Lock;
 

@@ -1,13 +1,13 @@
 #include <low/processor/low/Thread.h>
-#include <low/itc/high/Semaphore.h>
+#include <low/itc/high/Lock.h>
 
 #include <assert.h>
 #include <zconf.h>
 
 void* thread1(void* arg){
-    Semaphore* s = arg;
+    Lock* l = arg;
 
-    int result = s->wait(s, 3);
+    int result = l->lock(l);
 
     assert(result == 0);
 
@@ -15,9 +15,9 @@ void* thread1(void* arg){
 }
 
 void* thread2(void* arg){
-    Semaphore* s = arg;
+    Lock* l = arg;
 
-    int result = s->timewait(s, 3, 3000);
+    int result = l->timelock(l, 3000);
 
     assert(result == -1);
 
@@ -25,17 +25,22 @@ void* thread2(void* arg){
 }
 
 int main(int argc, char* argv[]) {
-    Semaphore *s = semaphore_new(2);
+    Lock *l1 = lock_new();
+    Lock *l2 = lock_new();
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();
 
-    t1->start(t1, thread1, s);
-    t2->start(t2, thread2, s);
+    l1->lock(l1);
+    l2->lock(l2);
+
+    t1->start(t1, thread1, l1);
+    t2->start(t2, thread2, l2);
 
     sleep(5);
 
-    s->post(s, 1);
+    l1->unlock(l1);
+    l2->unlock(l2);
 
     t1->join(t1);
     t2->join(t2);
@@ -46,5 +51,6 @@ int main(int argc, char* argv[]) {
     thread_free(t1);
     thread_free(t2);
 
-    semaphore_free(s);
+    lock_free(l1);
+    lock_free(l2);
 }

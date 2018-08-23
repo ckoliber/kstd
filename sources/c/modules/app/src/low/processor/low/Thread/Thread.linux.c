@@ -5,21 +5,19 @@
 #include <io/memory/Memory.h>
 #include <pthread.h>
 
-#include <stdio.h>
-
 struct Thread_ {
     struct Thread self;
     pthread_t id;
 };
 
 // link methods
-int thread_start(struct Thread* self, void* (*function)(void* arg), void* arg);
+int thread_start(struct Thread* self, void* (*function)(void*), void* arg);
 void* thread_join(struct Thread* self);
 int thread_id(struct Thread* self);
 int thread_stop(struct Thread* self);
 
-int thread_start(struct Thread* self, void* (*function)(void* arg), void* arg) {
-    struct Thread_* thread_ = self;
+int thread_start(struct Thread* self, void* (*function)(void*), void* arg) {
+    struct Thread_* thread_ = (struct Thread_ *) self;
 
     // start internal pthread
     int result = 0;
@@ -30,7 +28,7 @@ int thread_start(struct Thread* self, void* (*function)(void* arg), void* arg) {
     return result;
 }
 void* thread_join(struct Thread* self) {
-    struct Thread_* thread_ = self;
+    struct Thread_* thread_ = (struct Thread_ *) self;
 
     // join internal pthread
     void* result = NULL;
@@ -41,15 +39,15 @@ void* thread_join(struct Thread* self) {
     return result;
 }
 int thread_id(struct Thread* self) {
-    struct Thread_* thread_ = self;
+    struct Thread_* thread_ = (struct Thread_ *) self;
 
     // get internal pthread id
-    int result = thread_->id;
+    int result = (int) thread_->id;
 
     return result;
 }
 int thread_stop(struct Thread* self) {
-    struct Thread_* thread_ = self;
+    struct Thread_* thread_ = (struct Thread_ *) self;
 
     // stop internal pthread
     pthread_cancel(thread_->id);
@@ -66,14 +64,10 @@ struct Thread* thread_new() {
     thread_->self.id = thread_id;
     thread_->self.stop = thread_stop;
 
-    // init internal pthread
-
-    return thread_;
+    return (struct Thread *) thread_;
 }
 void thread_free(struct Thread* thread) {
-    struct Thread_* thread_ = thread;
-
-    // destroy internal pthread
+    struct Thread_* thread_ = (struct Thread_ *) thread;
 
     memory_free(thread_);
 }

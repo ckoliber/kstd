@@ -10,19 +10,19 @@ struct Lock_ {
 
 // link methods
 int lock_lock(struct Lock* self);
-int lock_timelock(struct Lock* self, int timeout);
+int lock_timelock(struct Lock* self, long int timeout);
 int lock_unlock(struct Lock* self);
 
 int lock_lock(struct Lock* self) {
-    struct Lock_* lock_ = self;
+    struct Lock_* lock_ = (struct Lock_ *) self;
 
     // lock internal Mutex
     lock_->mutex->lock(lock_->mutex);
 
     return 0;
 }
-int lock_timelock(struct Lock* self, int timeout) {
-    struct Lock_* lock_ = self;
+int lock_timelock(struct Lock* self, long int timeout) {
+    struct Lock_* lock_ = (struct Lock_ *) self;
 
     // lock internal Mutex
     int result = lock_->mutex->timelock(lock_->mutex, timeout);
@@ -30,7 +30,7 @@ int lock_timelock(struct Lock* self, int timeout) {
     return result;
 }
 int lock_unlock(struct Lock* self) {
-    struct Lock_* lock_ = self;
+    struct Lock_* lock_ = (struct Lock_ *) self;
 
     // lock internal Mutex
     lock_->mutex->unlock(lock_->mutex);
@@ -49,10 +49,10 @@ struct Lock* lock_new() {
     // create internal Mutex
     lock_->mutex = mutex_new();
 
-    return lock_;
+    return (struct Lock *) lock_;
 }
 void lock_free(struct Lock* lock) {
-    struct Lock_* lock_ = lock;
+    struct Lock_* lock_ = (struct Lock_ *) lock;
 
     // destry internal Mutex
     mutex_free(lock_->mutex);

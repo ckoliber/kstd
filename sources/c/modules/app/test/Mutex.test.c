@@ -1,13 +1,13 @@
 #include <low/processor/low/Thread.h>
-#include <low/itc/high/Semaphore.h>
+#include <low/itc/low/Mutex.h>
 
 #include <assert.h>
 #include <zconf.h>
 
 void* thread1(void* arg){
-    Semaphore* s = arg;
+    Mutex* m = arg;
 
-    int result = s->wait(s, 3);
+    int result = m->lock(m);
 
     assert(result == 0);
 
@@ -15,9 +15,9 @@ void* thread1(void* arg){
 }
 
 void* thread2(void* arg){
-    Semaphore* s = arg;
+    Mutex* m = arg;
 
-    int result = s->timewait(s, 3, 3000);
+    int result = m->timelock(m, 3000);
 
     assert(result == -1);
 
@@ -25,17 +25,22 @@ void* thread2(void* arg){
 }
 
 int main(int argc, char* argv[]) {
-    Semaphore *s = semaphore_new(2);
+    Mutex *m1 = mutex_new();
+    Mutex *m2 = mutex_new();
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();
 
-    t1->start(t1, thread1, s);
-    t2->start(t2, thread2, s);
+    m1->lock(m1);
+    m2->lock(m2);
+
+    t1->start(t1, thread1, m1);
+    t2->start(t2, thread2, m2);
 
     sleep(5);
 
-    s->post(s, 1);
+    m1->unlock(m1);
+    m2->unlock(m2);
 
     t1->join(t1);
     t2->join(t2);
@@ -46,5 +51,6 @@ int main(int argc, char* argv[]) {
     thread_free(t1);
     thread_free(t2);
 
-    semaphore_free(s);
+    mutex_free(m1);
+    mutex_free(m2);
 }

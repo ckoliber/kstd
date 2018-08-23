@@ -1,5 +1,5 @@
 typedef struct Process {
-    int (*start)(struct Process* self, char* command, char* argv[]);
+    int (*start)(struct Process* self, char* command);
     int (*join)(struct Process* self);
     int (*id)(struct Process* self);
     int (*stop)(struct Process* self);

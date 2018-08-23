@@ -1,5 +1,5 @@
 typedef struct Thread {
-    int (*start)(struct Thread* self, void* (*function)(void* arg), void* arg);
+    int (*start)(struct Thread* self, void* (*function)(void*), void* arg);
     void* (*join)(struct Thread* self);
     int (*id)(struct Thread* self);
     int (*stop)(struct Thread* self);

@@ -1,13 +1,13 @@
 #include <low/processor/low/Thread.h>
-#include <low/itc/high/Semaphore.h>
+#include <low/itc/low/Cond.h>
 
 #include <assert.h>
 #include <zconf.h>
 
 void* thread1(void* arg){
-    Semaphore* s = arg;
+    Cond* c = arg;
 
-    int result = s->wait(s, 3);
+    int result = c->wait(c, NULL, NULL, NULL, NULL);
 
     assert(result == 0);
 
@@ -15,9 +15,9 @@ void* thread1(void* arg){
 }
 
 void* thread2(void* arg){
-    Semaphore* s = arg;
+    Cond* c = arg;
 
-    int result = s->timewait(s, 3, 3000);
+    int result = c->timewait(c, NULL, NULL, NULL, NULL, 3000);
 
     assert(result == -1);
 
@@ -25,17 +25,19 @@ void* thread2(void* arg){
 }
 
 int main(int argc, char* argv[]) {
-    Semaphore *s = semaphore_new(2);
+    Cond* c1 = cond_new();
+    Cond* c2 = cond_new();
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();
 
-    t1->start(t1, thread1, s);
-    t2->start(t2, thread2, s);
+    t1->start(t1, thread1, c1);
+    t2->start(t2, thread2, c2);
 
     sleep(5);
 
-    s->post(s, 1);
+    c1->signal(c1, NULL, NULL);
+    c2->signal(c2, NULL, NULL);
 
     t1->join(t1);
     t2->join(t2);
@@ -46,5 +48,6 @@ int main(int argc, char* argv[]) {
     thread_free(t1);
     thread_free(t2);
 
-    semaphore_free(s);
+    cond_free(c1);
+    cond_free(c2);
 }
