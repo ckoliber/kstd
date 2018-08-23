@@ -5,7 +5,6 @@
 #include <io/memory/Memory.h>
 #include <low/local/Time.h>
 #include <pthread.h>
-#include <stdlib.h>
 
 struct Mutex_ {
     struct Mutex self;

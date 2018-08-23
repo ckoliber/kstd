@@ -13,7 +13,7 @@ typedef struct LinkedListIterator {
     void* (*next)(struct LinkedListIterator* self);
 } LinkedListIterator;
 
-struct LinkedList* linkedlist_new(int mode, int (*comperator)(void* item1, void* item2));
+struct LinkedList* linkedlist_new(int mode, int (*comperator)(void*, void*));
 void linkedlist_free(struct LinkedList* linkedlist);
 
 struct LinkedListIterator* linkedlistiterator_new(struct LinkedList* linkedlist);

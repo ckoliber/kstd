@@ -3,7 +3,6 @@
 #include <io/memory/Memory.h>
 #include <low/itc/high/RWLock.h>
 #include <low/itc/high/Semaphore.h>
-#include <stdlib.h>
 
 struct Queue_ {
     struct Queue self;
@@ -34,7 +33,7 @@ void* queue_dequeue_blocking(struct Queue* self, int front, int timeout);
 int queue_size_blocking(struct Queue* self);
 
 int queue_enqueue_normal(struct Queue* self, int front, void* item) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // get item before target item
     // if queue_->comperator is not NULL then InsertionSort
@@ -55,7 +54,7 @@ int queue_enqueue_normal(struct Queue* self, int front, void* item) {
     return result;
 }
 void* queue_dequeue_normal(struct Queue* self, int front, int timeout) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // check queue is not empty
     if (queue_->size <= 0) {
@@ -77,7 +76,7 @@ void* queue_dequeue_normal(struct Queue* self, int front, int timeout) {
     return result;
 }
 int queue_size_normal(struct Queue* self) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // get queue size
     int result = queue_->size;
@@ -86,7 +85,7 @@ int queue_size_normal(struct Queue* self) {
 }
 
 int queue_enqueue_concurrent(struct Queue* self, int front, void* item) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // concurrent writelock
     queue_->rwlock->writelock(queue_->rwlock);
@@ -100,7 +99,7 @@ int queue_enqueue_concurrent(struct Queue* self, int front, void* item) {
     return result;
 }
 void* queue_dequeue_concurrent(struct Queue* self, int front, int timeout) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // concurrent writelock
     queue_->rwlock->writelock(queue_->rwlock);
@@ -114,7 +113,7 @@ void* queue_dequeue_concurrent(struct Queue* self, int front, int timeout) {
     return result;
 }
 int queue_size_concurrent(struct Queue* self) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // concurrent readlock
     queue_->rwlock->readlock(queue_->rwlock);
@@ -129,7 +128,7 @@ int queue_size_concurrent(struct Queue* self) {
 }
 
 int queue_enqueue_blocking(struct Queue* self, int front, void* item) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // normal enqueue
     int result = queue_enqueue_normal(self, front, item);
@@ -140,18 +139,17 @@ int queue_enqueue_blocking(struct Queue* self, int front, void* item) {
     return result;
 }
 void* queue_dequeue_blocking(struct Queue* self, int front, int timeout) {
-    struct Queue_* queue_ = self;
+    struct Queue_* queue_ = (struct Queue_ *) self;
 
     // wait on semaphore
     queue_->semaphore->timewait(queue_->semaphore, 1, timeout);
 
     // normal dequeue
-    int result = queue_dequeue_normal(self, front, timeout);
+    void* result = queue_dequeue_normal(self, front, timeout);
 
     return result;
 }
 int queue_size_blocking(struct Queue* self) {
-    struct Queue_* queue_ = self;
 
     // normal size
     int result = queue_size_normal(self);
@@ -195,10 +193,10 @@ struct Queue* queue_new(int mode, int (*comperator)(void* item1, void* item2)) {
     queue_->head->item = NULL;
     queue_->comperator = comperator;
 
-    return queue_;
+    return (struct Queue *) queue_;
 }
 void queue_free(struct Queue* queue) {
-    struct Queue_* queue_ = queue;
+    struct Queue_* queue_ = (struct Queue_ *) queue;
 
     // break queue circle
     queue_->head->previews->next = NULL;

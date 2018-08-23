@@ -2,7 +2,6 @@
 
 #include <io/memory/Memory.h>
 #include <low/itc/high/RWLock.h>
-#include <stdlib.h>
 
 struct ArrayList_ {
     struct ArrayList self;
@@ -32,23 +31,15 @@ int arraylist_indexof_concurrent(struct ArrayList* self, void* item);
 int arraylist_size_concurrent(struct ArrayList* self);
 
 int arraylist_add_normal(struct ArrayList* self, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
-    // check array have free space or not
-    if (arraylist_->cursor >= arraylist_->length) {
-        arraylist_->length = arraylist_->length * arraylist_->factor;
-        arraylist_->array = memory_realloc(arraylist_->array, arraylist_->length * sizeof(void*));
-    }
-
-    // add item
-    int result = arraylist_->cursor;
-    arraylist_->array[arraylist_->cursor] = item;
-    arraylist_->cursor++;
+    // normal add
+    int result = arraylist_addto_normal(self, arraylist_->cursor, item);
 
     return result;
 }
 int arraylist_addto_normal(struct ArrayList* self, int position, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position > arraylist_->cursor) {
@@ -57,15 +48,14 @@ int arraylist_addto_normal(struct ArrayList* self, int position, void* item) {
 
     // check array have free space or not
     if (arraylist_->cursor >= arraylist_->length) {
-        arraylist_->length = arraylist_->length * arraylist_->factor;
+        arraylist_->length = (int) (arraylist_->length * arraylist_->factor + 1);
         arraylist_->array = memory_realloc(arraylist_->array, arraylist_->length * sizeof(void*));
     }
 
     // move other items one block next
-    memory_copy(
-        (arraylist_->array + (position + 1 * sizeof(void*))),  // target address
-        (arraylist_->array + ((position) * sizeof(void*))),    // source address
-        (arraylist_->cursor - position) * sizeof(void*));      // size
+    for(int cursor = arraylist_->cursor - 1 ; cursor >= position ; cursor--){
+        arraylist_->array[cursor+1] = arraylist_->array[cursor];
+    }
 
     // add item
     int result = position;
@@ -75,7 +65,7 @@ int arraylist_addto_normal(struct ArrayList* self, int position, void* item) {
     return result;
 }
 void* arraylist_put_normal(struct ArrayList* self, int position, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position >= arraylist_->cursor) {
@@ -89,7 +79,7 @@ void* arraylist_put_normal(struct ArrayList* self, int position, void* item) {
     return result;
 }
 void* arraylist_remove_normal(struct ArrayList* self, int position) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position >= arraylist_->cursor) {
@@ -100,24 +90,24 @@ void* arraylist_remove_normal(struct ArrayList* self, int position) {
     void* result = arraylist_->array[position];
 
     // move other items on that item
-    memory_copy(
-        (arraylist_->array + (position * sizeof(void*))),        // target address
-        (arraylist_->array + ((position + 1) * sizeof(void*))),  // source address
-        (arraylist_->cursor - position) * sizeof(void*));        // size
+    for(int cursor = position + 1 ; cursor < arraylist_->cursor ; cursor++){
+        arraylist_->array[cursor-1] = arraylist_->array[cursor];
+    }
 
     // remove item
     arraylist_->cursor--;
 
     // check array have free space or not
     if (arraylist_->cursor < arraylist_->length / arraylist_->factor) {
-        arraylist_->length = arraylist_->length / arraylist_->factor;
+        arraylist_->length = (int) (arraylist_->length / arraylist_->factor);
+        arraylist_->length = arraylist_->length ? arraylist_->length : 1;
         arraylist_->array = memory_realloc(arraylist_->array, arraylist_->length * sizeof(void*));
     }
 
     return result;
 }
 void* arraylist_get_normal(struct ArrayList* self, int position) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position >= arraylist_->cursor) {
@@ -130,7 +120,7 @@ void* arraylist_get_normal(struct ArrayList* self, int position) {
     return result;
 }
 int arraylist_indexof_normal(struct ArrayList* self, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // search in items to find item
     int result = -1;
@@ -152,7 +142,7 @@ int arraylist_indexof_normal(struct ArrayList* self, void* item) {
     return result;
 }
 int arraylist_size_normal(struct ArrayList* self) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // get current cursor position (size)
     int result = arraylist_->cursor;
@@ -161,7 +151,7 @@ int arraylist_size_normal(struct ArrayList* self) {
 }
 
 int arraylist_add_concurrent(struct ArrayList* self, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // concurrent writelock
     arraylist_->rwlock->writelock(arraylist_->rwlock);
@@ -175,7 +165,7 @@ int arraylist_add_concurrent(struct ArrayList* self, void* item) {
     return result;
 }
 int arraylist_addto_concurrent(struct ArrayList* self, int position, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position > arraylist_->cursor) {
@@ -194,7 +184,7 @@ int arraylist_addto_concurrent(struct ArrayList* self, int position, void* item)
     return result;
 }
 void* arraylist_put_concurrent(struct ArrayList* self, int position, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position >= arraylist_->cursor) {
@@ -213,7 +203,7 @@ void* arraylist_put_concurrent(struct ArrayList* self, int position, void* item)
     return result;
 }
 void* arraylist_remove_concurrent(struct ArrayList* self, int position) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position >= arraylist_->cursor) {
@@ -232,7 +222,7 @@ void* arraylist_remove_concurrent(struct ArrayList* self, int position) {
     return result;
 }
 void* arraylist_get_concurrent(struct ArrayList* self, int position) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // check position is valid
     if (position < 0 || position >= arraylist_->cursor) {
@@ -251,7 +241,7 @@ void* arraylist_get_concurrent(struct ArrayList* self, int position) {
     return result;
 }
 int arraylist_indexof_concurrent(struct ArrayList* self, void* item) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // concurrent readlock
     arraylist_->rwlock->readlock(arraylist_->rwlock);
@@ -265,7 +255,7 @@ int arraylist_indexof_concurrent(struct ArrayList* self, void* item) {
     return result;
 }
 int arraylist_size_concurrent(struct ArrayList* self) {
-    struct ArrayList_* arraylist_ = self;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) self;
 
     // concurrent readlock
     arraylist_->rwlock->readlock(arraylist_->rwlock);
@@ -279,7 +269,7 @@ int arraylist_size_concurrent(struct ArrayList* self) {
     return result;
 }
 
-struct ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void* item1, void* item2)) {
+struct ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*, void*)) {
     struct ArrayList_* arraylist_ = memory_alloc(sizeof(struct ArrayList_));
 
     // init private methods
@@ -313,10 +303,10 @@ struct ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void* 
     arraylist_->factor = factor;
     arraylist_->comperator = comperator;
 
-    return arraylist_;
+    return (struct ArrayList *) arraylist_;
 }
 void arraylist_free(struct ArrayList* arraylist) {
-    struct ArrayList_* arraylist_ = arraylist;
+    struct ArrayList_* arraylist_ = (struct ArrayList_ *) arraylist;
 
     // destry internal array and rwlock
     memory_free(arraylist_->array);

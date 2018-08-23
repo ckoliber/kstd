@@ -4,5 +4,5 @@ typedef struct Queue {
     int (*size)(struct Queue* self);
 } Queue;
 
-struct Queue* queue_new(int mode, int (*comperator)(void* item1, void* item2));
+struct Queue* queue_new(int mode, int (*comperator)(void*, void*));
 void queue_free(struct Queue* queue);

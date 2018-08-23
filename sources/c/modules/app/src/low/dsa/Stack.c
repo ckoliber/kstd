@@ -3,7 +3,6 @@
 #include <io/memory/Memory.h>
 #include <low/itc/high/RWLock.h>
 #include <low/itc/high/Semaphore.h>
-#include <stdlib.h>
 
 struct Stack_ {
     struct Stack self;
@@ -33,7 +32,7 @@ void* stack_pop_blocking(struct Stack* self, int timeout);
 int stack_size_blocking(struct Stack* self);
 
 int stack_push_normal(struct Stack* self, void* item) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // allocate new stackitem and fill it
     struct StackItem* stackitem = memory_alloc(sizeof(struct StackItem));
@@ -48,7 +47,7 @@ int stack_push_normal(struct Stack* self, void* item) {
     return result;
 }
 void* stack_pop_normal(struct Stack* self, int timeout) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // check stack_ is not empty
     if (stack_->size <= 0) {
@@ -67,7 +66,7 @@ void* stack_pop_normal(struct Stack* self, int timeout) {
     return result;
 }
 int stack_size_normal(struct Stack* self) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // get stack size
     int result = stack_->size;
@@ -76,7 +75,7 @@ int stack_size_normal(struct Stack* self) {
 }
 
 int stack_push_concurrent(struct Stack* self, void* item) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // concurrent writelock
     stack_->rwlock->writelock(stack_->rwlock);
@@ -90,7 +89,7 @@ int stack_push_concurrent(struct Stack* self, void* item) {
     return result;
 }
 void* stack_pop_concurrent(struct Stack* self, int timeout) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // concurrent writelock
     stack_->rwlock->writelock(stack_->rwlock);
@@ -104,7 +103,7 @@ void* stack_pop_concurrent(struct Stack* self, int timeout) {
     return result;
 }
 int stack_size_concurrent(struct Stack* self) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // concurrent readlock
     stack_->rwlock->readlock(stack_->rwlock);
@@ -119,7 +118,7 @@ int stack_size_concurrent(struct Stack* self) {
 }
 
 int stack_push_blocking(struct Stack* self, void* item) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // normal push
     int result = stack_push_normal(self, item);
@@ -130,18 +129,17 @@ int stack_push_blocking(struct Stack* self, void* item) {
     return result;
 }
 void* stack_pop_blocking(struct Stack* self, int timeout) {
-    struct Stack_* stack_ = self;
+    struct Stack_* stack_ = (struct Stack_ *) self;
 
     // wait on semaphore
     stack_->semaphore->timewait(stack_->semaphore, 1, timeout);
 
     // normal pop
-    int result = stack_pop_normal(self, timeout);
+    void* result = stack_pop_normal(self, timeout);
 
     return result;
 }
 int stack_size_blocking(struct Stack* self) {
-    struct Stack_* stack_ = self;
 
     // normal size
     int result = stack_size_normal(self);
@@ -183,10 +181,10 @@ struct Stack* stack_new(int mode, int (*comperator)(void* item1, void* item2)) {
     stack_->head->next = NULL;
     stack_->comperator = comperator;
 
-    return stack_;
+    return (struct Stack *) stack_;
 }
 void stack_free(struct Stack* stack) {
-    struct Stack_* stack_ = stack;
+    struct Stack_* stack_ = (struct Stack_ *) stack;
 
     // iterate stack and remove stackitems
     struct StackItem* remove_item = NULL;
