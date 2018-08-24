@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     Thread* t3 = thread_new();
     Thread* t4 = thread_new();
 
-    for(int cursor = 0 ; cursor < 10000 ; cursor++){
+    for(int cursor = 0 ; cursor < 1000 ; cursor++){
         int* item = memory_alloc(sizeof(int));
         *item = cursor;
         a->add(a, item);
