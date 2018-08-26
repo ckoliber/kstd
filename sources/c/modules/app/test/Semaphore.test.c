@@ -1,10 +1,10 @@
-#include <low/processor/low/Thread.h>
 #include <low/itc/high/Semaphore.h>
 
 #include <assert.h>
+#include <low/processor/low/Thread.h>
 #include <zconf.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     Semaphore* s = arg;
 
     int result = s->wait(s, 3);
@@ -14,7 +14,7 @@ void* thread1(void* arg){
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     Semaphore* s = arg;
 
     int result = s->timewait(s, 3, 3000);
@@ -25,7 +25,7 @@ void* thread2(void* arg){
 }
 
 int main(int argc, char* argv[]) {
-    Semaphore *s = semaphore_new(2);
+    Semaphore* s = semaphore_new(2);
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();

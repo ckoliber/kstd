@@ -20,7 +20,7 @@ int rwlock_readunlock(struct RWLock* self);
 int rwlock_writeunlock(struct RWLock* self);
 
 int rwlock_readlock(struct RWLock* self) {
-    struct RWLock_* rwlock_ = (struct RWLock_ *) self;
+    struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // reader lock (first critical mutex and if first reader then lock writer mutex)
     rwlock_->critical_mutex->lock(rwlock_->critical_mutex);
@@ -33,7 +33,7 @@ int rwlock_readlock(struct RWLock* self) {
     return 0;
 }
 int rwlock_writelock(struct RWLock* self) {
-    struct RWLock_* rwlock_ = (struct RWLock_ *) self;
+    struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // lock the writer mutex
     rwlock_->writer_mutex->lock(rwlock_->writer_mutex);
@@ -41,7 +41,7 @@ int rwlock_writelock(struct RWLock* self) {
     return 0;
 }
 int rwlock_timereadlock(struct RWLock* self, long int timeout) {
-    struct RWLock_* rwlock_ = (struct RWLock_ *) self;
+    struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // set default result and current time
     int result = -1;
@@ -70,7 +70,7 @@ int rwlock_timereadlock(struct RWLock* self, long int timeout) {
     return result;
 }
 int rwlock_timewritelock(struct RWLock* self, long int timeout) {
-    struct RWLock_* rwlock_ = (struct RWLock_ *) self;
+    struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // timelock the writer mutex
     int result = rwlock_->writer_mutex->timelock(rwlock_->writer_mutex, timeout);
@@ -78,7 +78,7 @@ int rwlock_timewritelock(struct RWLock* self, long int timeout) {
     return result;
 }
 int rwlock_readunlock(struct RWLock* self) {
-    struct RWLock_* rwlock_ = (struct RWLock_ *) self;
+    struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // reader unlock (first critical mutex and if last reader then unlock writer mutex)
     rwlock_->critical_mutex->lock(rwlock_->critical_mutex);
@@ -91,7 +91,7 @@ int rwlock_readunlock(struct RWLock* self) {
     return 0;
 }
 int rwlock_writeunlock(struct RWLock* self) {
-    struct RWLock_* rwlock_ = (struct RWLock_ *) self;
+    struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // unlock the writer lock
     rwlock_->writer_mutex->unlock(rwlock_->writer_mutex);
@@ -115,11 +115,11 @@ struct RWLock* rwlock_new() {
     rwlock_->critical_mutex = mutex_new();
     rwlock_->readers_count = 0;
 
-    return (struct RWLock *) rwlock_;
+    return (struct RWLock*)rwlock_;
 }
 
 void rwlock_free(struct RWLock* rwlock) {
-    struct RWLock_* rwlock_ = (struct RWLock_ *) rwlock;
+    struct RWLock_* rwlock_ = (struct RWLock_*)rwlock;
 
     // destroy internal Mutexes
     mutex_free(rwlock_->writer_mutex);

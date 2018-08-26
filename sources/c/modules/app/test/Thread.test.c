@@ -17,8 +17,8 @@ int main(int argc, char* argv[]) {
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();
 
-    t1->start(t1, thread1, (void *) 1);
-    t2->start(t2, thread2, (void *) 2);
+    t1->start(t1, thread1, (void*)1);
+    t2->start(t2, thread2, (void*)2);
 
     t1->join(t1);
     t2->join(t2);

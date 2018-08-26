@@ -17,7 +17,7 @@ int thread_id(struct Thread* self);
 int thread_stop(struct Thread* self);
 
 int thread_start(struct Thread* self, void* (*function)(void*), void* arg) {
-    struct Thread_* thread_ = (struct Thread_ *) self;
+    struct Thread_* thread_ = (struct Thread_*)self;
 
     // start internal pthread
     int result = 0;
@@ -28,7 +28,7 @@ int thread_start(struct Thread* self, void* (*function)(void*), void* arg) {
     return result;
 }
 void* thread_join(struct Thread* self) {
-    struct Thread_* thread_ = (struct Thread_ *) self;
+    struct Thread_* thread_ = (struct Thread_*)self;
 
     // join internal pthread
     void* result = NULL;
@@ -39,15 +39,15 @@ void* thread_join(struct Thread* self) {
     return result;
 }
 int thread_id(struct Thread* self) {
-    struct Thread_* thread_ = (struct Thread_ *) self;
+    struct Thread_* thread_ = (struct Thread_*)self;
 
     // get internal pthread id
-    int result = (int) thread_->id;
+    int result = (int)thread_->id;
 
     return result;
 }
 int thread_stop(struct Thread* self) {
-    struct Thread_* thread_ = (struct Thread_ *) self;
+    struct Thread_* thread_ = (struct Thread_*)self;
 
     // stop internal pthread
     pthread_cancel(thread_->id);
@@ -64,10 +64,10 @@ struct Thread* thread_new() {
     thread_->self.id = thread_id;
     thread_->self.stop = thread_stop;
 
-    return (struct Thread *) thread_;
+    return (struct Thread*)thread_;
 }
 void thread_free(struct Thread* thread) {
-    struct Thread_* thread_ = (struct Thread_ *) thread;
+    struct Thread_* thread_ = (struct Thread_*)thread;
 
     memory_free(thread_);
 }

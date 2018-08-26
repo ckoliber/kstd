@@ -1,16 +1,16 @@
-#include <low/processor/low/Thread.h>
 #include <low/dsa/Stack.h>
 
-#include <stdio.h>
 #include <io/memory/Memory.h>
+#include <low/processor/low/Thread.h>
+#include <stdio.h>
 #include <zconf.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     Stack* s = arg;
 
-    while(1){
+    while (1) {
         int* item = s->pop(s, 5000);
-        if(item == NULL){
+        if (item == NULL) {
             break;
         }
         printf("Thread 1 Remove Item = %d\n", *item);
@@ -22,10 +22,10 @@ void* thread1(void* arg){
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     Stack* s = arg;
 
-    while(s->size(s) > 0){
+    while (s->size(s) > 0) {
         int* item = s->pop(s, 0);
         printf("Thread 2 Remove Item = %d\n", *item);
         memory_free(item);
@@ -36,14 +36,13 @@ void* thread2(void* arg){
     return NULL;
 }
 
-
 int main(int argc, char* argv[]) {
     Stack* s = stack_new(2, -1, NULL);
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();
 
-    for(int cursor = 0 ; cursor < 1000 ; cursor++){
+    for (int cursor = 0; cursor < 1000; cursor++) {
         int* item = memory_alloc(sizeof(int));
         *item = cursor;
         s->push(s, item);
@@ -54,7 +53,7 @@ int main(int argc, char* argv[]) {
 
     sleep(3);
 
-    for(int cursor = 0 ; cursor < 1000 ; cursor++){
+    for (int cursor = 0; cursor < 1000; cursor++) {
         int* item = memory_alloc(sizeof(int));
         *item = cursor;
         s->push(s, item);

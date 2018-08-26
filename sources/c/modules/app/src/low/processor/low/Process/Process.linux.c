@@ -4,10 +4,10 @@
 
 #include <io/memory/Memory.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 struct Process_ {
     struct Process self;
@@ -21,7 +21,7 @@ int process_id(struct Process* self);
 int process_stop(struct Process* self);
 
 int process_start(struct Process* self, char* command) {
-    struct Process_* process_ = (struct Process_ *) self;
+    struct Process_* process_ = (struct Process_*)self;
 
     // start internal process
     int result = 0;
@@ -36,7 +36,7 @@ int process_start(struct Process* self, char* command) {
     return result;
 }
 int process_join(struct Process* self) {
-    struct Process_* process_ = (struct Process_ *) self;
+    struct Process_* process_ = (struct Process_*)self;
 
     // join internal process
     int result = 0;
@@ -45,7 +45,7 @@ int process_join(struct Process* self) {
     return result;
 }
 int process_id(struct Process* self) {
-    struct Process_* process_ = (struct Process_ *) self;
+    struct Process_* process_ = (struct Process_*)self;
 
     // get internal process id
     int result = process_->id;
@@ -53,7 +53,7 @@ int process_id(struct Process* self) {
     return result;
 }
 int process_stop(struct Process* self) {
-    struct Process_* process_ = (struct Process_ *) self;
+    struct Process_* process_ = (struct Process_*)self;
 
     // stop internal process
     kill(process_->id, SIGKILL);
@@ -70,10 +70,10 @@ struct Process* process_new() {
     process_->self.id = process_id;
     process_->self.stop = process_stop;
 
-    return (struct Process *) process_;
+    return (struct Process*)process_;
 }
 void process_free(struct Process* process) {
-    struct Process_* process_ = (struct Process_ *) process;
+    struct Process_* process_ = (struct Process_*)process;
 
     memory_free(process_);
 }

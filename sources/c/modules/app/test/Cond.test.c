@@ -1,10 +1,10 @@
-#include <low/processor/low/Thread.h>
 #include <low/itc/low/Cond.h>
 
 #include <assert.h>
+#include <low/processor/low/Thread.h>
 #include <zconf.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     Cond* c = arg;
 
     int result = c->wait(c, NULL, NULL, NULL, NULL);
@@ -14,7 +14,7 @@ void* thread1(void* arg){
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     Cond* c = arg;
 
     int result = c->timewait(c, NULL, NULL, NULL, NULL, 3000);

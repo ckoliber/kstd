@@ -204,9 +204,9 @@ void* dequeue_dequeue_blocking(struct Dequeue* self, int front, long int timeout
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on semaphore
-    if(timeout > 0){
+    if (timeout > 0) {
         dequeue_->semaphore->timewait(dequeue_->semaphore, 1, timeout);
-    }else{
+    } else {
         dequeue_->semaphore->wait(dequeue_->semaphore, 1);
     }
 

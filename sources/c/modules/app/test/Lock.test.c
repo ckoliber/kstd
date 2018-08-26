@@ -1,10 +1,10 @@
-#include <low/processor/low/Thread.h>
 #include <low/itc/high/Lock.h>
 
 #include <assert.h>
+#include <low/processor/low/Thread.h>
 #include <zconf.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     Lock* l = arg;
 
     int result = l->lock(l);
@@ -14,7 +14,7 @@ void* thread1(void* arg){
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     Lock* l = arg;
 
     int result = l->timelock(l, 3000);
@@ -25,8 +25,8 @@ void* thread2(void* arg){
 }
 
 int main(int argc, char* argv[]) {
-    Lock *l1 = lock_new();
-    Lock *l2 = lock_new();
+    Lock* l1 = lock_new();
+    Lock* l2 = lock_new();
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();

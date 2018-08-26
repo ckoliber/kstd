@@ -1,10 +1,10 @@
-#include <low/processor/low/Thread.h>
 #include <low/itc/low/Mutex.h>
 
 #include <assert.h>
+#include <low/processor/low/Thread.h>
 #include <zconf.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     Mutex* m = arg;
 
     int result = m->lock(m);
@@ -14,7 +14,7 @@ void* thread1(void* arg){
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     Mutex* m = arg;
 
     int result = m->timelock(m, 3000);
@@ -25,8 +25,8 @@ void* thread2(void* arg){
 }
 
 int main(int argc, char* argv[]) {
-    Mutex *m1 = mutex_new();
-    Mutex *m2 = mutex_new();
+    Mutex* m1 = mutex_new();
+    Mutex* m2 = mutex_new();
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();

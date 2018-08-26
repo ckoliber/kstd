@@ -14,32 +14,32 @@ void* stack_pop(struct Stack* self, long int timeout);
 void* stack_get(struct Stack* self);
 int stack_size(struct Stack* self);
 
-int stack_push(struct Stack* self, void* item){
-    struct Stack_* stack_ = (struct Stack_ *) self;
+int stack_push(struct Stack* self, void* item) {
+    struct Stack_* stack_ = (struct Stack_*)self;
 
     // Dequeue enqueue to front
     int result = stack_->dequeue->enqueue(stack_->dequeue, 1, item);
 
     return result;
 }
-void* stack_pop(struct Stack* self, long int timeout){
-    struct Stack_* stack_ = (struct Stack_ *) self;
+void* stack_pop(struct Stack* self, long int timeout) {
+    struct Stack_* stack_ = (struct Stack_*)self;
 
     // Dequeue dequeue from front
     void* result = stack_->dequeue->dequeue(stack_->dequeue, 1, timeout);
 
     return result;
 }
-void* stack_get(struct Stack* self){
-    struct Stack_* stack_ = (struct Stack_ *) self;
+void* stack_get(struct Stack* self) {
+    struct Stack_* stack_ = (struct Stack_*)self;
 
     // Dequeue get from front
     void* result = stack_->dequeue->get(stack_->dequeue, 1);
 
     return result;
 }
-int stack_size(struct Stack* self){
-    struct Stack_* stack_ = (struct Stack_ *) self;
+int stack_size(struct Stack* self) {
+    struct Stack_* stack_ = (struct Stack_*)self;
 
     // Dequeue get size
     int result = stack_->dequeue->size(stack_->dequeue);
@@ -59,10 +59,10 @@ struct Stack* stack_new(int mode, int max, int (*comperator)(void*, void*)) {
     // init internal Dequeue
     stack_->dequeue = dequeue_new(mode, max, comperator);
 
-    return (struct Stack *) stack_;
+    return (struct Stack*)stack_;
 }
 void stack_free(struct Stack* stack) {
-    struct Stack_* stack_ = (struct Stack_ *) stack;
+    struct Stack_* stack_ = (struct Stack_*)stack;
 
     // destroy internal Dequeue
     dequeue_free(stack_->dequeue);

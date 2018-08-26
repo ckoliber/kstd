@@ -17,7 +17,7 @@ int mutex_timelock(struct Mutex* self, long int timeout);
 int mutex_unlock(struct Mutex* self);
 
 int mutex_lock(struct Mutex* self) {
-    struct Mutex_* mutex_ = (struct Mutex_ *) self;
+    struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // lock the pthread mutex
     pthread_mutex_lock(&(mutex_->mutex));
@@ -25,14 +25,13 @@ int mutex_lock(struct Mutex* self) {
     return 0;
 }
 int mutex_timelock(struct Mutex* self, long int timeout) {
-    struct Mutex_* mutex_ = (struct Mutex_ *) self;
+    struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // get start time
     long int time = time_epochmillis();
 
     // try lock until timeout
     while ((time_epochmillis() - time) <= timeout) {
-
         if (pthread_mutex_trylock(&(mutex_->mutex)) == 0) {
             return 0;
         }
@@ -41,7 +40,7 @@ int mutex_timelock(struct Mutex* self, long int timeout) {
     return -1;
 }
 int mutex_unlock(struct Mutex* self) {
-    struct Mutex_* mutex_ = (struct Mutex_ *) self;
+    struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // lock the pthread mutex
     pthread_mutex_unlock(&(mutex_->mutex));
@@ -60,10 +59,10 @@ struct Mutex* mutex_new() {
     // init internal mutex
     pthread_mutex_init(&(mutex_->mutex), NULL);
 
-    return (struct Mutex *) mutex_;
+    return (struct Mutex*)mutex_;
 }
 void mutex_free(struct Mutex* mutex) {
-    struct Mutex_* mutex_ = (struct Mutex_ *) mutex;
+    struct Mutex_* mutex_ = (struct Mutex_*)mutex;
 
     // destry internal mutex
     pthread_mutex_destroy(&(mutex_->mutex));

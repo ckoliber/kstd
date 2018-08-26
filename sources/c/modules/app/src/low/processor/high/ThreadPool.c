@@ -14,12 +14,12 @@ struct ThreadPool_ {
     int size;
 };
 
-struct ThreadItem{
+struct ThreadItem {
     void (*function)(void* arg);
     void* arg;
 };
 
-struct ThreadArg{
+struct ThreadArg {
     struct ThreadPool_* pool;
     int index;
 };
@@ -30,11 +30,11 @@ int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg)
 int threadpool_stop(struct ThreadPool* self, int force);
 
 // local methods
-void* thread_loop(void* arg){
+void* thread_loop(void* arg) {
     struct ThreadArg* threadarg = arg;
 
     // thread loop
-    while(threadarg->pool->signal[threadarg->index]){
+    while (threadarg->pool->signal[threadarg->index]) {
         struct ThreadItem* item = threadarg->pool->queue->dequeue(threadarg->pool->queue, -1);
         item->function(item->arg);
         memory_free(item);
@@ -50,11 +50,11 @@ void* thread_loop(void* arg){
 }
 
 int threadpool_start(struct ThreadPool* self) {
-    struct ThreadPool_* threadpool_ = (struct ThreadPool_ *) self;
+    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // start all of the threads
     int result = 0;
-    for(int cursor = 0 ; cursor < threadpool_->size ; cursor++){
+    for (int cursor = 0; cursor < threadpool_->size; cursor++) {
         // create arg
         struct ThreadArg* arg = memory_alloc(sizeof(struct ThreadArg));
         arg->pool = threadpool_;
@@ -62,7 +62,7 @@ int threadpool_start(struct ThreadPool* self) {
 
         // start thread
         threadpool_->signal[cursor] = 1;
-        if(threadpool_->pool[cursor]->start(threadpool_->pool[cursor], thread_loop, arg) != 0){
+        if (threadpool_->pool[cursor]->start(threadpool_->pool[cursor], thread_loop, arg) != 0) {
             result = -1;
             break;
         }
@@ -71,7 +71,7 @@ int threadpool_start(struct ThreadPool* self) {
     return result;
 }
 int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg) {
-    struct ThreadPool_* threadpool_ = (struct ThreadPool_ *) self;
+    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // allocate threaditem
     struct ThreadItem* threaditem = memory_alloc(sizeof(struct ThreadItem));
@@ -84,14 +84,14 @@ int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg)
     return result;
 }
 int threadpool_stop(struct ThreadPool* self, int force) {
-    struct ThreadPool_* threadpool_ = (struct ThreadPool_ *) self;
+    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // stop all of the threads
     int result = 0;
-    for(int cursor = 0 ; cursor < threadpool_->size ; cursor++){
+    for (int cursor = 0; cursor < threadpool_->size; cursor++) {
         threadpool_->signal[cursor] = 0;
-        if(force){
-            if(threadpool_->pool[cursor]->stop(threadpool_->pool[cursor]) != 0){
+        if (force) {
+            if (threadpool_->pool[cursor]->stop(threadpool_->pool[cursor]) != 0) {
                 result = -1;
                 break;
             }
@@ -99,7 +99,7 @@ int threadpool_stop(struct ThreadPool* self, int force) {
     }
 
     // wait for exiting
-    if(!force){
+    if (!force) {
         threadpool_->semaphore->wait(threadpool_->semaphore, threadpool_->size);
     }
 
@@ -120,17 +120,17 @@ struct ThreadPool* threadpool_new(int size) {
     threadpool_->pool = memory_alloc(size * sizeof(struct Thread*));
     threadpool_->signal = memory_alloc(size * sizeof(int));
     threadpool_->size = size;
-    for(int cursor = 0 ; cursor < size ; cursor++){
+    for (int cursor = 0; cursor < size; cursor++) {
         threadpool_->pool[cursor] = thread_new();
     }
 
-    return (struct ThreadPool *) threadpool_;
+    return (struct ThreadPool*)threadpool_;
 }
 void threadpool_free(struct ThreadPool* threadpool) {
-    struct ThreadPool_* threadpool_ = (struct ThreadPool_ *) threadpool;
+    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)threadpool;
 
     // destroy internal queue and threads
-    for(int cursor = 0 ; cursor < threadpool_->size; cursor++){
+    for (int cursor = 0; cursor < threadpool_->size; cursor++) {
         thread_free(threadpool_->pool[cursor]);
     }
     memory_free(threadpool_->pool);

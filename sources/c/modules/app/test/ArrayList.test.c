@@ -1,55 +1,55 @@
-#include <low/processor/low/Thread.h>
 #include <low/dsa/ArrayList.h>
 
-#include <stdio.h>
 #include <io/memory/Memory.h>
+#include <low/processor/low/Thread.h>
+#include <stdio.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     ArrayList* a = arg;
 
-    while(a->size(a) > 0){
+    while (a->size(a) > 0) {
         int* item = a->remove(a, 0);
         printf("Thread 1 Remove Item = %d\n", *item);
         memory_free(item);
     }
 
-//    assert(result == 0);
+    //    assert(result == 0);
 
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     ArrayList* a = arg;
 
-    while(a->size(a) > 0){
+    while (a->size(a) > 0) {
         int* item = a->remove(a, 0);
         printf("Thread 2 Remove Item = %d\n", *item);
         memory_free(item);
     }
 
-//    assert(result == 0);
+    //    assert(result == 0);
 
     return NULL;
 }
 
-void* thread3(void* arg){
+void* thread3(void* arg) {
     ArrayList* a = arg;
 
-    while(a->size(a) > 0){
+    while (a->size(a) > 0) {
         int* item = a->remove(a, 0);
         printf("Thread 3 Remove Item = %d\n", *item);
         memory_free(item);
     }
 
-//    assert(result == 0);
+    //    assert(result == 0);
 
     return NULL;
 }
 
-void* thread4(void* arg){
+void* thread4(void* arg) {
     ArrayList* a = arg;
 
-    while(a->size(a) > 0){
+    while (a->size(a) > 0) {
         int* item = a->remove(a, 0);
         printf("Thread 4 Remove Item = %d\n", *item);
         memory_free(item);
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
     Thread* t3 = thread_new();
     Thread* t4 = thread_new();
 
-    for(int cursor = 0 ; cursor < 1000 ; cursor++){
+    for (int cursor = 0; cursor < 1000; cursor++) {
         int* item = memory_alloc(sizeof(int));
         *item = cursor;
         a->add(a, item);

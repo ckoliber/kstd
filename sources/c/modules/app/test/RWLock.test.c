@@ -1,10 +1,10 @@
-#include <low/processor/low/Thread.h>
 #include <low/itc/high/RWLock.h>
 
 #include <assert.h>
+#include <low/processor/low/Thread.h>
 #include <zconf.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     RWLock* rw = arg;
 
     int result = rw->readlock(rw);
@@ -16,7 +16,7 @@ void* thread1(void* arg){
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     RWLock* rw = arg;
 
     int result = rw->timereadlock(rw, 3000);
@@ -28,7 +28,7 @@ void* thread2(void* arg){
     return NULL;
 }
 
-void* thread3(void* arg){
+void* thread3(void* arg) {
     RWLock* rw = arg;
 
     int result = rw->writelock(rw);
@@ -38,7 +38,7 @@ void* thread3(void* arg){
     return NULL;
 }
 
-void* thread4(void* arg){
+void* thread4(void* arg) {
     RWLock* rw = arg;
 
     int result = rw->timewritelock(rw, 3000);
@@ -49,7 +49,7 @@ void* thread4(void* arg){
 }
 
 int main(int argc, char* argv[]) {
-    RWLock *rw = rwlock_new();
+    RWLock* rw = rwlock_new();
 
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();

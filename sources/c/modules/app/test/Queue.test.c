@@ -1,16 +1,16 @@
-#include <low/processor/low/Thread.h>
 #include <low/dsa/Queue.h>
 
-#include <stdio.h>
 #include <io/memory/Memory.h>
+#include <low/processor/low/Thread.h>
+#include <stdio.h>
 #include <zconf.h>
 
-void* thread1(void* arg){
+void* thread1(void* arg) {
     Queue* q = arg;
 
-    while(1){
+    while (1) {
         int* item = q->dequeue(q, 5000);
-        if(item == NULL){
+        if (item == NULL) {
             break;
         }
         printf("Thread 1 Remove Item = %d\n", *item);
@@ -22,10 +22,10 @@ void* thread1(void* arg){
     return NULL;
 }
 
-void* thread2(void* arg){
+void* thread2(void* arg) {
     Queue* q = arg;
 
-    while(q->size(q) > 0){
+    while (q->size(q) > 0) {
         int* item = q->dequeue(q, 5000);
         printf("Thread 2 Remove Item = %d\n", *item);
         memory_free(item);
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     Thread* t1 = thread_new();
     Thread* t2 = thread_new();
 
-    for(int cursor = 0 ; cursor < 100 ; cursor++){
+    for (int cursor = 0; cursor < 100; cursor++) {
         int* item = memory_alloc(sizeof(int));
         *item = cursor;
         q->enqueue(q, item);
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 
     sleep(3);
 
-    for(int cursor = 0 ; cursor < 10000 ; cursor++){
+    for (int cursor = 0; cursor < 10000; cursor++) {
         int* item = memory_alloc(sizeof(int));
         *item = cursor;
         q->enqueue(q, item);
