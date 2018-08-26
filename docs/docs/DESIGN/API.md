@@ -18,7 +18,7 @@
     ```c
     struct Mutex{
         int lock();
-        int timelock(int timeout);
+        int timelock(long int timeout);
         int unlock();
     }
     ```
@@ -30,14 +30,16 @@
 * __Struct__:
     ```c
     struct Cond{
-        int wait();
-        int timewait(int timeout);
-        int signal();
-        int broadcast();
+        int wait(int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2);
+        int timewait(int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2, long int timeout);
+        int signal(void (*critical)(void*), void* arg);
+        int broadcast(void (*critical)(void*), void* arg);
     }
     ```
 * __Function__: `Cond* cond_new()`
 * __Function__: `void cond_free(Cond* cond)`
+* __Comment__: `condition`-> loop on the wait inner lock
+* __Comment__: `critical`-> run function after wait and signal inner lock
 
 ##### High
 
@@ -47,7 +49,7 @@
     ```c
     struct Lock{
         int lock();
-        int timelock(int timeout);
+        int timelock(long int timeout);
         int unlock();
     }
     ```
@@ -58,11 +60,11 @@
 
 * __Struct__:
     ```c
-    struct Lock{
+    struct RWLock{
         int readlock();
         int writelock();
-        int timereadlock(int timeout);
-        int timewritelock(int timeout);
+        int timereadlock(long int timeout);
+        int timewritelock(long int timeout);
         int readunlock();
         int writeunlock();
     }
@@ -75,9 +77,9 @@
 * __Struct__:
     ```c
     struct Semaphore{
-        int wait();
-        int timewait(int timeout);
-        int post();
+        int wait(int count);
+        int timewait(int count, long int timeout);
+        int post(int count);
         int get();
     }
     ```
@@ -109,7 +111,7 @@ _________________________________________
 * __Struct__:
     ```c
     struct Thread{
-        int start(void (*function)(void* arg), void* arg);
+        int start(void (*function)(void*), void* arg);
         int join();
         int id();
         int stop();
@@ -124,6 +126,7 @@ _________________________________________
     ```c
     struct Process{
         int start(char* command);
+        int join();
         int id();
         int stop();
     }
@@ -139,8 +142,8 @@ _________________________________________
     ```c
     struct ThreadPool{
         int start();
-        int post(void (*function)(void* arg), void* arg);
-        int stop();
+        int post(void (*function)(void*), void* arg);
+        int stop(int force);
     }
     ```
 * __Function__: `ThreadPool* threadpool_new(int size)`
@@ -186,6 +189,7 @@ _________________________________________
     ```c
     struct ArrayList{
         int add(void *item);
+        int addto(int position, void *item);
         void* put(int position, void *item);
         void* remove(int position);
         void* get(int position);
@@ -193,8 +197,9 @@ _________________________________________
         int size();
     }
     ```
-* __Function__: `ArrayList* arraylist_new(int concurrent, float factor, int (*comperator)(void* item1, void* itme2))`
+* __Function__: `ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*, void*))`
 * __Function__: `void arraylist_free(ArrayList* arraylist)`
+* __Comment__: `mode`-> 0 = normal, 1 = concurrent
 
 ##### LinkedList
 
@@ -205,6 +210,7 @@ _________________________________________
     ```c
     struct LinkedList{
         int add(void *item);
+        int addto(int position, void *item);
         void* put(int position, void *item);
         void* remove(int position);
         void* get(int position);
@@ -212,8 +218,27 @@ _________________________________________
         int size();
     }
     ```
-* __Function__: `LinkedList* linkedlist_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
+* __Function__: `LinkedList* linkedlist_new(int mode, int (*comperator)(void*, void*))`
 * __Function__: `void linkedlist_free(LinkedList* linkedlist)`
+* __Comment__: `mode`-> 0 = normal, 1 = concurrent
+
+##### Dequeue
+
+* __blocking, concurrent, normal__
+
+* __Struct__:
+    ```c
+    struct Dequeue{
+        int enqueue(int front, void* item);
+        void* dequeue(int front, long int timeout);
+        void* get(int front);
+        int size();
+    }
+    ```
+* if `comperator` is not `NULL` queue is a `PriorityDequeue`
+* __Function__: `Dequeue* dequeue_new(int mode, int (*comperator)(void*, void*))`
+* __Function__: `void dequeue_free(Dequeue* dequeue)`
+* __Comment__: `mode`-> 0 = normal, 1 = concurrent, 2 = blocking
 
 ##### Queue
 
@@ -222,16 +247,16 @@ _________________________________________
 * __Struct__:
     ```c
     struct Queue{
-        int enqueue(int front, void* item);
-        void* dequeue(int front);
-        void* blockdequeue(int front);
-        void* timeblockdequeue(int front, int timeout);
+        int enqueue(void* item);
+        void* dequeue(long int timeout);
+        void* get();
         int size();
     }
     ```
 * if `comperator` is not `NULL` queue is a `PriorityQueue`
-* __Function__: `Queue* queue_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
+* __Function__: `Queue* queue_new(int mode, int (*comperator)(void*, void*))`
 * __Function__: `void queue_free(Queue* queue)`
+* __Comment__: `mode`-> 0 = normal, 1 = concurrent, 2 = blocking
 
 ##### Stack
 
@@ -242,14 +267,14 @@ _________________________________________
     struct Stack{
         int push(void* item);
         void* pop();
-        void* blockpop();
-        void* timeblockpop(int timeout);
+        void* get();
         int size();
     }
     ```
 * if `comperator` is not `NULL` stack is a `PriorityStack`
 * __Function__: `Stack* stack_new(int concurrent, int (*comperator)(void* item1, void* itme2))`
 * __Function__: `void stack_free(Stack* stack)`
+* __Comment__: `mode`-> 0 = normal, 1 = concurrent, 2 = blocking
 
 ##### Set
 
@@ -320,27 +345,33 @@ _________________________________________
 
 > Standard File Read and Write and Poll
 
-##### FD
+##### File
 
-* __get fd from `stdio`, `memory`, `socket`, `file`__
+* __get fd from `stdio`, `memory`, `socket`, `file`, `dir`, `pipe`__
 * __control (fcntl) operators: `nonblock`, `block`__
 
 * __Struct__:
     ```c
-    struct FD{
-        int openfile(char* path);
-        int opensocket(char* host, int port);
-        FD* accept();
-        int read(void* data, int size);
+    struct File{
+        int read(void** data, int size);
         int write(void* data, int size);
-        int control(int nonblock);
-        int close();
-        int file(char* path);
-        int socket(char* host, int* port);
+        int flush();
+        int wait();
+        int cancel();
+
+        
     }
     ```
-* __Function__: `FD* fd_new()`
-* __Function__: `void fd_free(FD* fd)`
+* __Function__: `File* file_new(char* uri)`
+* __Function__: `void file_free(File* file)`
+* __Comment__: `uri` ->
+    1. `file://{path}`
+    2. `pipe://{name}`
+    3. `socket://{host}:{port}`
+    4. `socket://{backlog}:{host}:{port}`
+    5. `std://input`
+    6. `std://output`
+    7. `std://error`
 
 ##### Poller
 
