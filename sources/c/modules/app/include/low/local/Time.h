@@ -1,2 +1,3 @@
-long int time_epochmillis();
+#include <io/memory/Type.h>
 
+UnsignedLong time_epochmillis();

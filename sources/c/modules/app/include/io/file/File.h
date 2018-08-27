@@ -16,7 +16,6 @@ typedef struct File {
     struct File* (*accept)(struct File* self);
 } File;
 
-
 // file://{path}
 // dir://{path}
 // std://input

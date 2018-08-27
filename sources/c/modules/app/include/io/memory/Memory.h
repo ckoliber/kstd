@@ -1,8 +1,6 @@
-#if !defined(NULL)
-#define NULL ((void*)0)
-#endif
+#include <io/memory/Type.h>
 
-void* memory_alloc(int size);
-void* memory_calloc(int count, int size);
-void* memory_realloc(void* address, int size);
-void memory_free(void* address);
+Void* memory_alloc(Size size);
+Void* memory_calloc(UnsignedInt count, Size size);
+Void* memory_realloc(Void* address, Size size);
+Void memory_free(Void* address);
