@@ -9,12 +9,12 @@ struct Stack_ {
 };
 
 // link methods
-int stack_push(struct Stack* self, void* item);
+int stack_push(struct Stack* self, long int timeout, void* item);
 void* stack_pop(struct Stack* self, long int timeout);
 void* stack_get(struct Stack* self);
 int stack_size(struct Stack* self);
 
-int stack_push(struct Stack* self, void* item) {
+int stack_push(struct Stack* self, long int timeout, void* item) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // Dequeue enqueue to front

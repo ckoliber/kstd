@@ -1,5 +1,5 @@
 typedef struct Stack {
-    int (*push)(struct Stack* self, void* item);
+    int (*push)(struct Stack* self, long int timeout, void* item);
     void* (*pop)(struct Stack* self, long int timeout);
     void* (*get)(struct Stack* self);
     int (*size)(struct Stack* self);

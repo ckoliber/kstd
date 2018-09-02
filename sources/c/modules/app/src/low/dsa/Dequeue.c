@@ -10,7 +10,8 @@ struct Dequeue_ {
     int size;
     int max;
     struct RWLock* rwlock;
-    struct Semaphore* semaphore;
+    struct Semaphore* empty_semaphore;
+    struct Semaphore* full_semaphore;
     int (*comperator)(void* item1, void* item2);
 };
 
@@ -21,17 +22,17 @@ struct DequeueItem {
 };
 
 // link methods
-int dequeue_enqueue_normal(struct Dequeue* self, int front, void* item);
+int dequeue_enqueue_normal(struct Dequeue* self, int front, long int timeout, void* item);
 void* dequeue_dequeue_normal(struct Dequeue* self, int front, long int timeout);
 void* dequeue_get_normal(struct Dequeue* self, int front);
 int dequeue_size_normal(struct Dequeue* self);
 
-int dequeue_enqueue_concurrent(struct Dequeue* self, int front, void* item);
+int dequeue_enqueue_concurrent(struct Dequeue* self, int front, long int timeout, void* item);
 void* dequeue_dequeue_concurrent(struct Dequeue* self, int front, long int timeout);
 void* dequeue_get_concurrent(struct Dequeue* self, int front);
 int dequeue_size_concurrent(struct Dequeue* self);
 
-int dequeue_enqueue_blocking(struct Dequeue* self, int front, void* item);
+int dequeue_enqueue_blocking(struct Dequeue* self, int front, long int timeout, void* item);
 void* dequeue_dequeue_blocking(struct Dequeue* self, int front, long int timeout);
 void* dequeue_get_blocking(struct Dequeue* self, int front);
 int dequeue_size_blocking(struct Dequeue* self);
@@ -63,7 +64,7 @@ struct DequeueItem* dequeueitem_get(struct Dequeue* dequeue, int front, void* it
     return result;
 }
 
-int dequeue_enqueue_normal(struct Dequeue* self, int front, void* item) {
+int dequeue_enqueue_normal(struct Dequeue* self, int front, long int timeout, void* item) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // check dequeue is full
@@ -132,7 +133,7 @@ int dequeue_size_normal(struct Dequeue* self) {
     return result;
 }
 
-int dequeue_enqueue_concurrent(struct Dequeue* self, int front, void* item) {
+int dequeue_enqueue_concurrent(struct Dequeue* self, int front, long int timeout, void* item) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
@@ -189,29 +190,43 @@ int dequeue_size_concurrent(struct Dequeue* self) {
     return result;
 }
 
-int dequeue_enqueue_blocking(struct Dequeue* self, int front, void* item) {
+int dequeue_enqueue_blocking(struct Dequeue* self, int front, long int timeout, void* item) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
+
+    // wait on full semaphore
+    if (dequeue_->full_semaphore != NULL) {
+        if (timeout > 0) {
+            dequeue_->full_semaphore->timewait(dequeue_->full_semaphore, 1, timeout);
+        } else {
+            dequeue_->full_semaphore->wait(dequeue_->full_semaphore, 1);
+        }
+    }
 
     // concurrent enqueue
     int result = dequeue_enqueue_concurrent(self, front, item);
 
-    // signal on semaphore
-    dequeue_->semaphore->post(dequeue_->semaphore, 1);
+    // signal on empty semaphore
+    dequeue_->empty_semaphore->post(dequeue_->empty_semaphore, 1);
 
     return result;
 }
 void* dequeue_dequeue_blocking(struct Dequeue* self, int front, long int timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
-    // wait on semaphore
+    // wait on empty semaphore
     if (timeout > 0) {
-        dequeue_->semaphore->timewait(dequeue_->semaphore, 1, timeout);
+        dequeue_->empty_semaphore->timewait(dequeue_->empty_semaphore, 1, timeout);
     } else {
-        dequeue_->semaphore->wait(dequeue_->semaphore, 1);
+        dequeue_->empty_semaphore->wait(dequeue_->empty_semaphore, 1);
     }
 
     // concurrent dequeue
     void* result = dequeue_dequeue_concurrent(self, front, timeout);
+
+    // signal on full semaphore
+    if (dequeue_->full_semaphore != NULL) {
+        dequeue_->full_semaphore->post(dequeue_->full_semaphore, 1);
+    }
 
     return result;
 }
@@ -239,7 +254,8 @@ struct Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) 
             dequeue_->self.get = dequeue_get_normal;
             dequeue_->self.size = dequeue_size_normal;
             dequeue_->rwlock = NULL;
-            dequeue_->semaphore = NULL;
+            dequeue_->empty_semaphore = NULL;
+            dequeue_->full_semaphore = NULL;
             break;
         case 1:
             dequeue_->self.enqueue = dequeue_enqueue_concurrent;
@@ -247,7 +263,8 @@ struct Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) 
             dequeue_->self.get = dequeue_get_concurrent;
             dequeue_->self.size = dequeue_size_concurrent;
             dequeue_->rwlock = rwlock_new();
-            dequeue_->semaphore = NULL;
+            dequeue_->empty_semaphore = NULL;
+            dequeue_->full_semaphore = NULL;
             break;
         case 2:
             dequeue_->self.enqueue = dequeue_enqueue_blocking;
@@ -255,7 +272,12 @@ struct Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) 
             dequeue_->self.get = dequeue_get_blocking;
             dequeue_->self.size = dequeue_size_blocking;
             dequeue_->rwlock = rwlock_new();
-            dequeue_->semaphore = semaphore_new(0);
+            dequeue_->empty_semaphore = semaphore_new(0);
+            if (max > 0) {
+                dequeue_->full_semaphore = semaphore_new(max);
+            } else {
+                dequeue_->full_semaphore = NULL;
+            }
             break;
     }
 
@@ -289,9 +311,12 @@ void dequeue_free(struct Dequeue* dequeue) {
         rwlock_free(dequeue_->rwlock);
     }
 
-    // destroy internal semaphore
-    if (dequeue_->semaphore != NULL) {
-        semaphore_free(dequeue_->semaphore);
+    // destroy internal semaphores
+    if (dequeue_->empty_semaphore != NULL) {
+        semaphore_free(dequeue_->empty_semaphore);
+    }
+    if (dequeue_->full_semaphore != NULL) {
+        semaphore_free(dequeue_->full_semaphore);
     }
 
     memory_free(dequeue_);

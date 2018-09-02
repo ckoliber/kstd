@@ -9,16 +9,16 @@ struct Queue_ {
 };
 
 // link methods
-int queue_enqueue(struct Queue* self, void* item);
+int queue_enqueue(struct Queue* self, long int timeout, void* item);
 void* queue_dequeue(struct Queue* self, long int timeout);
 void* queue_get(struct Queue* self);
 int queue_size(struct Queue* self);
 
-int queue_enqueue(struct Queue* self, void* item) {
+int queue_enqueue(struct Queue* self, long int timeout, void* item) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // Dequeue enqueue to front
-    int result = queue_->dequeue->enqueue(queue_->dequeue, 1, item);
+    int result = queue_->dequeue->enqueue(queue_->dequeue, 1, timeout, item);
 
     return result;
 }

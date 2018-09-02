@@ -1,9 +1,8 @@
-#ifdef __unix__
+#ifdef __WIN32
 
 #include <io/memory/Memory.h>
 
-#include <memory.h>
-#include <stdlib.h>
+#include <windows.h>
 
 Void* memory_alloc(Size size) {
     Void* result = NULL;

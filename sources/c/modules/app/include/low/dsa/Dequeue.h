@@ -1,5 +1,5 @@
 typedef struct Dequeue {
-    int (*enqueue)(struct Dequeue* self, int front, void* item);
+    int (*enqueue)(struct Dequeue* self, int front, long int timeout, void* item);
     void* (*dequeue)(struct Dequeue* self, int front, long int timeout);
     void* (*get)(struct Dequeue* self, int front);
     int (*size)(struct Dequeue* self);

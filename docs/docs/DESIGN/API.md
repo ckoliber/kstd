@@ -2,6 +2,287 @@
 
 ## Library API
 
+
+
+### Memory
+
+#### Low
+
+1. __Type__ -> `0.1.0` (regex => `0.2.0`)
+    * __cross platform :__
+        * 
+    * __Function__: `void* memory_alloc(int size)`
+    * __Function__: `void* memory_realloc(void* address, int size)`
+    * __Function__: `void memory_free(void* address)`
+2. __Heap__ -> `0.1.0`
+    * __cross platform `alloc`, `realloc`, `free`__
+    * __Function__: `void* memory_alloc(int size)`
+    * __Function__: `void* memory_realloc(void* address, int size)`
+    * __Function__: `void memory_free(void* address)`
+3. __Share__ -> `0.1.0`
+
+____________________________________________________
+
+### File
+
+#### Low
+
+1. __File__ -> `0.1.0` (regex => `0.2.0`)
+2. __Poller__ -> `0.1.0`
+
+____________________________________________________
+
+### IPC
+
+#### Low
+
+1. __Mutex__ -> `0.1.0`
+2. __Condition__ -> `0.1.0`
+3. __Semaphore__ -> `0.1.0`
+
+#### High
+
+1. __Lock__ -> `0.1.0`
+2. __RWLock__ -> `0.1.0`
+3. __MessageQueue__ -> `0.1.0`
+4. __Monitor__ -> `0.2.0`
+5. __Barrier__ -> `0.2.0`
+6. __Latch__ -> `0.2.0`
+
+____________________________________________________
+
+### DSA
+
+#### High
+
+1. __ArrayList__ -> `0.1.0`
+2. __LinkedList__ -> `0.1.0`
+3. __Dequeue__ -> `0.1.0`
+4. __Queue__ -> `0.1.0`
+5. __Stack__ -> `0.1.0`
+6. __Set__ -> `0.2.0`
+7. __Hash__ -> `0.2.0`
+
+____________________________________________________
+
+### Processor
+
+#### Low
+
+1. __Thread__ -> `0.1.0`
+2. __Process__ -> `0.1.0`
+
+#### High
+
+1. __ThreadPool__ -> `0.1.0`
+2. __ProcessPool__ -> `0.1.0`
+
+____________________________________________________
+
+### Local
+
+#### Low
+
+1. __Time__ -> `0.3.0`
+2. __Date__ -> `0.3.0`
+3. __Locale__ -> `0.3.0`
+
+____________________________________________________
+
+### Net
+
+#### Low
+
+1. __TCP__ -> `0.4.0`
+2. __UDP__ -> `0.4.0`
+3. __TLS__ -> `0.5.0`
+
+#### High
+
+1. __HTTP__ -> `0.6.0`
+2. __WS__ -> `0.6.0`
+3. __SSE__ -> `0.6.0`
+
+____________________________________________________
+
+### Security
+
+1. __High__ -> `0.5.0`
+
+____________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Memory
+
+#### Low
+
+##### Type
+
+##### Heap
+
+##### Share
+
+________________________________
+
+### File
+
+#### Low
+
+##### File
+
+##### Poller
+
+________________________________
+
+### IPC
+
+#### Low
+
+##### Mutex
+
+* __Struct__:
+    ```c
+    struct Mutex{
+        SignedByte lock();
+        SignedByte timelock(UnsignedLong timeout);
+        SignedByte unlock();
+    }
+    ```
+* __Function__: `Mutex* mutex_new(Bool share, String name)`
+* __Function__: `Void mutex_free(Mutex* mutex, Bool destroy)`
+* __Comment__: `share`-> `false`: inter process, `true`: intra process
+* __Comment__: `name`-> `NULL`: intra process -> anonymous, `name`: intra process -> named
+* __Comment__: `destroy`-> `false`: 
+
+##### Cond
+
+* __Struct__:
+    ```c
+    struct Cond{
+        SignedByte wait(SignedByte (*condition)(Void*), Void* arg1, Void (*critical)(Void*), Void* arg2);
+        SignedByte timewait(SignedByte (*condition)(Void*), Void* arg1, Void (*critical)(Void*), Void* arg2, UnsignedLong timeout);
+        SignedByte signal(Void (*critical)(Void*), Void* arg);
+        SignedByte broadcast(Void (*critical)(Void*), Void* arg);
+    }
+    ```
+* __Function__: `Cond* cond_new(String name)`
+* __Function__: `void cond_free(Cond* cond, Bool destroy)`
+* __Comment__: `condition`-> loop on the wait inner lock
+* __Comment__: `critical`-> run function after wait and signal inner lock
+
+#### High
+
+##### Lock
+
+##### RWLock
+
+##### Semaphore
+
+##### Monitor
+
+##### Barrier
+
+##### Latch
+
+________________________________
+
+### DSA
+
+#### High
+
+##### ArrayList
+
+##### LinkedList
+
+##### Dequeue
+
+##### Queue
+
+##### Stack
+
+##### Set
+
+##### Hash
+
+________________________________
+
+### Processor
+
+#### Low
+
+##### Thread
+
+##### Process
+
+#### High
+
+##### ThreadPool
+
+##### ProcessPool
+
+________________________________
+
+### Local
+
+#### Low
+
+##### Time
+
+##### Date
+
+##### Locale
+
+________________________________
+
+### Net
+
+#### Low
+
+##### TCP
+
+##### UDP
+
+##### TLS
+
+#### High
+
+##### HTTP
+
+##### WS
+
+##### SSE
+
+________________________________
+
+### Security
+
+#### High
+
+________________________________
+
+
+
 ### Low
 
 > Low level important libraries over OS and Hardware

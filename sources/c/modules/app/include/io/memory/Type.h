@@ -110,16 +110,19 @@ typedef uint_least64_t LeastUnsignedLong;
 #define LEAST_UNSIGNED_LONG_MAX UINT_LEAST64_MAX
 #define LEAST_UNSIGNED_LONG_MIN 0
 
-/*--------------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------------*/
-/*-----------Void and Boolean and Size and Float and Double and LongDouble----------*/
-/*--------------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------*/
+/*---------Void and Boolean and Size and Float and Double and LongDouble and String----------*/
+/*-------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------*/
 typedef void Void;
 typedef bool Bool;
 typedef size_t Size;
 typedef float Float;
 typedef double Double;
 typedef long double LongDouble;
+typedef char* String;
 
 #endif
+
+// string functions
