@@ -1,8 +1,9 @@
+#include <memory/low/Type.h>
+
 typedef struct Mutex {
-    int (*lock)(struct Mutex* self);
-    int (*timelock)(struct Mutex* self, long int timeout);
-    int (*unlock)(struct Mutex* self);
+    SignedInt acquire(struct Mutex* self, UnsignedLong timeout);
+    SignedInt release(struct Mutex* self);
 } Mutex;
 
-struct Mutex* mutex_new();
-void mutex_free(struct Mutex* mutex);
+Mutex* mutex_new(Char* name);
+Void mutex_free(Mutex* mutex);

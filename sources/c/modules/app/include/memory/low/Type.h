@@ -1,4 +1,6 @@
-#if defined(_WIN32) || defined(_WIN64) || defined(__WINDOWS__)
+#include <app.h>
+
+#if defined(APP_WINDOWS)
 #error Windows_OS
 #else
 
@@ -6,10 +8,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#if !defined(NULL)
-#define NULL ((void*)0)
-#endif
 
 /*----------------------------------------------*/
 /*----------------------------------------------*/
@@ -110,19 +108,62 @@ typedef uint_least64_t LeastUnsignedLong;
 #define LEAST_UNSIGNED_LONG_MAX UINT_LEAST64_MAX
 #define LEAST_UNSIGNED_LONG_MIN 0
 
-/*-------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------*/
-/*---------Void and Boolean and Size and Float and Double and LongDouble and String----------*/
-/*-------------------------------------------------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------*/
+/*---------Void and Bool and Char and Size and Float and Double and LongDouble----------*/
+/*--------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------------*/
 typedef void Void;
 typedef bool Bool;
+typedef char Char;
 typedef size_t Size;
 typedef float Float;
 typedef double Double;
 typedef long double LongDouble;
-typedef char* String;
 
 #endif
 
 // string functions
+
+typedef struct String {
+    // convert operators
+    SignedByte (*to_byte)(struct String* self);
+    SignedShort (*to_short)(struct String* self);
+    SignedInt (*to_int)(struct String* self);
+    SignedLong (*to_long)(struct String* self);
+    Float (*to_float)(struct String* self);
+    Double (*to_double)(struct String* self);
+    LongDouble (*to_longdouble)(struct String* self);
+
+    // change value operators
+    SignedInt (*lower)(struct String* self);
+    SignedInt (*upper)(struct String* self);
+    SignedInt (*reverse)(struct String* self);
+    SignedInt (*concat)(struct String* self, Char* data);
+    SignedInt (*set)(struct String* self, UnsignedInt from, UnsignedInt count, Char data);
+    SignedInt (*copy)(struct String* self, UnsignedInt from, UnsignedInt count, Char* data);
+
+    // information operators
+    SignedInt (*length)(struct String* self);
+    SignedInt (*compare)(struct String* self, Char* data);
+    Char* (*value)(struct String* self);
+
+    // regex operators
+    // Bool (*match)(Char* regex);
+    // Void (*replace)(Char* regex, UnsignedInt count, Char* data);
+    // struct ArrayList (*find)(Char* regex, UnsignedInt count);
+    // struct ArrayList (*export)(Char* regex);
+    // Void (*import)(Char* regex, ArrayList data);
+} String;
+
+String* string_new(Char* value);
+String* string_new_printf(Char* format, ...);
+String* string_new_lower(Char* value);
+String* string_new_upper(Char* value);
+String* string_new_reverse(Char* value);
+String* string_new_concat(Char* value, Char* data);
+String* string_new_set(Char* value, UnsignedInt from, UnsignedInt count, Char data);
+String* string_new_copy(Char* value, UnsignedInt from, UnsignedInt count, Char* data);
+// String* string_new_replace(Char* value, Char* regex, UnsignedInt count, Char* data);
+// String* string_new_import(Char* value, Char* regex, ArrayList data);
+Void string_free(String* string);

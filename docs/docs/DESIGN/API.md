@@ -25,7 +25,7 @@
             // convert operators
             SignedByte to_byte();
             SignedShort to_short();
-            SignedInte to_int();
+            SignedInt to_int();
             SignedLong to_long();
             Float to_float();
             Double to_double();
@@ -35,33 +35,33 @@
             Void lower();
             Void upper();
             Void reverse();
-            Void concat(Char* text);
-            Void set(UnsignedInt from, UnsignedInt count, Char char);
-            Void copy(UnsignedInt from, UnsignedInt count, Char* text);
+            Void concat(Char* data);
+            Void set(UnsignedInt from, UnsignedInt count, Char data);
+            Void copy(UnsignedInt from, UnsignedInt count, Char* data);
 
             // information operators
             SignedInt length();
-            SignedInt compare(Char* text);
+            SignedInt compare(Char* data);
             Char* value();
 
             // regex operators
             Bool match(Char* regex);
-            Void replace(Char* regex, UnsignedInt count, Char* text);
+            Void replace(Char* regex, UnsignedInt count, Char* data);
             ArrayList find(Char* regex, UnsignedInt count);
             ArrayList export(Char* regex);
             Void import(Char* regex, ArrayList data);
         }
         ```
-    * __Function__: `String string_new(Char* value)`
-    * __Function__: `String string_new_printf(Char* format, ...)`
-    * __Function__: `String string_new_lower(Char* value)`
-    * __Function__: `String string_new_upper(Char* value)`
-    * __Function__: `String string_new_reverse(Char* value)`
-    * __Function__: `String string_new_concat(Char* value, Char* text)`
-    * __Function__: `String string_new_set(Char* value, UnsignedInt from, UnsignedInt count, Char char)`
-    * __Function__: `String string_new_copy(Char* value, UnsignedInt from, UnsignedInt count, Char* text)`
-    * __Function__: `String string_new_replace(Char* value, Char* regex, UnsignedInt count, Char* text)`
-    * __Function__: `String string_new_import(Char* value, Char* regex, ArrayList data)`
+    * __Function__: `String* string_new(Char* value)`
+    * __Function__: `String* string_new_printf(Char* format, ...)`
+    * __Function__: `String* string_new_lower(Char* value)`
+    * __Function__: `String* string_new_upper(Char* value)`
+    * __Function__: `String* string_new_reverse(Char* value)`
+    * __Function__: `String* string_new_concat(Char* value, Char* data)`
+    * __Function__: `String* string_new_set(Char* value, UnsignedInt from, UnsignedInt count, Char data)`
+    * __Function__: `String* string_new_copy(Char* value, UnsignedInt from, UnsignedInt count, Char* data)`
+    * __Function__: `String* string_new_replace(Char* value, Char* regex, UnsignedInt count, Char* data)`
+    * __Function__: `String* string_new_import(Char* value, Char* regex, ArrayList data)`
     * __Function__: `Void string_free(String* string)`
 2. __Heap__ -> `0.1.0`
     * __cross platform `alloc`, `realloc`, `free`__
@@ -78,9 +78,9 @@
         ```
     * __Function__: `Share* share_new(Char* name, Size offset, Size size, SignedByte access)`
     * __Function__: `Void share_free(Share* share)`
-    * __Define__: `#DEFINE SHARE_ACCESS_READ 0b00000001`
-    * __Define__: `#DEFINE SHARE_ACCESS_WRITE 0b00000010`
-    * __Define__: `#DEFINE SHARE_ACCESS_EXEC 0b00000100`
+    * __Define__: `#define SHARE_ACCESS_READ 0b00000001`
+    * __Define__: `#define SHARE_ACCESS_WRITE 0b00000010`
+    * __Define__: `#define SHARE_ACCESS_EXEC 0b00000100`
 
 ____________________________________________________
 

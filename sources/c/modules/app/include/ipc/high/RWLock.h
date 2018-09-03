@@ -1,11 +1,11 @@
+#include <memory/low/Type.h>
+
 typedef struct RWLock {
-    int (*readlock)(struct RWLock* self);
-    int (*writelock)(struct RWLock* self);
-    int (*timereadlock)(struct RWLock* self, long int timeout);
-    int (*timewritelock)(struct RWLock* self, long int timeout);
-    int (*readunlock)(struct RWLock* self);
-    int (*writeunlock)(struct RWLock* self);
+    SignedInt lock_read(struct RWLock* self, UnsignedLong timeout);
+    SignedInt lock_write(struct RWLock* self, UnsignedLong timeout);
+    SignedInt unlock_read(struct RWLock* self);
+    SignedInt unlock_write(struct RWLock* self);
 } RWLock;
 
-struct RWLock* rwlock_new();
-void rwlock_free(struct RWLock* rwlock);
+RWLock* rwlock_new(Char* name);
+Void rwlock_free(RWLock* rwlock);

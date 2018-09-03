@@ -1,8 +1,9 @@
+#include <memory/low/Type.h>
+
 typedef struct Lock {
-    int (*lock)(struct Lock* self);
-    int (*timelock)(struct Lock* self, long int timeout);
-    int (*unlock)(struct Lock* self);
+    SignedInt lock(struct Lock* self, UnsignedLong timeout);
+    SignedInt unlock(struct Lock* self);
 } Lock;
 
-struct Lock* lock_new();
-void lock_free(struct Lock* lock);
+Lock* lock_new(Char* name);
+Void lock_free(Lock* lock);
