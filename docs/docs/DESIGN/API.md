@@ -35,33 +35,21 @@
             Void lower();
             Void upper();
             Void reverse();
+            Void copy(Char* data);
             Void concat(Char* data);
-            Void set(UnsignedInt from, UnsignedInt count, Char data);
-            Void copy(UnsignedInt from, UnsignedInt count, Char* data);
 
             // information operators
-            SignedInt length();
+            Size length();
             SignedInt compare(Char* data);
             Char* value();
-
-            // regex operators
-            Bool match(Char* regex);
-            Void replace(Char* regex, UnsignedInt count, Char* data);
-            ArrayList find(Char* regex, UnsignedInt count);
-            ArrayList export(Char* regex);
-            Void import(Char* regex, ArrayList data);
         }
         ```
-    * __Function__: `String* string_new(Char* value)`
     * __Function__: `String* string_new_printf(Char* format, ...)`
     * __Function__: `String* string_new_lower(Char* value)`
     * __Function__: `String* string_new_upper(Char* value)`
     * __Function__: `String* string_new_reverse(Char* value)`
+    * __Function__: `String* string_new_copy(Char* value)`
     * __Function__: `String* string_new_concat(Char* value, Char* data)`
-    * __Function__: `String* string_new_set(Char* value, UnsignedInt from, UnsignedInt count, Char data)`
-    * __Function__: `String* string_new_copy(Char* value, UnsignedInt from, UnsignedInt count, Char* data)`
-    * __Function__: `String* string_new_replace(Char* value, Char* regex, UnsignedInt count, Char* data)`
-    * __Function__: `String* string_new_import(Char* value, Char* regex, ArrayList data)`
     * __Function__: `Void string_free(String* string)`
 2. __Heap__ -> `0.1.0`
     * __cross platform `alloc`, `realloc`, `free`__

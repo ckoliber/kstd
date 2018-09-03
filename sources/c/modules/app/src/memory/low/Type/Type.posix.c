@@ -14,34 +14,17 @@ struct String_ {
 };
 
 // link methods
-// convert operators
-SignedByte string_to_byte(struct String* self);
-SignedShort string_to_short(struct String* self);
 SignedInt string_to_int(struct String* self);
 SignedLong string_to_long(struct String* self);
-Float string_to_float(struct String* self);
 Double string_to_double(struct String* self);
-LongDouble string_to_longdouble(struct String* self);
-
-// change value operators
-SignedInt string_lower(struct String* self);
-SignedInt string_upper(struct String* self);
-SignedInt string_reverse(struct String* self);
-SignedInt string_concat(struct String* self, Char* data);
-SignedInt string_set(struct String* self, UnsignedInt from, UnsignedInt count, Char data);
-SignedInt string_copy(struct String* self, UnsignedInt from, UnsignedInt count, Char* data);
-
-// information operators
-SignedInt string_length(struct String* self);
+Void string_lower(struct String* self);
+Void string_upper(struct String* self);
+Void string_reverse(struct String* self);
+Void string_copy(struct String* self, Char* data);
+Void string_concat(struct String* self, Char* data);
+Size string_length(struct String* self);
 SignedInt string_compare(struct String* self, Char* data);
 Char* string_value(struct String* self);
-
-// regex operators
-// Bool string_match(Char* regex);
-// Void string_replace(Char* regex, UnsignedInt count, Char* data);
-// struct ArrayList string_find(Char* regex, UnsignedInt count);
-// struct ArrayList string_export(Char* regex);
-// Void string_import(Char* regex, ArrayList data);
 
 Void string_swap(Char* char1, Char* char2);
 
@@ -54,52 +37,110 @@ Void string_swap(Char* char1, Char* char2) {
     }
 }
 
-SignedByte string_to_byte(struct String* self) {
+SignedInt string_to_int(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
-    strto
-
-        // convert string to int to SignedByte
-        int value = atoi(string_->string);
-    SignedByte result = (SignedByte)value;
-
-    return result;
-}
-SignedShort string_to_short(struct String* self) {
-    struct String_* string_ = (struct String_*)self;
-
-    // convert string to int to SignedByte
+    // convert string to SignedInt
     int value = atoi(string_->string);
-    SignedShort result = (SignedShort)value;
+    SignedInt result = (SignedInt)value;
 
     return result;
 }
-SignedInt string_to_int(struct String* self) {}
-SignedLong string_to_long(struct String* self) {}
-Float string_to_float(struct String* self) {}
-Double string_to_double(struct String* self) {}
-LongDouble string_to_longdouble(struct String* self) {}
-SignedInt string_lower(struct String* self) {}
-SignedInt string_upper(struct String* self) {}
-SignedInt string_reverse(struct String* self) {}
-SignedInt string_concat(struct String* self, Char* data) {}
-SignedInt string_set(struct String* self, UnsignedInt from, UnsignedInt count, Char data) {}
-SignedInt string_copy(struct String* self, UnsignedInt from, UnsignedInt count, Char* data) {}
-SignedInt string_length(struct String* self) {}
-SignedInt string_compare(struct String* self, Char* data) {}
-Char* string_value(struct String* self) {}
+SignedLong string_to_long(struct String* self) {
+    struct String_* string_ = (struct String_*)self;
 
-String* string_new(Char* value) {
-    struct String_* string_ = heap_alloc(sizeof(struct String_));
+    // convert string to SignedLong
+    long long value = atoll(string_->string);
+    SignedLong result = (SignedLong)value;
 
-    // init internal Char*
-    string_->string = heap_alloc(strlen(value) + 1);
-    strcpy(string_->string, value);
+    return result;
+}
+Double string_to_double(struct String* self) {
+    struct String_* string_ = (struct String_*)self;
 
-    return (String*)string_;
+    // convert string to Double
+    double value = atof(string_->string);
+    Double result = (Double)value;
+
+    return result;
+}
+Void string_lower(struct String* self) {
+    struct String_* string_ = (struct String_*)self;
+
+    // convert all Char's to lower
+    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
+        string_->string[cursor] = tolower(string_->string[cursor]);
+    }
+}
+Void string_upper(struct String* self) {
+    struct String_* string_ = (struct String_*)self;
+
+    // convert all Char's to upper
+    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
+        string_->string[cursor] = toupper(string_->string[cursor]);
+    }
+}
+Void string_reverse(struct String* self) {
+    struct String_* string_ = (struct String_*)self;
+
+    // reverse string
+    for (int cursor = 0; cursor <= strlen(string_->string) / 2; cursor++) {
+        string_swap((string_->string + cursor), (string_->string + (strlen(string_->string) - 1) - cursor));
+    }
+}
+Void string_copy(struct String* self, Char* data) {
+    struct String_* string_ = (struct String_*)self;
+
+    // copy data to string
+    string_->string = heap_realloc(string_->string, strlen(data) + 1);
+    strcpy(string_->string, data);
+}
+Void string_concat(struct String* self, Char* data) {
+    struct String_* string_ = (struct String_*)self;
+
+    // concatenate data to string
+    string_->string = heap_realloc(string_->string, strlen(string_->string) + strlen(data) + 1);
+    strcat(string_->string, data);
+}
+Size string_length(struct String* self) {
+    struct String_* string_ = (struct String_*)self;
+
+    // compute string length
+    Size result = strlen(string_->string);
+
+    return result;
+}
+SignedInt string_compare(struct String* self, Char* data) {
+    struct String_* string_ = (struct String_*)self;
+
+    // compare string
+    SignedInt result = strcmp(string_->string, data);
+
+    return result;
+}
+Char* string_value(struct String* self) {
+    struct String_* string_ = (struct String_*)self;
+
+    // get string
+    Char* result = string_->string;
+
+    return result;
 }
 String* string_new_printf(Char* format, ...) {
     struct String_* string_ = heap_alloc(sizeof(struct String_));
+
+    // init private methods
+    string_->self.to_int = string_to_int;
+    string_->self.to_long = string_to_long;
+    string_->self.to_double = string_to_double;
+    string_->self.lower = string_lower;
+    string_->self.upper = string_upper;
+    string_->self.reverse = string_reverse;
+    string_->self.copy = string_copy;
+    string_->self.concat = string_concat;
+    string_->self.length = string_length;
+    string_->self.compare = string_compare;
+    string_->self.value = string_value;
 
     // init internal Char*
     va_list args;
@@ -113,10 +154,23 @@ String* string_new_printf(Char* format, ...) {
 String* string_new_lower(Char* value) {
     struct String_* string_ = heap_alloc(sizeof(struct String_));
 
+    // init private methods
+    string_->self.to_int = string_to_int;
+    string_->self.to_long = string_to_long;
+    string_->self.to_double = string_to_double;
+    string_->self.lower = string_lower;
+    string_->self.upper = string_upper;
+    string_->self.reverse = string_reverse;
+    string_->self.copy = string_copy;
+    string_->self.concat = string_concat;
+    string_->self.length = string_length;
+    string_->self.compare = string_compare;
+    string_->self.value = string_value;
+
     // init internal Char*
     string_->string = heap_alloc(strlen(value) + 1);
     strcpy(string_->string, value);
-    for (int cursor = 0; cursor < strlen(value); cursor++) {
+    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
         string_->string[cursor] = tolower(string_->string[cursor]);
     }
 
@@ -125,10 +179,23 @@ String* string_new_lower(Char* value) {
 String* string_new_upper(Char* value) {
     struct String_* string_ = heap_alloc(sizeof(struct String_));
 
+    // init private methods
+    string_->self.to_int = string_to_int;
+    string_->self.to_long = string_to_long;
+    string_->self.to_double = string_to_double;
+    string_->self.lower = string_lower;
+    string_->self.upper = string_upper;
+    string_->self.reverse = string_reverse;
+    string_->self.copy = string_copy;
+    string_->self.concat = string_concat;
+    string_->self.length = string_length;
+    string_->self.compare = string_compare;
+    string_->self.value = string_value;
+
     // init internal Char*
     string_->string = heap_alloc(strlen(value) + 1);
     strcpy(string_->string, value);
-    for (int cursor = 0; cursor < strlen(value); cursor++) {
+    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
         string_->string[cursor] = toupper(string_->string[cursor]);
     }
 
@@ -137,17 +204,65 @@ String* string_new_upper(Char* value) {
 String* string_new_reverse(Char* value) {
     struct String_* string_ = heap_alloc(sizeof(struct String_));
 
+    // init private methods
+    string_->self.to_int = string_to_int;
+    string_->self.to_long = string_to_long;
+    string_->self.to_double = string_to_double;
+    string_->self.lower = string_lower;
+    string_->self.upper = string_upper;
+    string_->self.reverse = string_reverse;
+    string_->self.copy = string_copy;
+    string_->self.concat = string_concat;
+    string_->self.length = string_length;
+    string_->self.compare = string_compare;
+    string_->self.value = string_value;
+
     // init internal Char*
     string_->string = heap_alloc(strlen(value) + 1);
     strcpy(string_->string, value);
-    for (int cursor = 0; cursor <= strlen(value) / 2; cursor++) {
-        string_swap((string_->string + cursor), (string_->string + (strlen(value) - 1) - cursor));
+    for (int cursor = 0; cursor <= strlen(string_->string) / 2; cursor++) {
+        string_swap((string_->string + cursor), (string_->string + (strlen(string_->string) - 1) - cursor));
     }
+
+    return (String*)string_;
+}
+String* string_new_copy(Char* value) {
+    struct String_* string_ = heap_alloc(sizeof(struct String_));
+
+    // init private methods
+    string_->self.to_int = string_to_int;
+    string_->self.to_long = string_to_long;
+    string_->self.to_double = string_to_double;
+    string_->self.lower = string_lower;
+    string_->self.upper = string_upper;
+    string_->self.reverse = string_reverse;
+    string_->self.copy = string_copy;
+    string_->self.concat = string_concat;
+    string_->self.length = string_length;
+    string_->self.compare = string_compare;
+    string_->self.value = string_value;
+
+    // init internal Char*
+    string_->string = heap_alloc(strlen(value) + 1);
+    strcpy(string_->string, value);
 
     return (String*)string_;
 }
 String* string_new_concat(Char* value, Char* data) {
     struct String_* string_ = heap_alloc(sizeof(struct String_));
+
+    // init private methods
+    string_->self.to_int = string_to_int;
+    string_->self.to_long = string_to_long;
+    string_->self.to_double = string_to_double;
+    string_->self.lower = string_lower;
+    string_->self.upper = string_upper;
+    string_->self.reverse = string_reverse;
+    string_->self.copy = string_copy;
+    string_->self.concat = string_concat;
+    string_->self.length = string_length;
+    string_->self.compare = string_compare;
+    string_->self.value = string_value;
 
     // init internal Char*
     string_->string = heap_alloc(strlen(value) + strlen(data) + 1);
@@ -156,8 +271,6 @@ String* string_new_concat(Char* value, Char* data) {
 
     return (String*)string_;
 }
-// String* string_new_replace(Char* value, Char* regex, UnsignedInt count, Char* data){}
-// String* string_new_import(Char* value, Char* regex, ArrayList data){}
 Void string_free(String* string) {
     struct String_* string_ = (struct String_*)string;
 

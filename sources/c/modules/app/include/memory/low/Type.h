@@ -91,41 +91,27 @@ typedef long double LongDouble;
 // string functions
 typedef struct String {
     // convert operators
-    SignedByte (*to_byte)(struct String* self);
-    SignedShort (*to_short)(struct String* self);
     SignedInt (*to_int)(struct String* self);
     SignedLong (*to_long)(struct String* self);
-    Float (*to_float)(struct String* self);
     Double (*to_double)(struct String* self);
-    LongDouble (*to_longdouble)(struct String* self);
 
     // change value operators
-    SignedInt (*lower)(struct String* self);
-    SignedInt (*upper)(struct String* self);
-    SignedInt (*reverse)(struct String* self);
-    SignedInt (*copy)(struct String* self, Char* data);
-    SignedInt (*concat)(struct String* self, Char* data);
-    SignedInt (*set)(struct String* self, UnsignedInt from, UnsignedInt count, Char data);
+    Void (*lower)(struct String* self);
+    Void (*upper)(struct String* self);
+    Void (*reverse)(struct String* self);
+    Void (*copy)(struct String* self, Char* data);
+    Void (*concat)(struct String* self, Char* data);
 
     // information operators
-    SignedInt (*length)(struct String* self);
+    Size (*length)(struct String* self);
     SignedInt (*compare)(struct String* self, Char* data);
     Char* (*value)(struct String* self);
-
-    // regex operators
-    // Bool (*match)(Char* regex);
-    // Void (*replace)(Char* regex, UnsignedInt count, Char* data);
-    // struct ArrayList (*find)(Char* regex, UnsignedInt count);
-    // struct ArrayList (*export)(Char* regex);
-    // Void (*import)(Char* regex, ArrayList data);
 } String;
 
-String* string_new(Char* value);
 String* string_new_printf(Char* format, ...);
 String* string_new_lower(Char* value);
 String* string_new_upper(Char* value);
 String* string_new_reverse(Char* value);
+String* string_new_copy(Char* value);
 String* string_new_concat(Char* value, Char* data);
-// String* string_new_replace(Char* value, Char* regex, UnsignedInt count, Char* data);
-// String* string_new_import(Char* value, Char* regex, ArrayList data);
 Void string_free(String* string);
