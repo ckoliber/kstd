@@ -1,19 +1,53 @@
 #include <app.h>
 
 #if defined(APP_WINDOWS)
-#error Windows_OS
+
+#include <windows.h>
+
+// signed fixed size 8, 16, 32, 64
+typedef __int8 SignedByte;
+typedef __int16 SignedShort;
+typedef __int32 SignedInt;
+typedef __int64 SignedLong;
+#define SIGNED_BYTE_MAX CHAR_MAX
+#define SIGNED_BYTE_MIN CHAR_MIN
+#define SIGNED_SHORT_MAX SHRT_MAX
+#define SIGNED_SHORT_MIN SHRT_MIN
+#define SIGNED_INT_MAX INT_MAX
+#define SIGNED_INT_MIN INT_MIN
+#define SIGNED_LONG_MAX _I64_MAX
+#define SIGNED_LONG_MIN _I64_MIN
+
+// unsigned fixed size 8, 16, 32, 64
+typedef unsigned __int8 UnsignedByte;
+typedef unsigned __int16 UnsignedShort;
+typedef unsigned __int32 UnsignedInt;
+typedef unsigned __int64 UnsignedLong;
+#define UNSIGNED_BYTE_MAX UCHAR_MAX
+#define UNSIGNED_BYTE_MIN 0
+#define UNSIGNED_SHORT_MAX USHRT_MAX
+#define UNSIGNED_SHORT_MIN 0
+#define UNSIGNED_INT_MAX UINT_MAX
+#define UNSIGNED_INT_MIN 0
+#define UNSIGNED_LONG_MAX _UI64_MAX
+#define UNSIGNED_LONG_MIN 0
+
+typedef void Void;
+typedef char Bool;
+typedef char Char;
+typedef SIZE_T Size;
+typedef float Float;
+typedef double Double;
+typedef long double LongDouble;
+#define TRUE 1
+#define FALSE 0
+
 #else
 
 #include <float.h>
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-/*----------------------------------------------*/
-/*----------------------------------------------*/
-/*-----------Normal Signed and Unsigned---------*/
-/*----------------------------------------------*/
-/*----------------------------------------------*/
 // signed fixed size 8, 16, 32, 64
 typedef int8_t SignedByte;
 typedef int16_t SignedShort;
@@ -42,89 +76,19 @@ typedef uint64_t UnsignedLong;
 #define UNSIGNED_LONG_MAX UINT64_MAX
 #define UNSIGNED_LONG_MIN 0
 
-/*----------------------------------------------*/
-/*----------------------------------------------*/
-/*------------Fast Signed and Unsigned----------*/
-/*----------------------------------------------*/
-/*----------------------------------------------*/
-// fast signed fixed size 8, 16, 32, 64
-typedef int_fast8_t FastSignedByte;
-typedef int_fast16_t FastSignedShort;
-typedef int_fast32_t FastSignedInt;
-typedef int_fast64_t FastSignedLong;
-#define FAST_SIGNED_BYTE_MAX INT_FAST8_MAX
-#define FAST_SIGNED_BYTE_MIN INT_FAST8_MIN
-#define FAST_SIGNED_SHORT_MAX INT_FAST16_MAX
-#define FAST_SIGNED_SHORT_MIN INT_FAST16_MIN
-#define FAST_SIGNED_INT_MAX INT_FAST32_MAX
-#define FAST_SIGNED_INT_MIN INT_FAST32_MIN
-#define FAST_SIGNED_LONG_MAX INT_FAST64_MAX
-#define FAST_SIGNED_LONG_MIN INT_FAST64_MIN
-
-// fast unsigned fixed size 8, 16, 32, 64
-typedef uint_fast8_t FastUnsignedByte;
-typedef uint_fast16_t FastUnsignedShort;
-typedef uint_fast32_t FastUnsignedInt;
-typedef uint_fast64_t FastUnsignedLong;
-#define FAST_UNSIGNED_BYTE_MAX UINT_FAST8_MAX
-#define FAST_UNSIGNED_BYTE_MIN 0
-#define FAST_UNSIGNED_SHORT_MAX UINT_FAST16_MAX
-#define FAST_UNSIGNED_SHORT_MIN 0
-#define FAST_UNSIGNED_INT_MAX UINT_FAST32_MAX
-#define FAST_UNSIGNED_INT_MIN 0
-#define FAST_UNSIGNED_LONG_MAX UINT_FAST64_MAX
-#define FAST_UNSIGNED_LONG_MIN 0
-
-/*----------------------------------------------*/
-/*----------------------------------------------*/
-/*-----------Least Signed and Unsigned----------*/
-/*----------------------------------------------*/
-/*----------------------------------------------*/
-// signed least size 8, 16, 32, 64
-typedef int_least8_t LeastSignedByte;
-typedef int_least16_t LeastSignedShort;
-typedef int_least32_t LeastSignedInt;
-typedef int_least64_t LeastSignedLong;
-#define LEAST_SIGNED_BYTE_MAX INT_LEAST8_MAX
-#define LEAST_SIGNED_BYTE_MIN INT_LEAST8_MIN
-#define LEAST_SIGNED_SHORT_MAX INT_LEAST16_MAX
-#define LEAST_SIGNED_SHORT_MIN INT_LEAST16_MIN
-#define LEAST_SIGNED_INT_MAX INT_LEAST32_MAX
-#define LEAST_SIGNED_INT_MIN INT_LEAST32_MIN
-#define LEAST_SIGNED_LONG_MAX INT_LEAST64_MAX
-#define LEAST_SIGNED_LONG_MIN INT_LEAST64_MIN
-
-// unsigned least size 8, 16, 32, 64
-typedef uint_least8_t LeastUnsignedByte;
-typedef uint_least16_t LeastUnsignedShort;
-typedef uint_least32_t LeastUnsignedInt;
-typedef uint_least64_t LeastUnsignedLong;
-#define LEAST_UNSIGNED_BYTE_MAX UINT_LEAST8_MAX
-#define LEAST_UNSIGNED_BYTE_MIN 0
-#define LEAST_UNSIGNED_SHORT_MAX UINT_LEAST16_MAX
-#define LEAST_UNSIGNED_SHORT_MIN 0
-#define LEAST_UNSIGNED_INT_MAX UINT_LEAST32_MAX
-#define LEAST_UNSIGNED_INT_MIN 0
-#define LEAST_UNSIGNED_LONG_MAX UINT_LEAST64_MAX
-#define LEAST_UNSIGNED_LONG_MIN 0
-
-/*--------------------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------------------*/
-/*---------Void and Bool and Char and Size and Float and Double and LongDouble----------*/
-/*--------------------------------------------------------------------------------------*/
-/*--------------------------------------------------------------------------------------*/
 typedef void Void;
-typedef bool Bool;
+typedef char Bool;
 typedef char Char;
 typedef size_t Size;
 typedef float Float;
 typedef double Double;
 typedef long double LongDouble;
+#define TRUE 1
+#define FALSE 0
 
 #endif
 
 // string functions
-
 typedef struct String {
     // convert operators
     SignedByte (*to_byte)(struct String* self);
@@ -139,9 +103,9 @@ typedef struct String {
     SignedInt (*lower)(struct String* self);
     SignedInt (*upper)(struct String* self);
     SignedInt (*reverse)(struct String* self);
+    SignedInt (*copy)(struct String* self, Char* data);
     SignedInt (*concat)(struct String* self, Char* data);
     SignedInt (*set)(struct String* self, UnsignedInt from, UnsignedInt count, Char data);
-    SignedInt (*copy)(struct String* self, UnsignedInt from, UnsignedInt count, Char* data);
 
     // information operators
     SignedInt (*length)(struct String* self);
@@ -162,8 +126,6 @@ String* string_new_lower(Char* value);
 String* string_new_upper(Char* value);
 String* string_new_reverse(Char* value);
 String* string_new_concat(Char* value, Char* data);
-String* string_new_set(Char* value, UnsignedInt from, UnsignedInt count, Char data);
-String* string_new_copy(Char* value, UnsignedInt from, UnsignedInt count, Char* data);
 // String* string_new_replace(Char* value, Char* regex, UnsignedInt count, Char* data);
 // String* string_new_import(Char* value, Char* regex, ArrayList data);
 Void string_free(String* string);

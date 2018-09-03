@@ -16,6 +16,7 @@ void* thread_join(struct Thread* self);
 int thread_id(struct Thread* self);
 int thread_stop(struct Thread* self);
 
+// implement methods
 int thread_start(struct Thread* self, void* (*function)(void*), void* arg) {
     struct Thread_* thread_ = (struct Thread_*)self;
 

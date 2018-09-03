@@ -8,10 +8,10 @@
 
 1. __Type__ -> `0.1.0` (regex => `0.2.0`)
     * __cross platform `Data Types`:__
-        * [Fast, Least]{Signed, Unsigned}__Byte__
-        * [Fast, Least]{Signed, Unsigned}__Short__
-        * [Fast, Least]{Signed, Unsigned}__Int__
-        * [Fast, Least]{Signed, Unsigned}__Long__
+        * {Signed, Unsigned}__Byte__
+        * {Signed, Unsigned}__Short__
+        * {Signed, Unsigned}__Int__
+        * {Signed, Unsigned}__Long__
         * __Void__
         * __Bool__
         * __Char__
@@ -76,11 +76,8 @@
             Void flush();
         }
         ```
-    * __Function__: `Share* share_new(Char* name, Size offset, Size size, SignedByte access)`
+    * __Function__: `Share* share_new(Char* name, Size offset, Size size)`
     * __Function__: `Void share_free(Share* share)`
-    * __Define__: `#define SHARE_ACCESS_READ 0b00000001`
-    * __Define__: `#define SHARE_ACCESS_WRITE 0b00000010`
-    * __Define__: `#define SHARE_ACCESS_EXEC 0b00000100`
 
 ____________________________________________________
 
