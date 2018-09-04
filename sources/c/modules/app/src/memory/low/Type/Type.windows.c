@@ -3,7 +3,6 @@
 #if defined(APP_WINDOWS)
 
 #include <memory/low/Heap.h>
-#include <windows.h>
 
 struct String_ {
     struct String self;
