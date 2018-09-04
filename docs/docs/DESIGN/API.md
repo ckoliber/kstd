@@ -61,7 +61,7 @@
         ```c
         struct Share{
             Void* address();
-            Void flush();
+            Void flush(Size size);
         }
         ```
     * __Function__: `Share* share_new(Char* name, Size offset, Size size)`
