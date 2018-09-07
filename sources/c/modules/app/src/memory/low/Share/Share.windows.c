@@ -29,11 +29,9 @@ Void share_flush(struct Share* self, Size size) {
 
     // flush mapped shm to disk
     FlushViewOfFile(share_->address, size);
-
-    return result;
 }
 
-Share* share_new(Char* name, Size offset, Size size) {
+Share* share_new(Char* name, Size size) {
     struct Share_* share_ = heap_alloc(sizeof(struct Share_));
 
     // init private methods

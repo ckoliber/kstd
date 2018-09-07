@@ -5,5 +5,5 @@ typedef struct Share {
     Void (*flush)(struct Share* self, Size size);
 } Share;
 
-Share* share_new(Char* name, Size offset, Size size);
+Share* share_new(Char* name, Size size);
 Void share_free(Share* share);
