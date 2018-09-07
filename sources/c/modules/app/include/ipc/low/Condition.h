@@ -1,9 +1,9 @@
 #include <memory/low/Type.h>
 
 typedef struct Condition {
-    SignedInt wait(struct Condition* self, UnsignedLong timeout);
-    SignedInt signal(struct Condition* self, UnsignedInt count);
+    int wait(struct Condition* self, uint_64 timeout);
+    int signal(struct Condition* self, uint_64 count);
 } Condition;
 
-Condition* condition_new(Char* name);
-Void condition_free(Condition* condition);
+Condition* condition_new(char* name);
+void condition_free(Condition* condition);

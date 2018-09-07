@@ -1,3 +1,3 @@
 #include <io/memory/Type.h>
 
-UnsignedLong time_epochmillis();
+uint_64 time_epochmillis();

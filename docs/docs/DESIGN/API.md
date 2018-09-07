@@ -8,64 +8,21 @@
 
 1. __Type__ -> `0.1.0` (regex => `0.2.0`)
     * __cross platform `Data Types`:__
-        * {Signed, Unsigned}__Byte__
-        * {Signed, Unsigned}__Short__
-        * {Signed, Unsigned}__Int__
-        * {Signed, Unsigned}__Long__
-        * __Void__
-        * __Bool__
-        * __Char__
-        * __Size__
-        * __Float__
-        * __Double__
-        * __LongDouble__
-    * __struct__:
-        ```c
-        struct String{
-            // convert operators
-            SignedByte to_byte();
-            SignedShort to_short();
-            SignedInt to_int();
-            SignedLong to_long();
-            Float to_float();
-            Double to_double();
-            LongDouble to_longdouble();
-
-            // change value operators
-            Void lower();
-            Void upper();
-            Void reverse();
-            Void copy(Char* data);
-            Void concat(Char* data);
-
-            // information operators
-            Size length();
-            SignedInt compare(Char* data);
-            Char* value();
-        }
-        ```
-    * __Function__: `String* string_new_printf(Char* format, ...)`
-    * __Function__: `String* string_new_lower(Char* value)`
-    * __Function__: `String* string_new_upper(Char* value)`
-    * __Function__: `String* string_new_reverse(Char* value)`
-    * __Function__: `String* string_new_copy(Char* value)`
-    * __Function__: `String* string_new_concat(Char* value, Char* data)`
-    * __Function__: `Void string_free(String* string)`
+        * __[u]int_8__
+        * __[u]int_16__
+        * __[u]int_32__
+        * __[u]int_64__
+        * __void__
+        * __bool__
+        * __char__
+        * __tsize__
+        * __float__
+        * __double__
+    * Done
 2. __Heap__ -> `0.1.0`
-    * __cross platform `alloc`, `realloc`, `free`__
-    * __Function__: `Void* heap_alloc(Size size)`
-    * __Function__: `Void* heap_realloc(Void* address, Size size)`
-    * __Function__: `Void heap_free(Void* address)`
+    * Done
 3. __Share__ -> `0.1.0`
-    * __struct__:
-        ```c
-        struct Share{
-            Void* address();
-            Void flush(Size size);
-        }
-        ```
-    * __Function__: `Share* share_new(Char* name, Size offset, Size size)`
-    * __Function__: `Void share_free(Share* share)`
+    * Done
 
 ____________________________________________________
 

@@ -1,9 +1,9 @@
 #include <memory/low/Type.h>
 
 typedef struct Message {
-    SignedInt enqueue(struct Message* self, Void* item, UnsignedLong timeout);
-    SignedInt dequeue(struct Message* self, Void** item, UnsignedLong timeout);
+    int enqueue(struct Message* self, void* item, uint_64 timeout);
+    int dequeue(struct Message* self, void** item, uint_64 timeout);
 } Message;
 
-Message* message_new(Char* name, UnsignedInt max, Size item);
-Void message_free(Message* message);
+Message* message_new(char* name, int max, tsize item);
+void message_free(Message* message);

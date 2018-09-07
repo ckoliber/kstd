@@ -1,10 +1,10 @@
 #include <memory/low/Type.h>
 
 typedef struct Thread {
-    SignedInt (*start)(struct Thread* self, Void* (*function)(Void*), Void* arg);
-    SignedInt (*join)(struct Thread* self);
-    SignedInt (*id)(struct Thread* self);
-    SignedInt (*stop)(struct Thread* self);
+    int (*start)(struct Thread* self, void* (*function)(void*), void* arg);
+    int (*join)(struct Thread* self);
+    int (*id)(struct Thread* self);
+    int (*stop)(struct Thread* self);
 } Thread;
 
 Thread* thread_new();
