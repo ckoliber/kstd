@@ -9,23 +9,23 @@
 
 struct Share_ {
     struct Share self;
-    Size size;
     String* name;
-    Void* address;
     int fd;
+    void* address;
+    tsize size;
 };
 
 // link methods
-Void* share_address(struct Share* self);
-Void share_flush(struct Share* self, Size size);
+void* share_address(struct Share* self);
+void share_flush(struct Share* self, tsize size);
 
-Void share_create(struct Share_* share_);
-Void share_increase(struct Share_* share_);
-Void share_decrease(struct Share_* share_);
-Void share_destroy(struct Share_* share_);
+void share_create(struct Share_* share_);
+void share_increase(struct Share_* share_);
+void share_decrease(struct Share_* share_);
+void share_destroy(struct Share_* share_);
 
 // implement methods
-Void share_create(struct Share_* share_) {
+void share_create(struct Share_* share_) {
     // init shm mutex
     pthread_mutex_t mutex;
     pthread_mutexattr_t mattr;
@@ -39,7 +39,7 @@ Void share_create(struct Share_* share_) {
     int connections = 0;
     heap_copy(share_->address + sizeof(pthread_mutex_t), &connections, sizeof(int));
 }
-Void share_increase(struct Share_* share_) {
+void share_increase(struct Share_* share_) {
     pthread_mutex_t* mutex = share_->address;
 
     // begin critical section
@@ -52,7 +52,7 @@ Void share_increase(struct Share_* share_) {
     // end critical section
     pthread_mutex_unlock(mutex);
 }
-Void share_decrease(struct Share_* share_) {
+void share_decrease(struct Share_* share_) {
     pthread_mutex_t* mutex = share_->address;
 
     // begin critical section
@@ -65,7 +65,7 @@ Void share_decrease(struct Share_* share_) {
     // end critical section
     pthread_mutex_unlock(mutex);
 }
-Void share_destroy(struct Share_* share_) {
+void share_destroy(struct Share_* share_) {
     pthread_mutex_t* mutex = share_->address;
 
     // begin critical section
@@ -73,7 +73,7 @@ Void share_destroy(struct Share_* share_) {
 
     // check destroy
     int* connections = share_->address + sizeof(pthread_mutex_t);
-    Bool destroy = *connections == 0;
+    bool destroy = (*connections == 0);
 
     // end critical section
     pthread_mutex_unlock(mutex);
@@ -83,22 +83,22 @@ Void share_destroy(struct Share_* share_) {
     }
 }
 
-Void* share_address(struct Share* self) {
+void* share_address(struct Share* self) {
     struct Share_* share_ = (struct Share_*)self;
 
     // get mapped shm address
-    Void* result = share_->address;
+    void* result = share_->address;
 
     return result;
 }
-Void share_flush(struct Share* self, Size size) {
+void share_flush(struct Share* self, tsize size) {
     struct Share_* share_ = (struct Share_*)self;
 
     // flush mapped shm to disk
     msync(share_->address, size, MS_SYNC);
 }
 
-Share* share_new(Char* name, Size size) {
+Share* share_new(char* name, tsize size) {
     struct Share_* share_ = heap_alloc(sizeof(struct Share_));
 
     // init private methods
@@ -106,10 +106,10 @@ Share* share_new(Char* name, Size size) {
     share_->self.flush = share_flush;
 
     // check exists
-    Bool exists = TRUE;
+    bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
     if (exists_fd > 0) {
-        exists = FALSE;
+        exists = false;
         close(exists_fd);
     }
 
@@ -117,6 +117,7 @@ Share* share_new(Char* name, Size size) {
     share_->name = string_new_copy(name);
     share_->fd = shm_open(share_->name->value(share_->name), O_CREAT | O_RDWR, 0660);
     share_->address = mmap(NULL, sizeof(pthread_mutex_t) + sizeof(int) + size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, share_->fd, 0);
+    share_->size = size;
 
     // check error
     if (share_->fd <= 0 || share_->address == NULL || share_->address == MAP_FAILED) {
@@ -132,7 +133,7 @@ Share* share_new(Char* name, Size size) {
 
     return (Share*)share_;
 }
-Void share_free(Share* share) {
+void share_free(Share* share) {
     struct Share_* share_ = (struct Share_*)share;
 
     // connections decrease and destroy

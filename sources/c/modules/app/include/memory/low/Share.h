@@ -1,9 +1,9 @@
 #include <memory/low/Type.h>
 
 typedef struct Share {
-    Void* (*address)(struct Share* self);
-    Void (*flush)(struct Share* self, Size size);
+    void* (*address)(struct Share* self);
+    void (*flush)(struct Share* self, tsize size);
 } Share;
 
-Share* share_new(Char* name, Size size);
-Void share_free(Share* share);
+Share* share_new(char* name, tsize size);
+void share_free(Share* share);

@@ -7,31 +7,31 @@
 struct Share_ {
     struct Share self;
     String* name;
-    Void* address;
+    void* address;
     HANDLE handle;
 };
 
 // link methods
-Void* share_address(struct Share* self);
-Void share_flush(struct Share* self, Size size);
+void* share_address(struct Share* self);
+void share_flush(struct Share* self, tsize size);
 
 // implement methods
-Void* share_address(struct Share* self) {
+void* share_address(struct Share* self) {
     struct Share_* share_ = (struct Share_*)self;
 
     // get mapped shm address
-    Void* result = share_->address;
+    void* result = share_->address;
 
     return result;
 }
-Void share_flush(struct Share* self, Size size) {
+void share_flush(struct Share* self, tsize size) {
     struct Share_* share_ = (struct Share_*)self;
 
     // flush mapped shm to disk
     FlushViewOfFile(share_->address, size);
 }
 
-Share* share_new(Char* name, Size size) {
+Share* share_new(char* name, tsize size) {
     struct Share_* share_ = heap_alloc(sizeof(struct Share_));
 
     // init private methods
@@ -57,8 +57,7 @@ Share* share_new(Char* name, Size size) {
 
     return (Share*)share_;
 }
-
-Void share_free(Share* share) {
+void share_free(Share* share) {
     struct Share_* share_ = (struct Share_*)share;
 
     // unmap shm and close handle

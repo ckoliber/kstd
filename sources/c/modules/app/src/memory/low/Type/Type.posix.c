@@ -10,26 +10,26 @@
 
 struct String_ {
     struct String self;
-    Char* string;
+    char* string;
 };
 
 // link methods
-SignedInt string_to_int(struct String* self);
-SignedLong string_to_long(struct String* self);
-Double string_to_double(struct String* self);
-Void string_lower(struct String* self);
-Void string_upper(struct String* self);
-Void string_reverse(struct String* self);
-Void string_copy(struct String* self, Char* data);
-Void string_concat(struct String* self, Char* data);
-Size string_length(struct String* self);
-SignedInt string_compare(struct String* self, Char* data);
-Char* string_value(struct String* self);
+int string_to_int(struct String* self);
+long string_to_long(struct String* self);
+double string_to_double(struct String* self);
+void string_lower(struct String* self);
+void string_upper(struct String* self);
+void string_reverse(struct String* self);
+void string_copy(struct String* self, char* data);
+void string_concat(struct String* self, char* data);
+tsize string_length(struct String* self);
+int string_compare(struct String* self, char* data);
+char* string_value(struct String* self);
 
-Void string_swap(Char* char1, Char* char2);
+void string_swap(char* char1, char* char2);
 
 // implement methods
-Void string_swap(Char* char1, Char* char2) {
+void string_swap(char* char1, char* char2) {
     if (*char1 != *char2) {
         *char1 ^= *char2;
         *char2 ^= *char1;
@@ -37,34 +37,31 @@ Void string_swap(Char* char1, Char* char2) {
     }
 }
 
-SignedInt string_to_int(struct String* self) {
+int string_to_int(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
-    // convert string to SignedInt
-    int value = atoi(string_->string);
-    SignedInt result = (SignedInt)value;
+    // convert string to int
+    int result = atoi(string_->string);
 
     return result;
 }
-SignedLong string_to_long(struct String* self) {
+long string_to_long(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
-    // convert string to SignedLong
-    long long value = atoll(string_->string);
-    SignedLong result = (SignedLong)value;
+    // convert string to long
+    long result = atol(string_->string);
 
     return result;
 }
-Double string_to_double(struct String* self) {
+double string_to_double(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // convert string to Double
-    double value = atof(string_->string);
-    Double result = (Double)value;
+    double result = atof(string_->string);
 
     return result;
 }
-Void string_lower(struct String* self) {
+void string_lower(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // convert all Char's to lower
@@ -72,7 +69,7 @@ Void string_lower(struct String* self) {
         string_->string[cursor] = tolower(string_->string[cursor]);
     }
 }
-Void string_upper(struct String* self) {
+void string_upper(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // convert all Char's to upper
@@ -80,7 +77,7 @@ Void string_upper(struct String* self) {
         string_->string[cursor] = toupper(string_->string[cursor]);
     }
 }
-Void string_reverse(struct String* self) {
+void string_reverse(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // reverse string
@@ -88,45 +85,45 @@ Void string_reverse(struct String* self) {
         string_swap((string_->string + cursor), (string_->string + (strlen(string_->string) - 1) - cursor));
     }
 }
-Void string_copy(struct String* self, Char* data) {
+void string_copy(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // copy data to string
     string_->string = heap_realloc(string_->string, strlen(data) + 1);
     strcpy(string_->string, data);
 }
-Void string_concat(struct String* self, Char* data) {
+void string_concat(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // concatenate data to string
     string_->string = heap_realloc(string_->string, strlen(string_->string) + strlen(data) + 1);
     strcat(string_->string, data);
 }
-Size string_length(struct String* self) {
+tsize string_length(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // compute string length
-    Size result = strlen(string_->string);
+    tsize result = strlen(string_->string);
 
     return result;
 }
-SignedInt string_compare(struct String* self, Char* data) {
+int string_compare(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // compare string
-    SignedInt result = strcmp(string_->string, data);
+    int result = strcmp(string_->string, data);
 
     return result;
 }
-Char* string_value(struct String* self) {
+char* string_value(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // get string
-    Char* result = string_->string;
+    char* result = string_->string;
 
     return result;
 }
-String* string_new_printf(Char* format, ...) {
+String* string_new_printf(char* format, ...) {
     struct String_* string_ = heap_alloc(sizeof(struct String_));
 
     // init private methods
@@ -151,42 +148,42 @@ String* string_new_printf(Char* format, ...) {
 
     return (String*)string_;
 }
-String* string_new_lower(Char* value) {
+String* string_new_lower(char* value) {
     // init new string then lower
     String* string = string_new_printf("%s", value);
     string->lower(string);
 
     return string;
 }
-String* string_new_upper(Char* value) {
+String* string_new_upper(char* value) {
     // init new string then upper
     String* string = string_new_printf("%s", value);
     string->upper(string);
 
     return string;
 }
-String* string_new_reverse(Char* value) {
+String* string_new_reverse(char* value) {
     // init new string then upper
     String* string = string_new_printf("%s", value);
     string->reverse(string);
 
     return string;
 }
-String* string_new_copy(Char* value) {
+String* string_new_copy(char* value) {
     // init new string then upper
     String* string = string_new_printf("%s", value);
     string->copy(string, value);
 
     return string;
 }
-String* string_new_concat(Char* value, Char* data) {
+String* string_new_concat(char* value, char* data) {
     // init new string then upper
     String* string = string_new_printf("%s", value);
     string->concat(string, data);
 
     return string;
 }
-Void string_free(String* string) {
+void string_free(String* string) {
     struct String_* string_ = (struct String_*)string;
 
     // destroy internal Char*

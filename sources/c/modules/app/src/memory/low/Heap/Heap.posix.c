@@ -5,30 +5,30 @@
 #include <memory.h>
 #include <stdlib.h>
 
-Void* heap_alloc(Size size) {
-    Void* result = NULL;
+void* heap_alloc(tsize size) {
+    void* result = NULL;
     while (result == NULL) {
         result = malloc(size);
     }
     return result;
 }
-Void heap_copy(Void* address, Void* source, Size size) {
+void heap_copy(void* address, void* source, tsize size) {
     memcpy(address, source, size);
 }
-Void heap_move(Void* address, Void* source, Size size) {
+void heap_move(void* address, void* source, tsize size) {
     memmove(address, source, size);
 }
-Void heap_set(Void* address, SignedByte source, Size size) {
+void heap_set(void* address, char source, tsize size) {
     memset(address, source, size);
 }
-Void* heap_realloc(Void* address, Size size) {
-    Void* result = NULL;
+void* heap_realloc(void* address, tsize size) {
+    void* result = NULL;
     while (result == NULL) {
         result = realloc(address, size);
     }
     return result;
 }
-Void heap_free(Void* address) {
+void heap_free(void* address) {
     if (address != NULL) {
         free(address);
     }
