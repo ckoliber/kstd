@@ -1,12 +1,9 @@
-site_name: kstd (KoLiBer Standard Library)
+site_name: kstd
 pages:
   - 'KPS': KPS.md
-  - 'Readme': README.md
   - 'License': LICENSE.md
   - 'Todo list': TODO.md
-  - 'Stories': STORY.md
-  - 'User Comments': COMMENT.md
-  - 'Architecture and Design': DESIGN/README.md
+  - 'Architecture and Design': DESIGN/ARCHITECTURE.md
   - 'API': DESIGN/API.md
   - 'Database': DESIGN/DBMS.md
 theme: 'material'

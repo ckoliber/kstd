@@ -30,8 +30,7 @@ At the first level we should do these items :
 
 1. Determine the __purpose__ of the project and doc them into __README.md__
 2. Defining __TODO__ List and doc them into __TODO.md__
-3. Defining __User Stories__ or __Use Cases__ and doc them into __STORY.md__
-4. Talk with customers and post __Comments__ and doc them into __COMMENT.md__
+3. Create __Backlog__ at __Zoho or etc__ if SDLC was Agile using Scrum methodology.
 
 ________________________________________________________________
 
@@ -40,7 +39,7 @@ ________________________________________________________________
 At the second level we should do these items :
 
 1. Determine the type of __SDLC__ and doc them into __README.md__
-2. Create __Backlog, Release Backlogs, Sprints, Charts__ at __Zoho or etc__ if SDLC was Agile using Scrum methodology.
+2. Create __Sprints, Epics__ at __Zoho or etc__ if SDLC was Agile using Scrum methodology.
 
 ________________________________________________________________
 
@@ -48,9 +47,9 @@ ________________________________________________________________
 
 At the third level we should do these items :
 
-1. Determine the __layers and parts__ of software (client -> ui, logic, db, net, ...  --- server -> logic ( -> login, load balancer, ...), ...) using `TODO.md` and `STORY.md`
+1. Determine the __layers and parts__ of software (client -> ui, logic, db, net, ...  --- server -> logic ( -> login, load balancer, ...), ...) using `TODO.md`
 2. Determine the __architecture__ of layers (Layered(Domain-Centric (Clean, ...), Database-Centric (MVC, MVP, MVVM, ...)), Client-Server, Master-Slave, Pipeline, Broker, ...)
-3. Determine the __design__ of layers and determining __classes__ using __STORY.md__
+3. Determine the __design__ of layers and determining __classes__
 4. Create __UML__ of classes and scenarios
 5. Create __API__ of software (library) methods or REST calls or etc and doc them into __API.md__
 6. Create __DBMS__ tables and fields and doc them into __DBMS.md__
@@ -220,7 +219,7 @@ ________________________________________________________________
 
 ### docs
 
-> Docs Project Directory Structure : `mkdocs.yml`, `README.md`, `LICENSE.md`, `TODO.md`, `STORY.md`, `COMMENT.md`, `DESIGN/README.md`, `DESIGN/API.md`, `DESIGN/DBMS.md`, `DESIGN/UML/xxx.pu`, `DESIGN/UI/xxx.xd`
+> Docs Project Directory Structure : `mkdocs.yml`, `README.md`, `LICENSE.md`, `TODO.md`, `DESIGN/ARCHITECTURE.md`, `DESIGN/API.md`, `DESIGN/DBMS.md`, `DESIGN/UML/xxx.pu`, `DESIGN/UI/xxx.xd`
 
 1. __{project_name}/__
     1. __.git/__
@@ -230,10 +229,8 @@ ________________________________________________________________
             1. __README.md__
             2. __LICENSE.md__
             3. __TODO.md__
-            4. __STORY.md__
-            5. __COMMENT.md__
-            6. __DESIGN/__
-                1. __README.md__
+            4. __DESIGN/__
+                1. __ARCHITECTURE.md__
                 2. __API.md__
                 3. __DBMS.md__
                 4. __UML/__
@@ -247,16 +244,14 @@ ________________________________________________________________
 
 * __types__:
 
-    | Name                 | Description                                                                  |
-    | -------------------- | ---------------------------------------------------------------------------- |
-    | __README.md__        | Project goal, solve, license, requirements, languages, developers, date, ... |
-    | __LICENSE.md__       | Project license                                                              |
-    | __TODO.md__          | Project todo list                                                            |
-    | __STORY.md__         | Project user stories and use cases                                           |
-    | __COMMENT.md__       | Customer commnets about project and UAT Feedbacks                            |
-    | __DESIGN/README.md__ | Project architecture, layers, design, link to uml, ui                        |
-    | __DESIGN/API.md__    | Project library, socket, http, rest, ... API                                 |
-    | __DESIGN/DBMS.md__   | Project dbms tables, fields, datas, configs, ...                             |
+    | Name                       | Description                                                                  |
+    | -------------------------- | ---------------------------------------------------------------------------- |
+    | __README.md__              | Project goal, solve, license, requirements, languages, developers, date, ... |
+    | __LICENSE.md__             | Project license                                                              |
+    | __TODO.md__                | Project todo list                                                            |
+    | __DESIGN/ARCHITECTURE.md__ | Project architecture, layers, design, link to uml, ui                        |
+    | __DESIGN/API.md__          | Project library, socket, http, rest, ... API                                 |
+    | __DESIGN/DBMS.md__         | Project dbms tables, fields, datas, configs, ...                             |
 
 ### `c`
 
@@ -445,11 +440,16 @@ git init
 git config user.name "{your name}"
 git config user.email "{your email}"
 git config core.editor code
-git config core.autocrlf input 
-git config credential.helper cache [{timout seconds}]
+git config core.autocrlf input
+git config http.proxy http://127.0.0.1:8123
+git config credential.helper {cache|store} [{timout seconds}]
 [git config --unset credential.helper]
 
-git config --global http.proxy http://127.0.0.1:8123
+git clone https://gitlab.com/ckoliber/KPS -b base
+git clone https://gitlab.com/ckoliber/KPS -b {X}
+
+// change dir struct
+
 git remote add {remote name} [{.git url}]
 git push --set-upstream {remote name} master --all
 ```
@@ -684,17 +684,7 @@ ________________________________________________________________
 4. __Styling Views__
     > In this level we should design our `mockup` and create out `prototype` using `Adobe XD`.
 
-### STORY.md
-
-1. User Stories
-2. Use Cases
-
-### COMMENT.md
-
-1. Customer comments
-2. UAT Feetbacks
-
-### DESIGN/README.md
+### DESIGN/ARCHITECTURE.md
 
 1. Project architecture (client-server, master-slave, layered, ...)
 2. Project layers (client -> ui, core, net, ...)(MVC, MVP, MVVP, Clean, ...)
@@ -737,14 +727,13 @@ ________________________________________________________________
     2. Create __TODO list__ and __Version__ and __Deadline__ in __TODO.md__
     3. __Group__ todo list items into sub groups (__releases__)
     4. __Version__ todo list items based on groups and group items (__order them__)
-    5. Design Scenarios for __User Stories__ and __Use Cases__ in __STORY.md__
-    6. Chat with customers and save __feedbacks__ in __COMMENT.md__
+    5. If SDLC was Agile using Scrum methodology create __Backlog__ in __Zoho Sprints__ or etc
 3. __Cycling__
     1. Determine type of SDLC (Waterfall, Iterative, Sprial, Bigbang, V-Model, Agile, ...) and save into __README.md__
-    2. If SDLC was Agile create __Backlog__, __Release Backlogs__, __Sprints__, __Charts__ in __Zoho Sprints__ or etc
+    2. If SDLC was Agile using Scrum methodology create __Release Backlogs__, __Sprints__, __Epics__ in __Zoho Sprints__ or etc
 4. __Designing__
-    1. Design __Use Case Diagram__ from __STORY.md__ and save into __DESIGN/UML/__
-    2. Determine __Modules__ of Project from Use Case Diagram (ui, file, net, peer, pipe, broker, proxy, ...) and save into __DESIGN/README.md__
+    1. Design __Use Case Diagram__ and save into __DESIGN/UML/__
+    2. Determine __Modules__ of Project from Use Case Diagram (ui, file, net, peer, pipe, broker, proxy, ...) and save into __DESIGN/ARCHITECTURE.md__
     3. Design __Class Diagram__ from __Modules__ and __Methods of Use Case Diagram__ and save into __DESIGN/UML/__
     4. Break project into layers (client -> ui, core, net, db, file, ... --- server -> core, db, net, file, ...)(modules - requirements)
     5. Design application interface __REST or Socket or Library methods or etc__ and save into __DESIGN/API.md__
@@ -758,14 +747,14 @@ ________________________________________________________________
 7. __Deploying__
     1. Create __Release Build__ of project
     2. Launch project
-    3. UAT feedback and save into __COMMENT.md__
+    3. UAT feedback and save into __Zoho Sprints__
 
 ### Summary
 
 1. __Init__: Git
-2. __Plan__: README.md -> TODO.md -> STORY.md -> COMMENT.md
-3. __Cycle__: README.md -> Agile(backlog, sprints, ...)
+2. __Plan__: README.md -> TODO.md | README.md -> Agile using Scrum(backlog)
+3. __Cycle__: README.md -> Agile using Scrum(release backlogs, sprints, epics)
 4. __Design__: DESIGN/API.md -> DESIGN/DBMS.md -> DESIGN/UML/... -> DESIGN/UI/...
 5. __Build__: Clean Code
 6. __Test__: Unit Testing
-7. __Deploy__: COMMENT.md
+7. __Deploy__: Comments in Zoho (UAT)
