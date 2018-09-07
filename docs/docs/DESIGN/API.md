@@ -61,7 +61,7 @@
         ```c
         struct Share{
             Void* address();
-            Void flush();
+            Void flush(Size size);
         }
         ```
     * __Function__: `Share* share_new(Char* name, Size offset, Size size)`
@@ -300,25 +300,31 @@ ____________________________________________________
     * __Struct__:
         ```c
         struct Thread{
+            SignedInt priority(SignedInt priority);
+            SignedInt affinity(SignedInt affinity);
             SignedInt start(Void (*function)(Void*), Void* arg);
             SignedInt join();
             SignedInt id();
             SignedInt stop();
         }
         ```
-    * __Function__: `Thread* thread_new(SignedInt priority, SignedInt affinity, Size stack)`
+    * __Function__: `Thread* thread_new(Size stack)`
     * __Function__: `Void thread_free(Thread* thread)`
+    * __Comment__ `priority`+`affinity` -> `get=-1` -> get, `get=number` -> set
+    * __Comment__ `stack`: `-1` -> default size, `number` -> custom stack size
 2. __Process__ -> `0.1.0`
     * __Struct__:
         ```c
         struct Process{
+            SignedInt priority(SignedInt priority);
+            SignedInt affinity(SignedInt affinity);
             SignedInt start(Char* command);
             SignedInt join();
             SignedInt id();
             SignedInt stop();
         }
         ```
-    * __Function__: `Process* process_new(SignedInt priority, SignedInt affinity)`
+    * __Function__: `Process* process_new()`
     * __Function__: `Void process_free(Process* process)`
 
 #### High

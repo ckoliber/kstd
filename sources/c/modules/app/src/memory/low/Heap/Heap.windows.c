@@ -2,8 +2,6 @@
 
 #if defined(APP_WINDOWS)
 
-#include <windows.h>
-
 Void* heap_alloc(Size size) {
     Void* result = NULL;
     while (result == NULL) {

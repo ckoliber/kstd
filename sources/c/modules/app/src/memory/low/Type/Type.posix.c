@@ -152,124 +152,39 @@ String* string_new_printf(Char* format, ...) {
     return (String*)string_;
 }
 String* string_new_lower(Char* value) {
-    struct String_* string_ = heap_alloc(sizeof(struct String_));
+    // init new string then lower
+    String* string = string_new_printf("%s", value);
+    string->lower(string);
 
-    // init private methods
-    string_->self.to_int = string_to_int;
-    string_->self.to_long = string_to_long;
-    string_->self.to_double = string_to_double;
-    string_->self.lower = string_lower;
-    string_->self.upper = string_upper;
-    string_->self.reverse = string_reverse;
-    string_->self.copy = string_copy;
-    string_->self.concat = string_concat;
-    string_->self.length = string_length;
-    string_->self.compare = string_compare;
-    string_->self.value = string_value;
-
-    // init internal Char*
-    string_->string = heap_alloc(strlen(value) + 1);
-    strcpy(string_->string, value);
-    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
-        string_->string[cursor] = tolower(string_->string[cursor]);
-    }
-
-    return (String*)string_;
+    return string;
 }
 String* string_new_upper(Char* value) {
-    struct String_* string_ = heap_alloc(sizeof(struct String_));
+    // init new string then upper
+    String* string = string_new_printf("%s", value);
+    string->upper(string);
 
-    // init private methods
-    string_->self.to_int = string_to_int;
-    string_->self.to_long = string_to_long;
-    string_->self.to_double = string_to_double;
-    string_->self.lower = string_lower;
-    string_->self.upper = string_upper;
-    string_->self.reverse = string_reverse;
-    string_->self.copy = string_copy;
-    string_->self.concat = string_concat;
-    string_->self.length = string_length;
-    string_->self.compare = string_compare;
-    string_->self.value = string_value;
-
-    // init internal Char*
-    string_->string = heap_alloc(strlen(value) + 1);
-    strcpy(string_->string, value);
-    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
-        string_->string[cursor] = toupper(string_->string[cursor]);
-    }
-
-    return (String*)string_;
+    return string;
 }
 String* string_new_reverse(Char* value) {
-    struct String_* string_ = heap_alloc(sizeof(struct String_));
+    // init new string then upper
+    String* string = string_new_printf("%s", value);
+    string->reverse(string);
 
-    // init private methods
-    string_->self.to_int = string_to_int;
-    string_->self.to_long = string_to_long;
-    string_->self.to_double = string_to_double;
-    string_->self.lower = string_lower;
-    string_->self.upper = string_upper;
-    string_->self.reverse = string_reverse;
-    string_->self.copy = string_copy;
-    string_->self.concat = string_concat;
-    string_->self.length = string_length;
-    string_->self.compare = string_compare;
-    string_->self.value = string_value;
-
-    // init internal Char*
-    string_->string = heap_alloc(strlen(value) + 1);
-    strcpy(string_->string, value);
-    for (int cursor = 0; cursor <= strlen(string_->string) / 2; cursor++) {
-        string_swap((string_->string + cursor), (string_->string + (strlen(string_->string) - 1) - cursor));
-    }
-
-    return (String*)string_;
+    return string;
 }
 String* string_new_copy(Char* value) {
-    struct String_* string_ = heap_alloc(sizeof(struct String_));
+    // init new string then upper
+    String* string = string_new_printf("%s", value);
+    string->copy(string, value);
 
-    // init private methods
-    string_->self.to_int = string_to_int;
-    string_->self.to_long = string_to_long;
-    string_->self.to_double = string_to_double;
-    string_->self.lower = string_lower;
-    string_->self.upper = string_upper;
-    string_->self.reverse = string_reverse;
-    string_->self.copy = string_copy;
-    string_->self.concat = string_concat;
-    string_->self.length = string_length;
-    string_->self.compare = string_compare;
-    string_->self.value = string_value;
-
-    // init internal Char*
-    string_->string = heap_alloc(strlen(value) + 1);
-    strcpy(string_->string, value);
-
-    return (String*)string_;
+    return string;
 }
 String* string_new_concat(Char* value, Char* data) {
-    struct String_* string_ = heap_alloc(sizeof(struct String_));
+    // init new string then upper
+    String* string = string_new_printf("%s", value);
+    string->concat(string, data);
 
-    // init private methods
-    string_->self.to_int = string_to_int;
-    string_->self.to_long = string_to_long;
-    string_->self.to_double = string_to_double;
-    string_->self.lower = string_lower;
-    string_->self.upper = string_upper;
-    string_->self.reverse = string_reverse;
-    string_->self.copy = string_copy;
-    string_->self.concat = string_concat;
-    string_->self.length = string_length;
-    string_->self.compare = string_compare;
-    string_->self.value = string_value;
-
-    // init internal Char*
-    string_->string = heap_alloc(strlen(value) + strlen(data) + 1);
-    strcpy(string_->string, value);
-    strcat(string_->string, data);
-
-    return (String*)string_;
+    return string;
 }
 Void string_free(String* string) {
     struct String_* string_ = (struct String_*)string;

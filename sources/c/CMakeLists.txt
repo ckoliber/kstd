@@ -6,6 +6,14 @@
 
 cmake_minimum_required(VERSION 3.8)
 
+if(LINUX)
+    set( CMAKE_C_COMPILER "C:/Qt/Qt5.10.0/Tools/mingw530_32/bin/gcc.exe" )
+    set( CMAKE_CXX_COMPILER "C:/Qt/Qt5.10.0/Tools/mingw530_32/bin/g++.exe" )
+else()
+    set( CMAKE_C_COMPILER "gcc" )
+    set( CMAKE_CXX_COMPILER "g++" )
+endif()
+
 if(NOT BUILD STREQUAL "debug" AND NOT BUILD STREQUAL "release")
     message("Enter -DBUILD=<debug|release>")
     set(BUILD "debug")
