@@ -71,18 +71,9 @@ ____________________________________________________
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
     * Done
 3. __Semaphore__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Semaphore{
-            SignedInt wait(UnsignedLong timeout);
-            SignedInt post(UnsignedInt count);
-            SignedInt get();
-        }
-        ```
-    * __Function__: `Semaphore* semaphore_new(Char* name)`
-    * __Function__: `Void semaphore_free(Semaphore* semaphore)`
     * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
-    * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
+    * __Comment__: `name`->
+    * Done
 
 #### High
 
