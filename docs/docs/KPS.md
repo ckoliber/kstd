@@ -443,6 +443,7 @@ git config core.editor code
 git config core.autocrlf input
 git config http.proxy http://127.0.0.1:8123
 git config credential.helper {cache|store} [{timout seconds}]
+[git config --unset http.proxy]
 [git config --unset credential.helper]
 
 git clone https://gitlab.com/ckoliber/KPS -b base
@@ -507,21 +508,6 @@ sources/*/build/
     sudo pip install mkdocs mkdocs-material
     cd {project name}
     mkdocs new docs
-    ```
-
-* __docs/mkdocs.yml__
-
-    ```text
-    site_name: {project name}
-    pages:
-    - 'Getting Started': START.md
-    - 'License': LICENSE.md
-    - 'How to start project': HOWTO.md
-    - 'Coding Standards': STANDARD.md
-    - 'Todo list': TODO.md
-    - 'Application Interface': INTERFACE.md
-    - 'Application Protocol': PROTOCOL.md
-    theme: 'material'
     ```
 
 ### Git usage
