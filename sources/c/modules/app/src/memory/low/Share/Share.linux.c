@@ -87,7 +87,7 @@ void* share_address(struct Share* self) {
     struct Share_* share_ = (struct Share_*)self;
 
     // get mapped shm address
-    void* result = share_->address;
+    void* result = share_->address + sizeof(pthread_mutex_t);
 
     return result;
 }
@@ -95,7 +95,7 @@ void share_flush(struct Share* self, tsize size) {
     struct Share_* share_ = (struct Share_*)self;
 
     // flush mapped shm to disk
-    msync(share_->address, size, MS_SYNC);
+    msync(share_->address, sizeof(pthread_mutex_t) + size, MS_SYNC);
 }
 
 Share* share_new(char* name, tsize size) {

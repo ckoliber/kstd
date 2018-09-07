@@ -1,144 +1,194 @@
-#ifdef __unix__
+#include <ipc/low/Condition.h>
 
-#include <low/itc/low/Cond.h>
+#if defined(APP_LINUX)
 
-#include <io/memory/Memory.h>
-#include <low/local/Time.h>
+#include <local/low/Time.h>
+#include <memory/low/Heap.h>
+#include <memory/low/Share.h>
 #include <pthread.h>
-#include <sys/time.h>
-#include <time.h>
 
-struct Cond_ {
-    struct Cond self;
-    pthread_cond_t cond;
-    pthread_mutex_t mutex;
+struct Condition_ {
+    struct Mutex self;
+    pthread_mutex_t anonymous_mutex;
+    pthread_cond_t anonymous_cond;
+    Share* named_mutex;
+    Share* named_cond;
 };
 
 // link methods
-int cond_wait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2);
-int cond_timewait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2, long int timeout);
-int cond_signal(struct Cond* self, void (*critical)(void*), void* arg);
-int cond_broadcast(struct Cond* self, void (*critical)(void*), void* arg);
+int condition_wait_anonymous(struct Condition* self, uint_64 timeout);
+int condition_signal_anonymous(struct Condition* self, uint_32 count);
+int condition_wait_named(struct Condition* self, uint_64 timeout);
+int condition_signal_named(struct Condition* self, uint_32 count);
 
-int cond_wait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2) {
-    struct Cond_* cond_ = (struct Cond_*)self;
+// implement methods
+int condition_wait_anonymous(struct Condition* self, uint_64 timeout) {
+    struct Condition_* condition_ = (struct Condition_*)self;
 
-    // wait on the cond
-    pthread_mutex_lock(&(cond_->mutex));
+    // aquire the pthread mutex
+    pthread_mutex_lock(&(condition_->anonymous_mutex));
 
-    // run conditional wait loop
-    while (condition == NULL || condition(arg1)) {
-        pthread_cond_wait(&(cond_->cond), &(cond_->mutex));
-        if (condition == NULL) {
-            break;
+    // wait the pthread cond
+    int result = -1;
+    if (timeout == UINT_64_MAX) {
+        // infinity
+        if (pthread_cond_wait(&(condition_->anonymous_cond), &(condition_->anonymous_mutex)) == 0) {
+            result = 0;
+        }
+    } else {
+        // timed
+        struct timeval time_now;
+        struct timespec time_out;
+        gettimeofday(&time_now, NULL);
+        time_out.tv_sec = time_now.tv_sec;
+        time_out.tv_nsec = time_now.tv_usec * 1000;
+        time_out.tv_sec += timeout / 1000;
+        time_out.tv_nsec += (timeout % 1000) * 1000000;
+        if (pthread_cond_timedwait(&(condition_->anonymous_cond), &(condition_->anonymous_mutex), &time_out) == 0) {
+            result = 0;
         }
     }
 
-    // run critical
-    if (critical != NULL) {
-        critical(arg2);
-    }
-
-    pthread_mutex_unlock(&(cond_->mutex));
-
-    return 0;
-}
-int cond_timewait(struct Cond* self, int (*condition)(void*), void* arg1, void (*critical)(void*), void* arg2, long int timeout) {
-    struct Cond_* cond_ = (struct Cond_*)self;
-
-    // timedwait on the cond
-    pthread_mutex_lock(&(cond_->mutex));
-
-    // get timeout in timespec and result
-    int result = 0;
-    struct timeval time_now;
-    struct timespec time_out;
-    gettimeofday(&time_now, NULL);
-    time_out.tv_sec = time_now.tv_sec;
-    time_out.tv_nsec = time_now.tv_usec * 1000;
-    time_out.tv_sec += timeout / 1000;
-    time_out.tv_nsec += (timeout % 1000) * 1000000;
-
-    // run conditional wait loop
-    while (condition == NULL || condition(arg1)) {
-        if (pthread_cond_timedwait(&(cond_->cond), &(cond_->mutex), &time_out) != 0) {
-            result = -1;
-            break;
-        }
-        if (condition == NULL) {
-            break;
-        }
-    }
-
-    // run critical
-    if (result == 0) {
-        if (critical != NULL) {
-            critical(arg2);
-        }
-    }
-
-    pthread_mutex_unlock(&(cond_->mutex));
+    // release the pthread mutex
+    pthread_mutex_unlock(&(condition_->anonymous_mutex));
 
     return result;
 }
-int cond_signal(struct Cond* self, void (*critical)(void*), void* arg) {
-    struct Cond_* cond_ = (struct Cond_*)self;
+int condition_signal_anonymous(struct Condition* self, uint_32 count) {
+    struct Condition_* condition_ = (struct Condition_*)self;
 
-    pthread_mutex_lock(&(cond_->mutex));
+    // aquire the pthread mutex
+    pthread_mutex_lock(&(condition_->anonymous_mutex));
 
-    // signal on the cond
-    pthread_cond_signal(&(cond_->cond));
-
-    // run critical
-    if (critical != NULL) {
-        critical(arg);
+    // signal the pthread cond
+    int result = -1;
+    if (count == UINT_32_MAX) {
+        // broadcast
+        if (pthread_cond_broadcast(&(condition_->anonymous_cond)) == 0) {
+            result = 0;
+        }
+    } else {
+        // signal
+        for (int cursor = 0; cursor < (int)count; cursor++) {
+            pthread_cond_signal(&(condition_->anonymous_cond);
+        }
+        result = 0;
     }
 
-    pthread_mutex_unlock(&(cond_->mutex));
+    // release the pthread mutex
+    pthread_mutex_unlock(&(condition_->anonymous_mutex));
 
-    return 0;
+    return result;
 }
-int cond_broadcast(struct Cond* self, void (*critical)(void*), void* arg) {
-    struct Cond_* cond_ = (struct Cond_*)self;
+int condition_wait_named(struct Condition* self, uint_64 timeout) {
+    struct Condition_* condition_ = (struct Condition_*)self;
 
-    pthread_mutex_lock(&(cond_->mutex));
+    // aquire the pthread shared mutex
+    pthread_mutex_lock(condition_->named_mutex->address(condition_->named_mutex));
 
-    // signal on the cond
-    pthread_cond_broadcast(&(cond_->cond));
-
-    // run critical
-    if (critical != NULL) {
-        critical(arg);
+    // wait the pthread shared cond
+    int result = -1;
+    if (timeout == UINT_64_MAX) {
+        // infinity
+        if (pthread_cond_wait(condition_->named_cond->address(condition_->named_cond), condition_->named_mutex->address(condition_->named_mutex)) == 0) {
+            result = 0;
+        }
+    } else {
+        // timed
+        struct timeval time_now;
+        struct timespec time_out;
+        gettimeofday(&time_now, NULL);
+        time_out.tv_sec = time_now.tv_sec;
+        time_out.tv_nsec = time_now.tv_usec * 1000;
+        time_out.tv_sec += timeout / 1000;
+        time_out.tv_nsec += (timeout % 1000) * 1000000;
+        if (pthread_cond_timedwait(condition_->named_cond->address(condition_->named_cond), condition_->named_mutex->address(condition_->named_mutex), &time_out) == 0) {
+            result = 0;
+        }
     }
 
-    pthread_mutex_unlock(&(cond_->mutex));
+    // release the pthread shared mutex
+    pthread_mutex_unlock(condition_->named_mutex->address(condition_->named_mutex));
 
-    return 0;
+    return result;
+}
+int condition_signal_named(struct Condition* self, uint_32 count) {
+    struct Condition_* condition_ = (struct Condition_*)self;
+
+    // aquire the pthread named mutex
+    pthread_mutex_lock(condition_->named_mutex->address(condition_->named_mutex));
+
+    // signal the pthread shared cond
+    int result = -1;
+    if (count == UINT_32_MAX) {
+        // broadcast
+        if (pthread_cond_broadcast(condition_->named_cond->address(condition_->named_cond)) == 0) {
+            result = 0;
+        }
+    } else {
+        // signal
+        for (int cursor = 0; cursor < (int)count; cursor++) {
+            pthread_cond_signal(condition_->named_cond->address(condition_->named_cond));
+        }
+        result = 0;
+    }
+
+    // release the pthread named mutex
+    pthread_mutex_unlock(condition_->named_mutex->address(condition_->named_mutex));
+
+    return result;
 }
 
-struct Cond* cond_new() {
-    struct Cond_* cond_ = memory_alloc(sizeof(struct Cond_));
+Condition* condition_new(char* name) {
+    struct Condition_* condition_ = heap_alloc(sizeof(struct Condition_));
 
     // init private methods
-    cond_->self.wait = cond_wait;
-    cond_->self.timewait = cond_timewait;
-    cond_->self.signal = cond_signal;
-    cond_->self.broadcast = cond_broadcast;
+    if (name == NULL) {
+        condition_->self.wait = condition_wait_anonymous;
+        condition_->self.signal = condition_signal_anonymous;
 
-    // init internal cond and mutex
-    pthread_cond_init(&(cond_->cond), NULL);
-    pthread_mutex_init(&(cond_->mutex), NULL);
+        // init internal mutex, cond
+        condition_->named_mutex = NULL;
+        condition_->named_cond = NULL;
+        pthread_mutex_init(&(condition_->anonymous_mutex), NULL);
+        pthread_cond_init(&(condition_->anonymous_cond), NULL);
+    } else {
+        condition_->self.wait = condition_wait_named;
+        condition_->self.signal = condition_signal_named;
 
-    return (struct Cond*)cond_;
+        // init internal share mutex, cond
+        condition_->named_mutex = share_new(name, sizeof(pthread_mutex_t));
+        condition_->named_cond = share_new(name, sizeof(pthread_cond_t));
+        pthread_mutexattr_t mattr;
+        pthread_condattr_t cattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_condattr_init(&cattr);
+        pthread_mutexattr_setpshared(&mattr, 1);
+        pthread_condattr_setpshared(&cattr, 1);
+        pthread_mutex_init(condition_->named_mutex->address(condition_->named_mutex), &mattr);
+        pthread_cond_init(condition_->named_cond->address(condition_->named_cond), &cattr);
+        pthread_mutexattr_destroy(&mattr);
+        pthread_condattr_destroy(&cattr);
+    }
+
+    return (Condition*)condition_;
 }
-void cond_free(struct Cond* cond) {
-    struct Cond_* cond_ = (struct Cond_*)cond;
+void condition_free(Condition* condition) {
+    struct Condition_* condition_ = (struct Condition_*)condition;
 
-    // destry internal cond and mutex
-    pthread_cond_destroy(&(cond_->cond));
-    pthread_mutex_destroy(&(cond_->mutex));
+    if (condition_->named_mutex == NULL) {
+        // destroy internal mutex, cond
+        pthread_mutex_destroy(&(condition_->anonymous_mutex));
+        pthread_cond_destroy(&(condition_->anonymous_cond));
+    } else {
+        // destroy internal share mutex
+        pthread_mutex_destroy(condition_->named_mutex->address(condition_->named_mutex));
+        pthread_cond_destroy(condition_->named_cond->address(condition_->named_cond));
+        share_free(condition_->named_mutex);
+        share_free(condition_->named_cond);
+    }
 
-    memory_free(cond_);
+    heap_free(condition_);
 }
 
 #endif

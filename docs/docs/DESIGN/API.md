@@ -62,30 +62,14 @@ ____________________________________________________
 #### Low
 
 1. __Mutex__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Mutex{
-            SignedInt acquire(UnsignedLong timeout);
-            SignedInt release();
-        }
-        ```
-    * __Function__: `Mutex* mutex_new(Char* name)`
-    * __Function__: `Void mutex_free(Mutex* mutex)`
     * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
+    * Done
 2. __Condition__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Condition{
-            SignedInt wait(UnsignedLong timeout);
-            SignedInt signal(UnsignedInt count);
-        }
-        ```
-    * __Function__: `Condition* condition_new(Char* name)`
-    * __Function__: `Void condition_free(Condition* condition)`
     * __Comment__: `timeout`-> `number`: timed, `UNSIGNED_LONG_MAX`: infinity
     * __Comment__: `count`-> `1`: signal, `number`: signal count, `UNSIGNED_INT_MAX`: broadcast
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
+    * Done
 3. __Semaphore__ -> `0.1.0`
     * __Struct__:
         ```c
