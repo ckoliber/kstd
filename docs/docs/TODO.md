@@ -55,3 +55,10 @@
         3. __SSE__ -> `0.6.0`
 8. __Security__
     1. __High__ -> `0.5.0`
+
+
+
+
+
+1. Semaphore, Condition, Mutex -> share name different
+2. Semaphore share -> on exists not change value
