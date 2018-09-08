@@ -4,7 +4,7 @@
 
 1. __Memory__
     1. __Low__: kernel
-        1. __Type__ -> `0.1.0` (regex => `0.2.0`)
+        1. __Type__ -> `0.1.0`
         2. __Heap__ -> `0.1.0`
         3. __Share__ -> `0.1.0`
 2. __File__
@@ -19,12 +19,14 @@
     2. __High__
         1. __Lock__ -> `0.1.0`
         2. __RWLock__ -> `0.1.0`
-        3. __Message__ -> `0.1.0`
-        4. __Monitor__ -> `0.2.0`
-        5. __Barrier__ -> `0.2.0`
-        6. __Latch__ -> `0.2.0`
+        3. __Monitor__ -> `0.2.0`
+        4. __Barrier__ -> `0.2.0`
+        5. __Latch__ -> `0.2.0`
 4. __DSA__
-    1. __High__
+    1. __Low__
+        1. __String__ -> `0.1.0`
+        2. __RegEX__ -> `0.2.0`
+    2. __High__
         1. __ArrayList__ -> `0.1.0`
         2. __LinkedList__ -> `0.1.0`
         3. __Dequeue__ -> `0.1.0`
@@ -57,4 +59,4 @@
     1. __High__ -> `0.5.0`
 
 
-9. Atomic _new, _free !!!
+9.  Atomic _new, _free !!!

@@ -78,46 +78,13 @@ ____________________________________________________
 #### High
 
 1. __Lock__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Lock{
-            SignedInt lock(UnsignedLong timeout);
-            SignedInt unlock();
-        }
-        ```
-    * __Function__: `Lock* lock_new(Char* name)`
-    * __Function__: `Void lock_free(Lock* lock)`
     * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
+    * Done
 2. __RWLock__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct RWLock{
-            SignedInt lock_read(UnsignedLong timeout);
-            SignedInt lock_write(UnsignedLong timeout);
-            SignedInt unlock_read();
-            SignedInt unlock_write();
-        }
-        ```
-    * __Function__: `RWLock* rwlock_new(Char* name)`
-    * __Function__: `Void rwlock_free(RWLock* rwlock)`
     * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
-3. __Message__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Message{
-            SignedInt enqueue(Void* item, UnsignedLong timeout);
-            SignedInt dequeue(Void** item, UnsignedLong timeout);
-        }
-        ```
-    * __Function__: `Message* message_new(Char* name, UnsignedInt max, Size item)`
-    * __Function__: `Void message_free(Message* message)`
-    * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
-    * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
-4. __Monitor__ -> `0.2.0`
-5. __Barrier__ -> `0.2.0`
-6. __Latch__ -> `0.2.0`
+    * Done
 
 ____________________________________________________
 

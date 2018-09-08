@@ -1,61 +1,55 @@
-#include <low/itc/high/Lock.h>
+#include <ipc/high/Lock.h>
 
-#include <io/memory/Memory.h>
-#include <low/itc/low/Mutex.h>
+#include <dsa/low/String.h>
+#include <ipc/low/Mutex.h>
+#include <memory/low/Heap.h>
 
 struct Lock_ {
     struct Lock self;
-    struct Mutex* mutex;
+    Mutex* mutex;
 };
 
 // link methods
-int lock_lock(struct Lock* self);
-int lock_timelock(struct Lock* self, long int timeout);
+int lock_lock(struct Lock* self, uint_64 timeout);
 int lock_unlock(struct Lock* self);
 
-int lock_lock(struct Lock* self) {
-    struct Lock_* lock_ = (struct Lock_ *) self;
+// implement methods
+int lock_lock(struct Lock* self, uint_64 timeout) {
+    struct Lock_* lock_ = (struct Lock_*)self;
 
-    // lock internal Mutex
-    lock_->mutex->lock(lock_->mutex);
-
-    return 0;
-}
-int lock_timelock(struct Lock* self, long int timeout) {
-    struct Lock_* lock_ = (struct Lock_ *) self;
-
-    // lock internal Mutex
-    int result = lock_->mutex->timelock(lock_->mutex, timeout);
+    // acquire internal Mutex
+    int result = lock_->mutex->acquire(lock_->mutex, timeout);
 
     return result;
 }
 int lock_unlock(struct Lock* self) {
-    struct Lock_* lock_ = (struct Lock_ *) self;
+    struct Lock_* lock_ = (struct Lock_*)self;
 
-    // lock internal Mutex
-    lock_->mutex->unlock(lock_->mutex);
+    // release internal Mutex
+    int result = lock_->mutex->release(lock_->mutex);
 
-    return 0;
+    return result;
 }
 
-struct Lock* lock_new() {
-    struct Lock_* lock_ = memory_alloc(sizeof(struct Lock_));
+Lock* lock_new(char* name) {
+    struct Lock_* lock_ = heap_alloc(sizeof(struct Lock_));
 
     // init private methods
     lock_->self.lock = lock_lock;
-    lock_->self.timelock = lock_timelock;
     lock_->self.unlock = lock_unlock;
 
-    // create internal Mutex
-    lock_->mutex = mutex_new();
+    // create internal mutex
+    String* lockmutex_name = string_new_concat(name, "/lockmutex");
+    lock_->mutex = mutex_new(lockmutex_name);
+    string_free(lockmutex_name);
 
-    return (struct Lock *) lock_;
+    return (Lock*)lock_;
 }
-void lock_free(struct Lock* lock) {
-    struct Lock_* lock_ = (struct Lock_ *) lock;
+void lock_free(Lock* lock) {
+    struct Lock_* lock_ = (struct Lock_*)lock;
 
-    // destry internal Mutex
+    // destroy internal mutex
     mutex_free(lock_->mutex);
 
-    memory_free(lock_);
+    heap_free(lock_);
 }

@@ -6,100 +6,83 @@
 
 struct RWLock_ {
     struct RWLock self;
-    struct Mutex* writer_mutex;
-    struct Mutex* critical_mutex;
+    Mutex* critical_mutex;
+    Mutex* write_mutex;
     int readers_count;
 };
 
 // link methods
-int rwlock_readlock(struct RWLock* self);
-int rwlock_writelock(struct RWLock* self);
-int rwlock_timereadlock(struct RWLock* self, long int timeout);
-int rwlock_timewritelock(struct RWLock* self, long int timeout);
-int rwlock_readunlock(struct RWLock* self);
-int rwlock_writeunlock(struct RWLock* self);
+int rwlock_read_lock(struct RWLock* self, uint_64 timeout);
+int rwlock_read_unlock(struct RWLock* self);
+int rwlock_write_lock(struct RWLock* self, uint_64 timeout);
+int rwlock_write_unlock(struct RWLock* self);
 
-int rwlock_readlock(struct RWLock* self) {
+// implement methods
+int rwlock_read_lock(struct RWLock* self, uint_64 timeout) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
-    // reader lock (first critical mutex and if first reader then lock writer mutex)
-    rwlock_->critical_mutex->lock(rwlock_->critical_mutex);
-    rwlock_->readers_count++;
-    if (rwlock_->readers_count == 1) {
-        rwlock_->writer_mutex->lock(rwlock_->writer_mutex);
-    }
-    rwlock_->critical_mutex->unlock(rwlock_->critical_mutex);
-
-    return 0;
-}
-int rwlock_writelock(struct RWLock* self) {
-    struct RWLock_* rwlock_ = (struct RWLock_*)self;
-
-    // lock the writer mutex
-    rwlock_->writer_mutex->lock(rwlock_->writer_mutex);
-
-    return 0;
-}
-int rwlock_timereadlock(struct RWLock* self, long int timeout) {
-    struct RWLock_* rwlock_ = (struct RWLock_*)self;
-
-    // set default result and current time
+    // get time and result
     int result = -1;
-    long int time = time_epochmillis();
+    uint_64 time = time_epochmillis();
 
-    // reader timelock -> try timelock critical mutex
-    if (rwlock_->critical_mutex->timelock(rwlock_->critical_mutex, timeout) == 0) {
+    // critical begin
+    if (rwlock_->critical_mutex->acquire(rwlock_->critical_mutex, timeout) == 0) {
+        // add readers count
         rwlock_->readers_count++;
 
-        // if first reader then try lock writer else complete
+        // check readers count
         if (rwlock_->readers_count == 1) {
-            // get new timeout
-            long int timeout_new = timeout - (time_epochmillis() - time);
-
-            // try lock write mutex in new timeout
-            if (rwlock_->writer_mutex->timelock(rwlock_->writer_mutex, timeout_new) == 0) {
-                result = 0;
-            }
-
+            // get new timeout and lock writer
+            timeout -= (time_epochmillis() - time);
+            result = rwlock_->writer_mutex->acquire(rwlock_->writer_mutex, timeout);
         } else {
             result = 0;
         }
-        rwlock_->critical_mutex->unlock(rwlock_->critical_mutex);
+
+        // critical end
+        rwlock_->critical_mutex->release(rwlock_->critical_mutex);
     }
 
     return result;
 }
-int rwlock_timewritelock(struct RWLock* self, long int timeout) {
+int rwlock_read_unlock(struct RWLock* self) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
-    // timelock the writer mutex
-    int result = rwlock_->writer_mutex->timelock(rwlock_->writer_mutex, timeout);
+    // critical begin
+    rwlock_->critical_mutex->acquire(rwlock_->critical_mutex, UINT_16_MAX);
 
-    return result;
-}
-int rwlock_readunlock(struct RWLock* self) {
-    struct RWLock_* rwlock_ = (struct RWLock_*)self;
-
-    // reader unlock (first critical mutex and if last reader then unlock writer mutex)
-    rwlock_->critical_mutex->lock(rwlock_->critical_mutex);
+    // decrease readers count and release write lock
+    int result = -1;
     rwlock_->readers_count--;
     if (rwlock_->readers_count == 0) {
-        rwlock_->writer_mutex->unlock(rwlock_->writer_mutex);
+        result = rwlock_->writer_mutex->release(rwlock_->writer_mutex);
+    } else {
+        result = 0;
     }
-    rwlock_->critical_mutex->unlock(rwlock_->critical_mutex);
 
-    return 0;
+    // critical end
+    rwlock_->critical_mutex->release(rwlock_->critical_mutex);
+
+    return result;
 }
-int rwlock_writeunlock(struct RWLock* self) {
+int rwlock_write_lock(struct RWLock* self, uint_64 timeout) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
-    // unlock the writer lock
-    rwlock_->writer_mutex->unlock(rwlock_->writer_mutex);
+    // write lock
+    int result = rwlock_->writer_mutex->acquire(rwlock_->writer_mutex, timeout);
 
-    return 0;
+    return result;
+}
+int rwlock_write_unlock(struct RWLock* self) {
+    struct RWLock_* rwlock_ = (struct RWLock_*)self;
+
+    // write unlock
+    int result = rwlock_->writer_mutex->release(rwlock_->writer_mutex);
+
+    return result;
 }
 
-struct RWLock* rwlock_new() {
+RWLock* rwlock_new(char* name) {
     struct RWLock_* rwlock_ = memory_alloc(sizeof(struct RWLock_));
 
     // init private methods
@@ -110,20 +93,27 @@ struct RWLock* rwlock_new() {
     rwlock_->self.readunlock = rwlock_readunlock;
     rwlock_->self.writeunlock = rwlock_writeunlock;
 
-    // create internal Mutexes
-    rwlock_->writer_mutex = mutex_new();
-    rwlock_->critical_mutex = mutex_new();
+    // create internal mutexes
+    String* criticalmutex_name = string_new_concat(name, "/criticalmutex");
+    rwlock_->critical_mutex = mutex_new(criticalmutex_name);
+    string_free(criticalmutex_name);
+
+    // create internal mutexes
+    String* writemutex_name = string_new_concat(name, "/writemutex");
+    rwlock_->writer_mutex = mutex_new(writemutex_name);
+    string_free(writemutex_name);
+
     rwlock_->readers_count = 0;
 
     return (struct RWLock*)rwlock_;
 }
 
-void rwlock_free(struct RWLock* rwlock) {
+void rwlock_free(RWLock* rwlock) {
     struct RWLock_* rwlock_ = (struct RWLock_*)rwlock;
 
-    // destroy internal Mutexes
-    mutex_free(rwlock_->writer_mutex);
+    // destroy internal mutexes
     mutex_free(rwlock_->critical_mutex);
+    mutex_free(rwlock_->write_mutex);
 
-    memory_free(rwlock_);
+    heap_free(rwlock_);
 }
