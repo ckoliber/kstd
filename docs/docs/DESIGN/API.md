@@ -205,31 +205,3 @@ ____________________________________________________
 1. __High__ -> `0.5.0`
 
 ____________________________________________________
-
-
-
-
-
-#### File
-
-> Standard File Read and Write and Poll
-
-##### File
-
-
-##### Poller
-
-* __has fd set for polling array of fd's__
-* __set's nonblocking flag on fd__
-
-* __Struct__:
-    ```c
-    struct Poller{
-        int add(FD* fd);
-        int remove(FD* fd);
-        int start();
-        int stop();
-    }
-    ```
-* __Function__: `Poller* poller_new(void (*onAccept)(FD* fd), void (*onClose)(FD* fd), void (*onRead)(FD* fd, void* data, int size))`
-* __Function__: `void poller_free(Poller* poller)`
