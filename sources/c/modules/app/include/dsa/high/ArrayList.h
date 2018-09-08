@@ -1,3 +1,5 @@
+#include <memory/low/Type.h>
+
 typedef struct ArrayList {
     int (*add)(struct ArrayList* self, void* item);
     int (*addto)(struct ArrayList* self, int position, void* item);
@@ -8,5 +10,5 @@ typedef struct ArrayList {
     int (*size)(struct ArrayList* self);
 } ArrayList;
 
-struct ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*, void*));
-void arraylist_free(struct ArrayList* arraylist);
+ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*, void*));
+void arraylist_free(ArrayList* arraylist);

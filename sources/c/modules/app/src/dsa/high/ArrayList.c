@@ -1,7 +1,7 @@
-#include <low/dsa/ArrayList.h>
+#include <dsa/high/ArrayList.h>
 
-#include <io/memory/Memory.h>
-#include <low/itc/high/RWLock.h>
+#include <ipc/high/RWLock.h>
+#include <memory/low/Heap.h>
 
 struct ArrayList_ {
     struct ArrayList self;
@@ -9,8 +9,8 @@ struct ArrayList_ {
     int cursor;
     void** array;
     float factor;
-    struct RWLock* rwlock;
-    int (*comperator)(void* item1, void* item2);
+    RWLock* rwlock;
+    int (*comperator)(void*, void*);
 };
 
 // link methods
@@ -49,7 +49,7 @@ int arraylist_addto_normal(struct ArrayList* self, int position, void* item) {
     // check array have free space or not
     if (arraylist_->cursor >= arraylist_->length) {
         arraylist_->length = (int)(arraylist_->length * arraylist_->factor + 1);
-        arraylist_->array = memory_realloc(arraylist_->array, arraylist_->length * sizeof(void*));
+        arraylist_->array = heap_realloc(arraylist_->array, arraylist_->length * sizeof(void*));
     }
 
     // move other items one block next
@@ -101,7 +101,7 @@ void* arraylist_remove_normal(struct ArrayList* self, int position) {
     if (arraylist_->cursor < arraylist_->length / arraylist_->factor) {
         arraylist_->length = (int)(arraylist_->length / arraylist_->factor);
         arraylist_->length = arraylist_->length ? arraylist_->length : 1;
-        arraylist_->array = memory_realloc(arraylist_->array, arraylist_->length * sizeof(void*));
+        arraylist_->array = heap_realloc(arraylist_->array, arraylist_->length * sizeof(void*));
     }
 
     return result;
@@ -154,13 +154,13 @@ int arraylist_add_concurrent(struct ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent writelock
-    arraylist_->rwlock->writelock(arraylist_->rwlock);
+    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal add
     int result = arraylist_add_normal(self, item);
 
     // concurrent writeunlock
-    arraylist_->rwlock->writeunlock(arraylist_->rwlock);
+    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -173,13 +173,13 @@ int arraylist_addto_concurrent(struct ArrayList* self, int position, void* item)
     }
 
     // concurrent writelock
-    arraylist_->rwlock->writelock(arraylist_->rwlock);
+    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal addto
     int result = arraylist_addto_normal(self, position, item);
 
     // concurrent writeunlock
-    arraylist_->rwlock->writeunlock(arraylist_->rwlock);
+    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -192,13 +192,13 @@ void* arraylist_put_concurrent(struct ArrayList* self, int position, void* item)
     }
 
     // concurrent writelock
-    arraylist_->rwlock->writelock(arraylist_->rwlock);
+    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal put
     void* result = arraylist_put_normal(self, position, item);
 
     // concurrent writeunlock
-    arraylist_->rwlock->writeunlock(arraylist_->rwlock);
+    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -211,13 +211,13 @@ void* arraylist_remove_concurrent(struct ArrayList* self, int position) {
     }
 
     // concurrent writelock
-    arraylist_->rwlock->writelock(arraylist_->rwlock);
+    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal remove
     void* result = arraylist_remove_normal(self, position);
 
     // concurrent writeunlock
-    arraylist_->rwlock->writeunlock(arraylist_->rwlock);
+    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -230,13 +230,13 @@ void* arraylist_get_concurrent(struct ArrayList* self, int position) {
     }
 
     // concurrent readlock
-    arraylist_->rwlock->readlock(arraylist_->rwlock);
+    arraylist_->rwlock->read_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal get
     void* result = arraylist_get_normal(self, position);
 
     // concurrent readunlock
-    arraylist_->rwlock->readunlock(arraylist_->rwlock);
+    arraylist_->rwlock->read_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -244,13 +244,13 @@ int arraylist_indexof_concurrent(struct ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent readlock
-    arraylist_->rwlock->readlock(arraylist_->rwlock);
+    arraylist_->rwlock->read_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal indexof
     int result = arraylist_indexof_normal(self, item);
 
     // concurrent readunlock
-    arraylist_->rwlock->readunlock(arraylist_->rwlock);
+    arraylist_->rwlock->read_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -258,19 +258,19 @@ int arraylist_size_concurrent(struct ArrayList* self) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent readlock
-    arraylist_->rwlock->readlock(arraylist_->rwlock);
+    arraylist_->rwlock->read_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal size
     int result = arraylist_size_normal(self);
 
     // concurrent readunlock
-    arraylist_->rwlock->readunlock(arraylist_->rwlock);
+    arraylist_->rwlock->read_unlock(arraylist_->rwlock);
 
     return result;
 }
 
-struct ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*, void*)) {
-    struct ArrayList_* arraylist_ = memory_alloc(sizeof(struct ArrayList_));
+ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*, void*)) {
+    struct ArrayList_* arraylist_ = heap_alloc(sizeof(struct ArrayList_));
 
     // init private methods
     switch (mode) {
@@ -292,27 +292,27 @@ struct ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*,
             arraylist_->self.get = arraylist_get_concurrent;
             arraylist_->self.indexof = arraylist_indexof_concurrent;
             arraylist_->self.size = arraylist_size_concurrent;
-            arraylist_->rwlock = rwlock_new();
+            arraylist_->rwlock = rwlock_new(NULL);
             break;
     }
 
     // create internal cursor and length and array and factor
     arraylist_->length = 1;
     arraylist_->cursor = 0;
-    arraylist_->array = memory_alloc(arraylist_->length * sizeof(void*));
+    arraylist_->array = heap_alloc(arraylist_->length * sizeof(void*));
     arraylist_->factor = factor;
     arraylist_->comperator = comperator;
 
-    return (struct ArrayList*)arraylist_;
+    return (ArrayList*)arraylist_;
 }
-void arraylist_free(struct ArrayList* arraylist) {
+void arraylist_free(ArrayList* arraylist) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)arraylist;
 
     // destry internal array and rwlock
-    memory_free(arraylist_->array);
+    heap_free(arraylist_->array);
     if (arraylist_->rwlock != NULL) {
         rwlock_free(arraylist_->rwlock);
     }
 
-    memory_free(arraylist_);
+    heap_free(arraylist_);
 }

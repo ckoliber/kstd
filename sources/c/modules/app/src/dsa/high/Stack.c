@@ -1,7 +1,7 @@
-#include <low/dsa/Stack.h>
+#include <dsa/high/Stack.h>
 
-#include <io/memory/Memory.h>
-#include <low/dsa/Dequeue.h>
+#include <dsa/high/Dequeue.h>
+#include <memory/low/Heap.h>
 
 struct Stack_ {
     struct Stack self;
@@ -9,20 +9,20 @@ struct Stack_ {
 };
 
 // link methods
-int stack_push(struct Stack* self, long int timeout, void* item);
-void* stack_pop(struct Stack* self, long int timeout);
+int stack_push(struct Stack* self, void* item, uint_64 timeout);
+void* stack_pop(struct Stack* self, uint_64 timeout);
 void* stack_get(struct Stack* self);
 int stack_size(struct Stack* self);
 
-int stack_push(struct Stack* self, long int timeout, void* item) {
+int stack_push(struct Stack* self, void* item, uint_64 timeout) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // Dequeue enqueue to front
-    int result = stack_->dequeue->enqueue(stack_->dequeue, 1, item);
+    int result = stack_->dequeue->enqueue(stack_->dequeue, 1, item, timeout);
 
     return result;
 }
-void* stack_pop(struct Stack* self, long int timeout) {
+void* stack_pop(struct Stack* self, uint_64 timeout) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // Dequeue dequeue from front
@@ -48,7 +48,7 @@ int stack_size(struct Stack* self) {
 }
 
 struct Stack* stack_new(int mode, int max, int (*comperator)(void*, void*)) {
-    struct Stack_* stack_ = memory_alloc(sizeof(struct Stack_));
+    struct Stack_* stack_ = heap_alloc(sizeof(struct Stack_));
 
     // init private methods
     stack_->self.push = stack_push;
@@ -67,5 +67,5 @@ void stack_free(struct Stack* stack) {
     // destroy internal Dequeue
     dequeue_free(stack_->dequeue);
 
-    memory_free(stack_);
+    heap_free(stack_);
 }

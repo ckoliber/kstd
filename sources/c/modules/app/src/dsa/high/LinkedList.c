@@ -1,14 +1,14 @@
-#include <low/dsa/LinkedList.h>
+#include <dsa/high/LinkedList.h>
 
-#include <io/memory/Memory.h>
-#include <low/itc/high/RWLock.h>
+#include <ipc/high/RWLock.h>
+#include <memory/low/Heap.h>
 
 struct LinkedList_ {
     struct LinkedList self;
     struct LinkedItem* head;
     int size;
-    struct RWLock* rwlock;
-    int (*comperator)(void* item1, void* item2);
+    RWLock* rwlock;
+    int (*comperator)(void*, void*);
 };
 
 struct LinkedItem {
@@ -97,7 +97,7 @@ int linkedlist_addto_normal(struct LinkedList* self, int position, void* item) {
     struct LinkedItem* item_target = linkeditem_get(self, position);
 
     // allocate new linkeditem and fill it
-    struct LinkedItem* linkeditem = memory_alloc(sizeof(struct LinkedItem));
+    struct LinkedItem* linkeditem = heap_alloc(sizeof(struct LinkedItem));
     linkeditem->item = item;
     linkeditem->next = item_target->next;
     linkeditem->previews = item_target;
@@ -144,7 +144,7 @@ void* linkedlist_remove_normal(struct LinkedList* self, int position) {
 
     // remove item
     void* result = item_target->item;
-    memory_free(item_target);
+    heap_free(item_target);
     linkedlist_->size--;
 
     return result;
@@ -208,13 +208,13 @@ int linkedlist_add_concurrent(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
-    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal add
     int result = linkedlist_add_normal(self, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -227,13 +227,13 @@ int linkedlist_addto_concurrent(struct LinkedList* self, int position, void* ite
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal addto
     int result = linkedlist_addto_normal(self, position, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -246,13 +246,13 @@ void* linkedlist_put_concurrent(struct LinkedList* self, int position, void* ite
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal put
     void* result = linkedlist_put_normal(self, position, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -265,13 +265,13 @@ void* linkedlist_remove_concurrent(struct LinkedList* self, int position) {
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->writelock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal remove
     void* result = linkedlist_remove_normal(self, position);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->writeunlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -284,13 +284,13 @@ void* linkedlist_get_concurrent(struct LinkedList* self, int position) {
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->readlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->read_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal get
     void* result = linkedlist_get_normal(self, position);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->read_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -298,13 +298,13 @@ int linkedlist_indexof_concurrent(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
-    linkedlist_->rwlock->readlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->read_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal indexof
     int result = linkedlist_indexof_normal(self, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->read_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -312,13 +312,13 @@ int linkedlist_size_concurrent(struct LinkedList* self) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
-    linkedlist_->rwlock->readlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->read_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal size
     int result = linkedlist_size_normal(self);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->readunlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->read_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -341,8 +341,8 @@ void* linkedlistiterator_next(struct LinkedListIterator* self) {
     return result;
 }
 
-struct LinkedList* linkedlist_new(int mode, int (*comperator)(void* item1, void* item2)) {
-    struct LinkedList_* linkedlist_ = memory_alloc(sizeof(struct LinkedList_));
+LinkedList* linkedlist_new(int mode, int (*comperator)(void* item1, void* item2)) {
+    struct LinkedList_* linkedlist_ = heap_alloc(sizeof(struct LinkedList_));
 
     // init private methods
     switch (mode) {
@@ -364,21 +364,21 @@ struct LinkedList* linkedlist_new(int mode, int (*comperator)(void* item1, void*
             linkedlist_->self.get = linkedlist_get_concurrent;
             linkedlist_->self.indexof = linkedlist_indexof_concurrent;
             linkedlist_->self.size = linkedlist_size_concurrent;
-            linkedlist_->rwlock = rwlock_new();
+            linkedlist_->rwlock = rwlock_new(NULL);
             break;
     }
 
     // init size and head and comperator
     linkedlist_->size = 0;
-    linkedlist_->head = memory_alloc(sizeof(struct LinkedItem));
+    linkedlist_->head = heap_alloc(sizeof(struct LinkedItem));
     linkedlist_->head->next = linkedlist_->head;
     linkedlist_->head->previews = linkedlist_->head;
     linkedlist_->head->item = NULL;
     linkedlist_->comperator = comperator;
 
-    return (struct LinkedList*)linkedlist_;
+    return (LinkedList*)linkedlist_;
 }
-void linkedlist_free(struct LinkedList* linkedlist) {
+void linkedlist_free(LinkedList* linkedlist) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)linkedlist;
 
     // break linkedlist circle
@@ -389,7 +389,7 @@ void linkedlist_free(struct LinkedList* linkedlist) {
     do {
         remove_item = linkedlist_->head;
         linkedlist_->head = linkedlist_->head->next;
-        memory_free(remove_item);
+        heap_free(remove_item);
     } while (linkedlist_->head != NULL);
 
     // destry internal rwlock
@@ -397,11 +397,11 @@ void linkedlist_free(struct LinkedList* linkedlist) {
         rwlock_free(linkedlist_->rwlock);
     }
 
-    memory_free(linkedlist_);
+    heap_free(linkedlist_);
 }
 
-struct LinkedListIterator* linkedlistiterator_new(struct LinkedList* linkedlist) {
-    struct LinkedListIterator_* linkedlistiterator_ = memory_alloc(sizeof(struct LinkedListIterator_));
+LinkedListIterator* linkedlistiterator_new(struct LinkedList* linkedlist) {
+    struct LinkedListIterator_* linkedlistiterator_ = heap_alloc(sizeof(struct LinkedListIterator_));
 
     // init private methods
     linkedlistiterator_->self.hasnext = linkedlistiterator_hasnext;
@@ -412,10 +412,10 @@ struct LinkedListIterator* linkedlistiterator_new(struct LinkedList* linkedlist)
     linkedlistiterator_->item = linkedlist_->head->next;
     linkedlistiterator_->end = linkedlist_->head;
 
-    return (struct LinkedListIterator*)linkedlistiterator_;
+    return (LinkedListIterator*)linkedlistiterator_;
 }
-void linkedlistiterator_free(struct LinkedListIterator* linkedlistiterator) {
+void linkedlistiterator_free(LinkedListIterator* linkedlistiterator) {
     struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)linkedlistiterator;
 
-    memory_free(linkedlistiterator_);
+    heap_free(linkedlistiterator_);
 }

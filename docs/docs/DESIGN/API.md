@@ -93,97 +93,18 @@ ____________________________________________________
 #### High
 
 1. __ArrayList__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct ArrayList{
-            SignedInt add(Void* item);
-            SignedInt addto(SignedInt position, Void* item);
-            Void* put(SignedInt position, Void* item);
-            Void* remove(SignedInt position);
-            Void* get(SignedInt position);
-            SignedInt indexof(Void* item);
-            SignedInt size();
-        }
-        enum ArrayListMode{
-            ARRAYLIST_MODE_NORMAL,
-            ARRAYLIST_MODE_CONCURRENT
-        }
-        ```
-    * __Function__: `ArrayList* arraylist_new(ArrayListMode mode, Float factor, SignedInt (*comperator)(Void*, Void*))`
-    * __Function__: `Void arraylist_free(ArrayList* arraylist)`
+    * Done
 2. __LinkedList__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct LinkedList{
-            SignedInt add(Void* item);
-            SignedInt addto(SignedInt position, Void* item);
-            Void* put(SignedInt position, Void* item);
-            Void* remove(SignedInt position);
-            Void* get(SignedInt position);
-            SignedInt indexof(Void* item);
-            SignedInt size();
-        }
-        enum LinkedListMode{
-            LINKEDLIST_MODE_NORMAL,
-            LINKEDLIST_MODE_CONCURRENT
-        }
-        ```
-    * __Function__: `LinkedList* linkedlist_new(LinkedListMode mode, SignedInt (*comperator)(Void*, Void*))`
-    * __Function__: `Void linkedlist_free(LinkedList* linkedlist)`
+    * Done
 3. __Dequeue__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Dequeue{
-            SignedInt enqueue(Bool front, Void* item, UnsignedLong timeout);
-            Void* dequeue(Bool front, UnsignedLong timeout);
-            Void* get(Bool front);
-            SignedInt size();
-        }
-        enum DequeueMode{
-            DEQUEUE_MODE_NORMAL,
-            DEQUEUE_MODE_CONCURRENT,
-            DEQUEUE_MODE_BLOCKING
-        }
-        ```
     * if `comperator` is not `NULL` queue is a `PriorityDequeue`
-    * __Function__: `Dequeue* dequeue_new(DequeueMode mode, SignedInt max, SignedInt (*comperator)(Void*, Void*))`
-    * __Function__: `Void dequeue_free(Dequeue* dequeue)`
+    * Done
 4. __Queue__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Queue{
-            SignedInt enqueue(Void* item, UnsignedLong timeout);
-            Void* dequeue(UnsignedLong timeout);
-            Void* get();
-            SignedInt size();
-        }
-        enum QueueMode{
-            QUEUE_MODE_NORMAL,
-            QUEUE_MODE_CONCURRENT,
-            QUEUE_MODE_BLOCKING
-        }
-        ```
     * if `comperator` is not `NULL` queue is a `PriorityQueue`
-    * __Function__: `Queue* queue_new(QueueMode mode, SignedInt max, SignedInt (*comperator)(Void*, Void*))`
-    * __Function__: `Void queue_free(Queue* queue)`
+    * Done
 5. __Stack__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Stack{
-            SignedInt push(Void* item, UnsignedLong timeout);
-            Void* pop(UnsignedLong timeout);
-            Void* get();
-            SignedInt size();
-        }
-        enum StackMode{
-            STACK_MODE_NORMAL,
-            STACK_MODE_CONCURRENT,
-            STACK_MODE_BLOCKING
-        }
-        ```
     * if `comperator` is not `NULL` stack is a `PriorityStack`
-    * __Function__: `Stack* stack_new(StackMode mode, SignedInt max, SignedInt (*comperator)(Void*, Void*))`
-    * __Function__: `void stack_free(Stack* stack)`
+    * Done
 6. __Set__ -> `0.2.0`
     * __concurrent, normal set (memory, speed optimization)__
 7. __Hash__ -> `0.2.0`

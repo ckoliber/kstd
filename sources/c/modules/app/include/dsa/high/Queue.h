@@ -1,9 +1,11 @@
+#include <memory/low/Type.h>
+
 typedef struct Queue {
-    int (*enqueue)(struct Queue* self, long int timeout, void* item);
-    void* (*dequeue)(struct Queue* self, long int timeout);
+    int (*enqueue)(struct Queue* self, void* item, uint_64 timeout);
+    void* (*dequeue)(struct Queue* self, uint_64 timeout);
     void* (*get)(struct Queue* self);
     int (*size)(struct Queue* self);
 } Queue;
 
-struct Queue* queue_new(int mode, int max, int (*comperator)(void*, void*));
-void queue_free(struct Queue* queue);
+Queue* queue_new(int mode, int max, int (*comperator)(void*, void*));
+void queue_free(Queue* queue);

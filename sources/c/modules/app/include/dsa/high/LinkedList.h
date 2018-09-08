@@ -1,3 +1,5 @@
+#include <memory/low/Type.h>
+
 typedef struct LinkedList {
     int (*add)(struct LinkedList* self, void* item);
     int (*addto)(struct LinkedList* self, int position, void* item);
@@ -13,8 +15,8 @@ typedef struct LinkedListIterator {
     void* (*next)(struct LinkedListIterator* self);
 } LinkedListIterator;
 
-struct LinkedList* linkedlist_new(int mode, int (*comperator)(void*, void*));
-void linkedlist_free(struct LinkedList* linkedlist);
+LinkedList* linkedlist_new(int mode, int (*comperator)(void*, void*));
+void linkedlist_free(LinkedList* linkedlist);
 
-struct LinkedListIterator* linkedlistiterator_new(struct LinkedList* linkedlist);
-void linkedlistiterator_free(struct LinkedListIterator* linkedlistiterator);
+LinkedListIterator* linkedlistiterator_new(LinkedList* linkedlist);
+void linkedlistiterator_free(LinkedListIterator* linkedlistiterator);

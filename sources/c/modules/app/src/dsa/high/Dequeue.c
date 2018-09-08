@@ -1,18 +1,18 @@
-#include <low/dsa/Dequeue.h>
+#include <dsa/high/Dequeue.h>
 
-#include <io/memory/Memory.h>
-#include <low/itc/high/RWLock.h>
-#include <low/itc/high/Semaphore.h>
+#include <ipc/high/RWLock.h>
+#include <ipc/high/Semaphore.h>
+#include <memory/low/Heap.h>
 
 struct Dequeue_ {
     struct Dequeue self;
     struct DequeueItem* head;
     int size;
     int max;
-    struct RWLock* rwlock;
-    struct Semaphore* empty_semaphore;
-    struct Semaphore* full_semaphore;
-    int (*comperator)(void* item1, void* item2);
+    RWLock* rwlock;
+    Semaphore* empty_semaphore;
+    Semaphore* full_semaphore;
+    int (*comperator)(void*, void*);
 };
 
 struct DequeueItem {
@@ -22,18 +22,18 @@ struct DequeueItem {
 };
 
 // link methods
-int dequeue_enqueue_normal(struct Dequeue* self, int front, long int timeout, void* item);
-void* dequeue_dequeue_normal(struct Dequeue* self, int front, long int timeout);
+int dequeue_enqueue_normal(struct Dequeue* self, int front, void* item, uint_64 timeout);
+void* dequeue_dequeue_normal(struct Dequeue* self, int front, uint_64 timeout);
 void* dequeue_get_normal(struct Dequeue* self, int front);
 int dequeue_size_normal(struct Dequeue* self);
 
-int dequeue_enqueue_concurrent(struct Dequeue* self, int front, long int timeout, void* item);
-void* dequeue_dequeue_concurrent(struct Dequeue* self, int front, long int timeout);
+int dequeue_enqueue_concurrent(struct Dequeue* self, int front, void* item, uint_64 timeout);
+void* dequeue_dequeue_concurrent(struct Dequeue* self, int front, uint_64 timeout);
 void* dequeue_get_concurrent(struct Dequeue* self, int front);
 int dequeue_size_concurrent(struct Dequeue* self);
 
-int dequeue_enqueue_blocking(struct Dequeue* self, int front, long int timeout, void* item);
-void* dequeue_dequeue_blocking(struct Dequeue* self, int front, long int timeout);
+int dequeue_enqueue_blocking(struct Dequeue* self, int front, void* item, uint_64 timeout);
+void* dequeue_dequeue_blocking(struct Dequeue* self, int front, uint_64 timeout);
 void* dequeue_get_blocking(struct Dequeue* self, int front);
 int dequeue_size_blocking(struct Dequeue* self);
 
@@ -64,7 +64,7 @@ struct DequeueItem* dequeueitem_get(struct Dequeue* dequeue, int front, void* it
     return result;
 }
 
-int dequeue_enqueue_normal(struct Dequeue* self, int front, long int timeout, void* item) {
+int dequeue_enqueue_normal(struct Dequeue* self, int front, void* item, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // check dequeue is full
@@ -76,7 +76,7 @@ int dequeue_enqueue_normal(struct Dequeue* self, int front, long int timeout, vo
     struct DequeueItem* item_target = dequeueitem_get(self, front, item);
 
     // allocate new dequeueitem and fill it
-    struct DequeueItem* dequeueitem = memory_alloc(sizeof(struct DequeueItem));
+    struct DequeueItem* dequeueitem = heap_alloc(sizeof(struct DequeueItem));
     dequeueitem->item = item;
     dequeueitem->next = item_target->next;
     dequeueitem->previews = item_target;
@@ -89,7 +89,7 @@ int dequeue_enqueue_normal(struct Dequeue* self, int front, long int timeout, vo
 
     return result;
 }
-void* dequeue_dequeue_normal(struct Dequeue* self, int front, long int timeout) {
+void* dequeue_dequeue_normal(struct Dequeue* self, int front, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // check dequeue is not empty
@@ -106,7 +106,7 @@ void* dequeue_dequeue_normal(struct Dequeue* self, int front, long int timeout) 
 
     // remove item
     void* result = item_target->item;
-    memory_free(item_target);
+    heap_free(item_target);
     dequeue_->size--;
 
     return result;
@@ -133,31 +133,31 @@ int dequeue_size_normal(struct Dequeue* self) {
     return result;
 }
 
-int dequeue_enqueue_concurrent(struct Dequeue* self, int front, long int timeout, void* item) {
+int dequeue_enqueue_concurrent(struct Dequeue* self, int front, void* item, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
-    dequeue_->rwlock->writelock(dequeue_->rwlock);
+    dequeue_->rwlock->write_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal enqueue
     int result = dequeue_enqueue_normal(self, front, item);
 
     // concurrent writeunlock
-    dequeue_->rwlock->writeunlock(dequeue_->rwlock);
+    dequeue_->rwlock->write_unlock(dequeue_->rwlock);
 
     return result;
 }
-void* dequeue_dequeue_concurrent(struct Dequeue* self, int front, long int timeout) {
+void* dequeue_dequeue_concurrent(struct Dequeue* self, int front, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
-    dequeue_->rwlock->writelock(dequeue_->rwlock);
+    dequeue_->rwlock->write_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal dequeue
     void* result = dequeue_dequeue_normal(self, front, timeout);
 
     // concurrent writeunlock
-    dequeue_->rwlock->writeunlock(dequeue_->rwlock);
+    dequeue_->rwlock->write_unlock(dequeue_->rwlock);
 
     return result;
 }
@@ -165,13 +165,13 @@ void* dequeue_get_concurrent(struct Dequeue* self, int front) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent readlock
-    dequeue_->rwlock->readlock(dequeue_->rwlock);
+    dequeue_->rwlock->read_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal get
     void* result = dequeue_get_normal(self, front);
 
     // concurrent readunlock
-    dequeue_->rwlock->readunlock(dequeue_->rwlock);
+    dequeue_->rwlock->read_unlock(dequeue_->rwlock);
 
     return result;
 }
@@ -179,53 +179,45 @@ int dequeue_size_concurrent(struct Dequeue* self) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent readlock
-    dequeue_->rwlock->readlock(dequeue_->rwlock);
+    dequeue_->rwlock->read_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal size
     int result = dequeue_size_normal(self);
 
     // concurrent readunlock
-    dequeue_->rwlock->readunlock(dequeue_->rwlock);
+    dequeue_->rwlock->read_unlock(dequeue_->rwlock);
 
     return result;
 }
 
-int dequeue_enqueue_blocking(struct Dequeue* self, int front, long int timeout, void* item) {
+int dequeue_enqueue_blocking(struct Dequeue* self, int front, void* item, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on full semaphore
     if (dequeue_->full_semaphore != NULL) {
-        if (timeout > 0) {
-            dequeue_->full_semaphore->timewait(dequeue_->full_semaphore, 1, timeout);
-        } else {
-            dequeue_->full_semaphore->wait(dequeue_->full_semaphore, 1);
-        }
+        dequeue_->full_semaphore->wait(dequeue_->full_semaphore, timeout);
     }
 
     // concurrent enqueue
     int result = dequeue_enqueue_concurrent(self, front, item);
 
     // signal on empty semaphore
-    dequeue_->empty_semaphore->post(dequeue_->empty_semaphore, 1);
+    dequeue_->empty_semaphore->post(dequeue_->empty_semaphore);
 
     return result;
 }
-void* dequeue_dequeue_blocking(struct Dequeue* self, int front, long int timeout) {
+void* dequeue_dequeue_blocking(struct Dequeue* self, int front, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on empty semaphore
-    if (timeout > 0) {
-        dequeue_->empty_semaphore->timewait(dequeue_->empty_semaphore, 1, timeout);
-    } else {
-        dequeue_->empty_semaphore->wait(dequeue_->empty_semaphore, 1);
-    }
+    dequeue_->empty_semaphore->timewait(dequeue_->empty_semaphore, timeout);
 
     // concurrent dequeue
     void* result = dequeue_dequeue_concurrent(self, front, timeout);
 
     // signal on full semaphore
     if (dequeue_->full_semaphore != NULL) {
-        dequeue_->full_semaphore->post(dequeue_->full_semaphore, 1);
+        dequeue_->full_semaphore->post(dequeue_->full_semaphore);
     }
 
     return result;
@@ -243,8 +235,8 @@ int dequeue_size_blocking(struct Dequeue* self) {
     return result;
 }
 
-struct Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) {
-    struct Dequeue_* dequeue_ = memory_alloc(sizeof(struct Dequeue_));
+Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) {
+    struct Dequeue_* dequeue_ = heap_alloc(sizeof(struct Dequeue_));
 
     // init private methods
     switch (mode) {
@@ -262,7 +254,7 @@ struct Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) 
             dequeue_->self.dequeue = dequeue_dequeue_concurrent;
             dequeue_->self.get = dequeue_get_concurrent;
             dequeue_->self.size = dequeue_size_concurrent;
-            dequeue_->rwlock = rwlock_new();
+            dequeue_->rwlock = rwlock_new(NULL);
             dequeue_->empty_semaphore = NULL;
             dequeue_->full_semaphore = NULL;
             break;
@@ -271,28 +263,24 @@ struct Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) 
             dequeue_->self.dequeue = dequeue_dequeue_blocking;
             dequeue_->self.get = dequeue_get_blocking;
             dequeue_->self.size = dequeue_size_blocking;
-            dequeue_->rwlock = rwlock_new();
-            dequeue_->empty_semaphore = semaphore_new(0);
-            if (max > 0) {
-                dequeue_->full_semaphore = semaphore_new(max);
-            } else {
-                dequeue_->full_semaphore = NULL;
-            }
+            dequeue_->rwlock = rwlock_new(NULL);
+            dequeue_->empty_semaphore = semaphore_new(NULL, 0);
+            dequeue_->full_semaphore = max > 0 ? semaphore_new(NULL, max) : NULL;
             break;
     }
 
     // init size and max and head and comperator
     dequeue_->size = 0;
     dequeue_->max = max;
-    dequeue_->head = memory_alloc(sizeof(struct DequeueItem));
+    dequeue_->head = heap_alloc(sizeof(struct DequeueItem));
     dequeue_->head->next = dequeue_->head;
     dequeue_->head->previews = dequeue_->head;
     dequeue_->head->item = NULL;
     dequeue_->comperator = comperator;
 
-    return (struct Dequeue*)dequeue_;
+    return (Dequeue*)dequeue_;
 }
-void dequeue_free(struct Dequeue* dequeue) {
+void dequeue_free(Dequeue* dequeue) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)dequeue;
 
     // break dequeue circle
@@ -303,7 +291,7 @@ void dequeue_free(struct Dequeue* dequeue) {
     do {
         remove_item = dequeue_->head;
         dequeue_->head = dequeue_->head->next;
-        memory_free(remove_item);
+        heap_free(remove_item);
     } while (dequeue_->head != NULL);
 
     // destroy internal rwlock
@@ -319,5 +307,5 @@ void dequeue_free(struct Dequeue* dequeue) {
         semaphore_free(dequeue_->full_semaphore);
     }
 
-    memory_free(dequeue_);
+    heap_free(dequeue_);
 }

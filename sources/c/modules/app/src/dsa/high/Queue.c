@@ -1,7 +1,7 @@
-#include <low/dsa/Queue.h>
+#include <dsa/high/Queue.h>
 
-#include <io/memory/Memory.h>
-#include <low/dsa/Dequeue.h>
+#include <dsa/high/Dequeue.h>
+#include <memory/low/Heap.h>
 
 struct Queue_ {
     struct Queue self;
@@ -9,20 +9,20 @@ struct Queue_ {
 };
 
 // link methods
-int queue_enqueue(struct Queue* self, long int timeout, void* item);
-void* queue_dequeue(struct Queue* self, long int timeout);
+int queue_enqueue(struct Queue* self, void* item, uint_64 timeout);
+void* queue_dequeue(struct Queue* self, uint_64 timeout);
 void* queue_get(struct Queue* self);
 int queue_size(struct Queue* self);
 
-int queue_enqueue(struct Queue* self, long int timeout, void* item) {
+int queue_enqueue(struct Queue* self, void* item, uint_64 timeout) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // Dequeue enqueue to front
-    int result = queue_->dequeue->enqueue(queue_->dequeue, 1, timeout, item);
+    int result = queue_->dequeue->enqueue(queue_->dequeue, 1, item, timeout);
 
     return result;
 }
-void* queue_dequeue(struct Queue* self, long int timeout) {
+void* queue_dequeue(struct Queue* self, uint_64 timeout) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // Dequeue dequeue from back
@@ -47,8 +47,8 @@ int queue_size(struct Queue* self) {
     return result;
 }
 
-struct Queue* queue_new(int mode, int max, int (*comperator)(void*, void*)) {
-    struct Queue_* queue_ = memory_alloc(sizeof(struct Queue_));
+Queue* queue_new(int mode, int max, int (*comperator)(void*, void*)) {
+    struct Queue_* queue_ = heap_alloc(sizeof(struct Queue_));
 
     // init private methods
     queue_->self.enqueue = queue_enqueue;
@@ -59,13 +59,13 @@ struct Queue* queue_new(int mode, int max, int (*comperator)(void*, void*)) {
     // init internal Dequeue
     queue_->dequeue = dequeue_new(mode, max, comperator);
 
-    return (struct Queue*)queue_;
+    return (Queue*)queue_;
 }
-void queue_free(struct Queue* queue) {
+void queue_free(Queue* queue) {
     struct Queue_* queue_ = (struct Queue_*)queue;
 
     // destroy internal Dequeue
     dequeue_free(queue_->dequeue);
 
-    memory_free(queue_);
+    heap_free(queue_);
 }
