@@ -2,6 +2,7 @@
 
 #if defined(APP_LINUX)
 
+#include <dsa/low/String.h>
 #include <fcntl.h>
 #include <memory/low/Heap.h>
 #include <pthread.h>
@@ -18,6 +19,7 @@ struct Share_ {
 // link methods
 void* share_address(struct Share* self);
 void share_flush(struct Share* self, tsize size);
+int share_connections(struct Share* self);
 
 void share_create(struct Share_* share_);
 void share_increase(struct Share_* share_);
@@ -87,7 +89,7 @@ void* share_address(struct Share* self) {
     struct Share_* share_ = (struct Share_*)self;
 
     // get mapped shm address
-    void* result = share_->address + sizeof(pthread_mutex_t);
+    void* result = share_->address + sizeof(pthread_mutex_t) + sizeof(int);
 
     return result;
 }
@@ -97,6 +99,14 @@ void share_flush(struct Share* self, tsize size) {
     // flush mapped shm to disk
     msync(share_->address, sizeof(pthread_mutex_t) + size, MS_SYNC);
 }
+int share_connections(struct Share* self) {
+    struct Share_* share_ = (struct Share_*)self;
+
+    // get connections
+    int result = *((int*)share_->address + sizeof(pthread_mutex_t));
+
+    return result;
+}
 
 Share* share_new(char* name, tsize size) {
     struct Share_* share_ = heap_alloc(sizeof(struct Share_));
@@ -104,6 +114,7 @@ Share* share_new(char* name, tsize size) {
     // init private methods
     share_->self.address = share_address;
     share_->self.flush = share_flush;
+    share_->self.connections = share_connections;
 
     // check exists
     bool exists = true;

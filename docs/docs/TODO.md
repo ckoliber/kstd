@@ -57,8 +57,4 @@
     1. __High__ -> `0.5.0`
 
 
-
-
-
-1. Semaphore, Condition, Mutex -> share name different
-2. Semaphore share -> on exists not change value
+9. Atomic _new, _free !!!

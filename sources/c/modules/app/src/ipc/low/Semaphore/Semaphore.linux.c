@@ -277,39 +277,66 @@ int semaphore_get_named(struct Semaphore* self) {
 Semaphore* semaphore_new(char* name, int value) {
     struct Semaphore_* semaphore_ = heap_alloc(sizeof(struct Semaphore_));
 
-    // init private methods
     if (name == NULL) {
+        // init private methods
         semaphore_->self.wait = semaphore_wait_anonymous;
         semaphore_->self.post = semaphore_post_anonymous;
         semaphore_->self.get = semaphore_get_anonymous;
 
-        // init internal mutex, cond, value
+        // init internal mutex
         semaphore_->named_mutex = NULL;
-        semaphore_->named_cond = NULL;
-        semaphore_->named_value = NULL;
         pthread_mutex_init(&(semaphore_->anonymous_mutex), NULL);
+
+        // init internal cond
+        semaphore_->named_cond = NULL;
         pthread_cond_init(&(semaphore_->anonymous_cond), NULL);
+
+        // init internal value
+        semaphore_->named_value = NULL;
         semaphore_->anonymous_value = value;
     } else {
+        // init private methods
         semaphore_->self.wait = semaphore_wait_named;
         semaphore_->self.post = semaphore_post_named;
         semaphore_->self.get = semaphore_get_named;
 
-        // init internal share mutex, cond, value
-        semaphore_->named_mutex = share_new(name, sizeof(pthread_mutex_t));
-        semaphore_->named_cond = share_new(name, sizeof(pthread_cond_t));
-        semaphore_->named_value = share_new(name, sizeof(int));
-        pthread_mutexattr_t mattr;
-        pthread_condattr_t cattr;
-        pthread_mutexattr_init(&mattr);
-        pthread_condattr_init(&cattr);
-        pthread_mutexattr_setpshared(&mattr, 1);
-        pthread_condattr_setpshared(&cattr, 1);
-        pthread_mutex_init(semaphore_->named_mutex->address(semaphore_->named_mutex), &mattr);
-        pthread_cond_init(semaphore_->named_cond->address(semaphore_->named_cond), &cattr);
-        pthread_mutexattr_destroy(&mattr);
-        pthread_condattr_destroy(&cattr);
-        *((int*)semaphore_->named_value->address(semaphore_->named_value)) = value;
+        // init internal share mutex
+        String* mutex_name = string_new_concat(name, "/mutex");
+        semaphore_->named_mutex = share_new(mutex_name, sizeof(pthread_mutex_t));
+        string_free(mutex_name);
+
+        // init internal share cond
+        String* cond_name = string_new_concat(name, "/cond");
+        semaphore_->named_cond = share_new(cond_name, sizeof(pthread_cond_t));
+        string_free(cond_name);
+
+        // init internal share value
+        String* value_name = string_new_concat(name, "/value");
+        semaphore_->named_value = share_new(value_name, sizeof(int));
+        string_free(value_name);
+
+        // if share mutex not created before, init it
+        if (semaphore_->named_mutex->connections(semaphore_->named_mutex) <= 1) {
+            pthread_mutexattr_t mattr;
+            pthread_mutexattr_init(&mattr);
+            pthread_mutexattr_setpshared(&mattr, 1);
+            pthread_mutex_init(semaphore_->named_mutex->address(semaphore_->named_mutex), &mattr);
+            pthread_mutexattr_destroy(&mattr);
+        }
+
+        // if share cond not created before, init it
+        if (semaphore_->named_cond->connections(semaphore_->named_cond) <= 1) {
+            pthread_condattr_t cattr;
+            pthread_condattr_init(&cattr);
+            pthread_condattr_setpshared(&cattr, 1);
+            pthread_cond_init(semaphore_->named_cond->address(semaphore_->named_cond), &cattr);
+            pthread_condattr_destroy(&cattr);
+        }
+
+        // if share value not created before, init it
+        if (semaphore_->named_value->connections(semaphore_->named_value) <= 1) {
+            *((int*)semaphore_->named_value->address(semaphore_->named_value)) = value;
+        }
     }
 
     return (Semaphore*)semaphore_;
@@ -318,15 +345,27 @@ void semaphore_free(Semaphore* semaphore) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore;
 
     if (semaphore_->named_mutex == NULL) {
-        // destroy internal mutex, cond
+        // destroy internal mutex, cond, value
         pthread_mutex_destroy(&(semaphore_->anonymous_mutex));
         pthread_cond_destroy(&(semaphore_->anonymous_cond));
+        semaphore_->anonymous_value = -1;
     } else {
         // destroy internal share mutex
-        pthread_mutex_destroy(semaphore_->named_mutex->address(semaphore_->named_mutex));
-        pthread_cond_destroy(semaphore_->named_cond->address(semaphore_->named_cond));
+        if (semaphore_->named_mutex->connections(semaphore_->named_mutex) <= 1) {
+            pthread_mutex_destroy(semaphore_->named_mutex->address(semaphore_->named_mutex));
+        }
         share_free(semaphore_->named_mutex);
+
+        // destroy internal share cond
+        if (semaphore_->named_cond->connections(semaphore_->named_cond) <= 1) {
+            pthread_cond_destroy(semaphore_->named_cond->address(semaphore_->named_cond));
+        }
         share_free(semaphore_->named_cond);
+
+        // destroy internal share value
+        if (semaphore_->named_value->connections(semaphore_->named_value) <= 1) {
+            semaphore_->anonymous_value = -1;
+        }
         share_free(semaphore_->named_value);
     }
 

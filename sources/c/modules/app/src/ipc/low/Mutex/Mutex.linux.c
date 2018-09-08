@@ -2,6 +2,7 @@
 
 #if defined(APP_LINUX)
 
+#include <dsa/low/String.h>
 #include <local/low/Time.h>
 #include <memory/low/Heap.h>
 #include <memory/low/Share.h>
@@ -41,6 +42,7 @@ int mutex_acquire_anonymous(struct Mutex* self, uint_64 timeout) {
 
         // try lock until timeout
         while ((time_epochmillis() - time) <= timeout) {
+            // try
             if (pthread_mutex_trylock(&(mutex_->anonymous_mutex)) == 0) {
                 result = 0;
                 break;
@@ -82,6 +84,7 @@ int mutex_acquire_named(struct Mutex* self, uint_64 timeout) {
 
         // try lock until timeout
         while ((time_epochmillis() - time) <= timeout) {
+            // try
             if (pthread_mutex_trylock(mutex_->named_mutex->address(mutex_->named_mutex)) == 0) {
                 result = 0;
                 break;
@@ -106,8 +109,8 @@ int mutex_release_named(struct Mutex* self) {
 Mutex* mutex_new(char* name) {
     struct Mutex_* mutex_ = heap_alloc(sizeof(struct Mutex_));
 
-    // init private methods
     if (name == NULL) {
+        // init private methods
         mutex_->self.acquire = mutex_acquire_anonymous;
         mutex_->self.release = mutex_release_anonymous;
 
@@ -115,16 +118,23 @@ Mutex* mutex_new(char* name) {
         mutex_->named_mutex = NULL;
         pthread_mutex_init(&(mutex_->anonymous_mutex), NULL);
     } else {
+        // init private methods
         mutex_->self.acquire = mutex_acquire_named;
         mutex_->self.release = mutex_release_named;
 
         // init internal share mutex
-        mutex_->named_mutex = share_new(name, sizeof(pthread_mutex_t));
-        pthread_mutexattr_t mattr;
-        pthread_mutexattr_init(&mattr);
-        pthread_mutexattr_setpshared(&mattr, 1);
-        pthread_mutex_init(mutex_->named_mutex->address(mutex_->named_mutex), &mattr);
-        pthread_mutexattr_destroy(&mattr);
+        String* mutex_name = string_new_concat(name, "/mutex");
+        mutex_->named_mutex = share_new(mutex_name, sizeof(pthread_mutex_t));
+        string_free(mutex_name);
+
+        // if share mutex not created before, init it
+        if (mutex_->named_mutex->connections(mutex_->named_mutex) <= 1) {
+            pthread_mutexattr_t mattr;
+            pthread_mutexattr_init(&mattr);
+            pthread_mutexattr_setpshared(&mattr, 1);
+            pthread_mutex_init(mutex_->named_mutex->address(mutex_->named_mutex), &mattr);
+            pthread_mutexattr_destroy(&mattr);
+        }
     }
 
     return (Mutex*)mutex_;
@@ -137,7 +147,9 @@ void mutex_free(Mutex* mutex) {
         pthread_mutex_destroy(&(mutex_->anonymous_mutex));
     } else {
         // destroy internal share mutex
-        pthread_mutex_destroy(mutex_->named_mutex->address(mutex_->named_mutex));
+        if (mutex_->named_mutex->connections(mutex_->named_mutex) <= 1) {
+            pthread_mutex_destroy(mutex_->named_mutex->address(mutex_->named_mutex));
+        }
         share_free(mutex_->named_mutex);
     }
 

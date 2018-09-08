@@ -142,33 +142,50 @@ int condition_signal_named(struct Condition* self, uint_32 count) {
 Condition* condition_new(char* name) {
     struct Condition_* condition_ = heap_alloc(sizeof(struct Condition_));
 
-    // init private methods
     if (name == NULL) {
+        // init private methods
         condition_->self.wait = condition_wait_anonymous;
         condition_->self.signal = condition_signal_anonymous;
 
-        // init internal mutex, cond
+        // init internal mutex
         condition_->named_mutex = NULL;
-        condition_->named_cond = NULL;
         pthread_mutex_init(&(condition_->anonymous_mutex), NULL);
+
+        // init internal cond
+        condition_->named_cond = NULL;
         pthread_cond_init(&(condition_->anonymous_cond), NULL);
     } else {
+        // init private methods
         condition_->self.wait = condition_wait_named;
         condition_->self.signal = condition_signal_named;
 
-        // init internal share mutex, cond
-        condition_->named_mutex = share_new(name, sizeof(pthread_mutex_t));
-        condition_->named_cond = share_new(name, sizeof(pthread_cond_t));
-        pthread_mutexattr_t mattr;
-        pthread_condattr_t cattr;
-        pthread_mutexattr_init(&mattr);
-        pthread_condattr_init(&cattr);
-        pthread_mutexattr_setpshared(&mattr, 1);
-        pthread_condattr_setpshared(&cattr, 1);
-        pthread_mutex_init(condition_->named_mutex->address(condition_->named_mutex), &mattr);
-        pthread_cond_init(condition_->named_cond->address(condition_->named_cond), &cattr);
-        pthread_mutexattr_destroy(&mattr);
-        pthread_condattr_destroy(&cattr);
+        // init internal share mutex
+        String* mutex_name = string_new_concat(name, "/mutex");
+        condition_->named_mutex = share_new(mutex_name, sizeof(pthread_mutex_t));
+        string_free(mutex_name);
+
+        // init internal share cond
+        String* cond_name = string_new_concat(name, "/cond");
+        condition_->named_cond = share_new(cond_name, sizeof(pthread_cond_t));
+        string_free(cond_name);
+
+        // if share mutex not created before, init it
+        if (condition_->named_mutex->connections(condition_->named_mutex) <= 1) {
+            pthread_mutexattr_t mattr;
+            pthread_mutexattr_init(&mattr);
+            pthread_mutexattr_setpshared(&mattr, 1);
+            pthread_mutex_init(condition_->named_mutex->address(condition_->named_mutex), &mattr);
+            pthread_mutexattr_destroy(&mattr);
+        }
+
+        // if share cond not created before, init it
+        if (condition_->named_cond->connections(condition_->named_cond) <= 1) {
+            pthread_condattr_t cattr;
+            pthread_condattr_init(&cattr);
+            pthread_condattr_setpshared(&cattr, 1);
+            pthread_cond_init(condition_->named_cond->address(condition_->named_cond), &cattr);
+            pthread_condattr_destroy(&cattr);
+        }
     }
 
     return (Condition*)condition_;
@@ -182,9 +199,15 @@ void condition_free(Condition* condition) {
         pthread_cond_destroy(&(condition_->anonymous_cond));
     } else {
         // destroy internal share mutex
-        pthread_mutex_destroy(condition_->named_mutex->address(condition_->named_mutex));
-        pthread_cond_destroy(condition_->named_cond->address(condition_->named_cond));
+        if (mutex_->named_mutex->connections(mutex_->named_mutex) <= 1) {
+            pthread_mutex_destroy(condition_->named_mutex->address(condition_->named_mutex));
+        }
         share_free(condition_->named_mutex);
+
+        // destroy internal share cond
+        if (mutex_->named_cond->connections(mutex_->named_cond) <= 1) {
+            pthread_cond_destroy(condition_->named_cond->address(condition_->named_cond));
+        }
         share_free(condition_->named_cond);
     }
 
