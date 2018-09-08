@@ -117,60 +117,20 @@ ____________________________________________________
 #### Low
 
 1. __Thread__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Thread{
-            SignedInt priority(SignedInt priority);
-            SignedInt affinity(SignedInt affinity);
-            SignedInt start(Void (*function)(Void*), Void* arg);
-            SignedInt join();
-            SignedInt id();
-            SignedInt stop();
-        }
-        ```
-    * __Function__: `Thread* thread_new(Size stack)`
-    * __Function__: `Void thread_free(Thread* thread)`
     * __Comment__ `priority`+`affinity` -> `get=-1` -> get, `get=number` -> set
     * __Comment__ `stack`: `-1` -> default size, `number` -> custom stack size
+    * Done
 2. __Process__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct Process{
-            SignedInt priority(SignedInt priority);
-            SignedInt affinity(SignedInt affinity);
-            SignedInt start(Char* command);
-            SignedInt join();
-            SignedInt id();
-            SignedInt stop();
-        }
-        ```
-    * __Function__: `Process* process_new()`
-    * __Function__: `Void process_free(Process* process)`
+    * __Comment__ `priority`+`affinity` -> `get=-1` -> get, `get=number` -> set
+    * __Comment__ `stack`: `-1` -> default size, `number` -> custom stack size
+    * Done
 
 #### High
 
 1. __ThreadPool__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct ThreadPool{
-            SignedInt start();
-            SignedInt post(Void (*function)(Void*), Void* arg);
-            SignedInt stop(Bool force);
-        }
-        ```
-    * __Function__: `ThreadPool* threadpool_new(SignedInt size)`
-    * __Function__: `Void threadpool_free(ThreadPool* threadpool)`
-1. __ProcessPool__ -> `0.1.0`
-    * __Struct__:
-        ```c
-        struct ProcessPool{
-            SignedInt start();
-            SignedInt post(Char* command);
-            SignedInt stop();
-        }
-        ```
-    * __Function__: `ProcessPool* processpool_new(SignedInt size)`
-    * __Function__: `Void processpool_free(ProcessPool* processpool)`
+    * Done
+2. __ProcessPool__ -> `0.1.0`
+    * Done
 
 ____________________________________________________
 
