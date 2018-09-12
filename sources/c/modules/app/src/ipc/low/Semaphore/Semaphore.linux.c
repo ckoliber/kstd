@@ -1,11 +1,11 @@
-#include <low/itc/high/Semaphore.h>
+#include <ipc/low/Semaphore.h>
 
-#include <io/memory/Memory.h>
-#include <low/itc/low/Cond.h>
+#include <ipc/low/Condition.h>
+#include <memory/low/Heap.h>
 
 struct Semaphore_ {
     struct Semaphore self;
-    struct Cond* cond;
+    Condition* condition;
     int value;
 };
 
@@ -75,7 +75,7 @@ int semaphore_get(struct Semaphore* self) {
 }
 
 struct Semaphore* semaphore_new(int value) {
-    struct Semaphore_* semaphore_ = memory_alloc(sizeof(struct Semaphore_));
+    struct Semaphore_* semaphore_ = heap_alloc(sizeof(struct Semaphore_));
 
     // init private methods
     semaphore_->self.wait = semaphore_wait;
@@ -96,7 +96,7 @@ void semaphore_free(struct Semaphore* semaphore) {
     // destry internal Cond
     cond_free(semaphore_->cond);
 
-    memory_free(semaphore_);
+    heap_free(semaphore_);
 }
 
 #include <ipc/low/Semaphore.h>

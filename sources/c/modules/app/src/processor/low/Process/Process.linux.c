@@ -1,8 +1,8 @@
-#ifdef __unix__
+#include <processor/low/Process.h>
 
-#include <low/processor/low/Process.h>
+#if defined(APP_LINUX)
 
-#include <io/memory/Memory.h>
+#include <memory/low/Heap.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -15,22 +15,40 @@ struct Process_ {
 };
 
 // link methods
-int process_start(struct Process* self, char* command);
+int process_priority(struct Process* self, int priority);
+int process_affinity(struct Process* self, int affinity);
+int process_start(struct Process* self, int (*function)(void*), void* arg);
 int process_join(struct Process* self);
 int process_id(struct Process* self);
 int process_stop(struct Process* self);
 
-int process_start(struct Process* self, char* command) {
+// implement methods
+int process_priority(struct Process* self, int priority) {
+    struct Thread_* thread_ = (struct Thread_*)self;
+
+    // set priority
+    int result = -1;
+
+    return result;
+}
+int process_affinity(struct Process* self, int affinity) {
+    struct Thread_* thread_ = (struct Thread_*)self;
+
+    // set affinity
+    int result = -1;
+
+    return result;
+}
+int process_start(struct Process* self, int (*function)(void*), void* arg) {
     struct Process_* process_ = (struct Process_*)self;
 
-    // start internal process
-    int result = 0;
+    // start internal child process
+    int result = -1;
     process_->id = fork();
     if (process_->id == 0) {
-        system(command);
-        exit(0);
-    } else if (process_->id == -1) {
-        result = -1;
+        exit(function(arg));
+    } else if (process_->id > 0) {
+        result = 0;
     }
 
     return result;
@@ -38,8 +56,8 @@ int process_start(struct Process* self, char* command) {
 int process_join(struct Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
-    // join internal process
-    int result = 0;
+    // join internal child process
+    int result = -1;
     waitpid(process_->id, &result, 0);
 
     return result;
@@ -47,35 +65,37 @@ int process_join(struct Process* self) {
 int process_id(struct Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
-    // get internal process id
-    int result = process_->id;
+    // get internal child process id
+    int result = (int)process_->id;
 
     return result;
 }
 int process_stop(struct Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
-    // stop internal process
-    kill(process_->id, SIGKILL);
+    // stop internal child process
+    int result = kill(process_->id, SIGKILL);
 
-    return 0;
+    return result;
 }
 
-struct Process* process_new() {
-    struct Process_* process_ = memory_alloc(sizeof(struct Process_));
+Process* process_new() {
+    struct Process_* process_ = heap_alloc(sizeof(struct Process_));
 
     // init private methods
+    process_->self.priority = process_priority;
+    process_->self.affinity = process_affinity;
     process_->self.start = process_start;
     process_->self.join = process_join;
     process_->self.id = process_id;
     process_->self.stop = process_stop;
 
-    return (struct Process*)process_;
+    return (Process*)process_;
 }
-void process_free(struct Process* process) {
+void process_free(Process* process) {
     struct Process_* process_ = (struct Process_*)process;
 
-    memory_free(process_);
+    heap_free(process_);
 }
 
 #endif

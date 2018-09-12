@@ -14,7 +14,7 @@ struct Thread_ {
 // link methods
 int thread_priority(struct Thread* self, int priority);
 int thread_affinity(struct Thread* self, int affinity);
-int thread_start(struct Thread* self, void* (*function)(void*), void* arg);
+int thread_start(struct Thread* self, int (*function)(void*), void* arg);
 int thread_join(struct Thread* self);
 int thread_id(struct Thread* self);
 int thread_stop(struct Thread* self);
@@ -36,7 +36,7 @@ int thread_affinity(struct Thread* self, int affinity) {
 
     return result;
 }
-int thread_start(struct Thread* self, void* (*function)(void*), void* arg) {
+int thread_start(struct Thread* self, int (*function)(void*), void* arg) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
     // start internal pthread
@@ -80,7 +80,7 @@ int thread_stop(struct Thread* self) {
 }
 
 Thread* thread_new(tsize stack) {
-    struct Thread_* thread_ = memory_alloc(sizeof(struct Thread_));
+    struct Thread_* thread_ = heap_alloc(sizeof(struct Thread_));
 
     // init private methods
     thread_->self.priority = thread_priority;

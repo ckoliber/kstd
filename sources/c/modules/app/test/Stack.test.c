@@ -14,7 +14,7 @@ void* thread1(void* arg) {
             break;
         }
         printf("Thread 1 Remove Item = %d\n", *item);
-        memory_free(item);
+        heap_free(item);
     }
 
     printf("Thread 1 End\n");
@@ -28,7 +28,7 @@ void* thread2(void* arg) {
     while (s->size(s) > 0) {
         int* item = s->pop(s, 0);
         printf("Thread 2 Remove Item = %d\n", *item);
-        memory_free(item);
+        heap_free(item);
     }
 
     printf("Thread 2 End\n");
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     Thread* t2 = thread_new();
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = memory_alloc(sizeof(int));
+        int* item = heap_alloc(sizeof(int));
         *item = cursor;
         s->push(s, item);
     }
@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     sleep(3);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = memory_alloc(sizeof(int));
+        int* item = heap_alloc(sizeof(int));
         *item = cursor;
         s->push(s, item);
     }

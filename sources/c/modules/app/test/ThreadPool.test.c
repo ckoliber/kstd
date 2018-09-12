@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     pool->start(pool);
 
     for (int cursor = 0; cursor < 100; cursor++) {
-        int* item = memory_alloc(sizeof(int));
+        int* item = heap_alloc(sizeof(int));
         *item = cursor;
         printf("%d\n", cursor);
         fflush(stdout);

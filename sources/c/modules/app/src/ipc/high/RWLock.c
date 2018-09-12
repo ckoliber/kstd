@@ -1,8 +1,9 @@
-#include <low/itc/high/RWLock.h>
+#include <ipc/high/RWLock.h>
 
-#include <io/memory/Memory.h>
-#include <low/itc/low/Mutex.h>
-#include <low/local/Time.h>
+#include <dsa/low/String.h>
+#include <ipc/low/Mutex.h>
+#include <local/low/Time.h>
+#include <memory/low/Heap.h>
 
 struct RWLock_ {
     struct RWLock self;
@@ -34,7 +35,7 @@ int rwlock_read_lock(struct RWLock* self, uint_64 timeout) {
         if (rwlock_->readers_count == 1) {
             // get new timeout and lock writer
             timeout -= (time_epochmillis() - time);
-            result = rwlock_->writer_mutex->acquire(rwlock_->writer_mutex, timeout);
+            result = rwlock_->write_mutex->acquire(rwlock_->write_mutex, timeout);
         } else {
             result = 0;
         }
@@ -55,7 +56,7 @@ int rwlock_read_unlock(struct RWLock* self) {
     int result = -1;
     rwlock_->readers_count--;
     if (rwlock_->readers_count == 0) {
-        result = rwlock_->writer_mutex->release(rwlock_->writer_mutex);
+        result = rwlock_->write_mutex->release(rwlock_->write_mutex);
     } else {
         result = 0;
     }
@@ -69,7 +70,7 @@ int rwlock_write_lock(struct RWLock* self, uint_64 timeout) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // write lock
-    int result = rwlock_->writer_mutex->acquire(rwlock_->writer_mutex, timeout);
+    int result = rwlock_->write_mutex->acquire(rwlock_->write_mutex, timeout);
 
     return result;
 }
@@ -77,37 +78,34 @@ int rwlock_write_unlock(struct RWLock* self) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // write unlock
-    int result = rwlock_->writer_mutex->release(rwlock_->writer_mutex);
+    int result = rwlock_->write_mutex->release(rwlock_->write_mutex);
 
     return result;
 }
 
 RWLock* rwlock_new(char* name) {
-    struct RWLock_* rwlock_ = memory_alloc(sizeof(struct RWLock_));
+    struct RWLock_* rwlock_ = heap_alloc(sizeof(struct RWLock_));
 
     // init private methods
-    rwlock_->self.readlock = rwlock_readlock;
-    rwlock_->self.writelock = rwlock_writelock;
-    rwlock_->self.timereadlock = rwlock_timereadlock;
-    rwlock_->self.timewritelock = rwlock_timewritelock;
-    rwlock_->self.readunlock = rwlock_readunlock;
-    rwlock_->self.writeunlock = rwlock_writeunlock;
+    rwlock_->self.read_lock = rwlock_read_lock;
+    rwlock_->self.read_unlock = rwlock_read_unlock;
+    rwlock_->self.write_lock = rwlock_write_lock;
+    rwlock_->self.write_unlock = rwlock_write_unlock;
 
     // create internal mutexes
     String* criticalmutex_name = string_new_concat(name, "/criticalmutex");
-    rwlock_->critical_mutex = mutex_new(criticalmutex_name);
+    rwlock_->critical_mutex = mutex_new(criticalmutex_name->value(criticalmutex_name));
     string_free(criticalmutex_name);
 
     // create internal mutexes
     String* writemutex_name = string_new_concat(name, "/writemutex");
-    rwlock_->writer_mutex = mutex_new(writemutex_name);
+    rwlock_->write_mutex = mutex_new(writemutex_name->value(writemutex_name));
     string_free(writemutex_name);
 
     rwlock_->readers_count = 0;
 
-    return (struct RWLock*)rwlock_;
+    return (RWLock*)rwlock_;
 }
-
 void rwlock_free(RWLock* rwlock) {
     struct RWLock_* rwlock_ = (struct RWLock_*)rwlock;
 

@@ -1,7 +1,7 @@
 #include <dsa/high/Dequeue.h>
 
 #include <ipc/high/RWLock.h>
-#include <ipc/high/Semaphore.h>
+#include <ipc/low/Semaphore.h>
 #include <memory/low/Heap.h>
 
 struct Dequeue_ {
@@ -140,7 +140,7 @@ int dequeue_enqueue_concurrent(struct Dequeue* self, int front, void* item, uint
     dequeue_->rwlock->write_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal enqueue
-    int result = dequeue_enqueue_normal(self, front, item);
+    int result = dequeue_enqueue_normal(self, front, item, timeout);
 
     // concurrent writeunlock
     dequeue_->rwlock->write_unlock(dequeue_->rwlock);
@@ -199,7 +199,7 @@ int dequeue_enqueue_blocking(struct Dequeue* self, int front, void* item, uint_6
     }
 
     // concurrent enqueue
-    int result = dequeue_enqueue_concurrent(self, front, item);
+    int result = dequeue_enqueue_concurrent(self, front, item, timeout);
 
     // signal on empty semaphore
     dequeue_->empty_semaphore->post(dequeue_->empty_semaphore);
@@ -210,7 +210,7 @@ void* dequeue_dequeue_blocking(struct Dequeue* self, int front, uint_64 timeout)
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on empty semaphore
-    dequeue_->empty_semaphore->timewait(dequeue_->empty_semaphore, timeout);
+    dequeue_->empty_semaphore->wait(dequeue_->empty_semaphore, timeout);
 
     // concurrent dequeue
     void* result = dequeue_dequeue_concurrent(self, front, timeout);

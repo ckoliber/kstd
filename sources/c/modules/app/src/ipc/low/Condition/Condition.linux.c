@@ -2,13 +2,16 @@
 
 #if defined(APP_LINUX)
 
+#include <dsa/low/String.h>
 #include <local/low/Time.h>
 #include <memory/low/Heap.h>
 #include <memory/low/Share.h>
 #include <pthread.h>
+#include <stdlib.h>
+#include <sys/time.h>
 
 struct Condition_ {
-    struct Mutex self;
+    struct Condition self;
     pthread_mutex_t anonymous_mutex;
     pthread_cond_t anonymous_cond;
     Share* named_mutex;
@@ -70,7 +73,7 @@ int condition_signal_anonymous(struct Condition* self, uint_32 count) {
     } else {
         // signal
         for (int cursor = 0; cursor < (int)count; cursor++) {
-            pthread_cond_signal(&(condition_->anonymous_cond);
+            pthread_cond_signal(&(condition_->anonymous_cond));
         }
         result = 0;
     }
@@ -161,12 +164,12 @@ Condition* condition_new(char* name) {
 
         // init internal share mutex
         String* mutex_name = string_new_concat(name, "/mutex");
-        condition_->named_mutex = share_new(mutex_name, sizeof(pthread_mutex_t));
+        condition_->named_mutex = share_new(mutex_name->value(mutex_name), sizeof(pthread_mutex_t));
         string_free(mutex_name);
 
         // init internal share cond
         String* cond_name = string_new_concat(name, "/cond");
-        condition_->named_cond = share_new(cond_name, sizeof(pthread_cond_t));
+        condition_->named_cond = share_new(cond_name->value(cond_name), sizeof(pthread_cond_t));
         string_free(cond_name);
 
         // if share mutex not created before, init it
@@ -199,13 +202,13 @@ void condition_free(Condition* condition) {
         pthread_cond_destroy(&(condition_->anonymous_cond));
     } else {
         // destroy internal share mutex
-        if (mutex_->named_mutex->connections(mutex_->named_mutex) <= 1) {
+        if (condition_->named_mutex->connections(condition_->named_mutex) <= 1) {
             pthread_mutex_destroy(condition_->named_mutex->address(condition_->named_mutex));
         }
         share_free(condition_->named_mutex);
 
         // destroy internal share cond
-        if (mutex_->named_cond->connections(mutex_->named_cond) <= 1) {
+        if (condition_->named_cond->connections(condition_->named_cond) <= 1) {
             pthread_cond_destroy(condition_->named_cond->address(condition_->named_cond));
         }
         share_free(condition_->named_cond);

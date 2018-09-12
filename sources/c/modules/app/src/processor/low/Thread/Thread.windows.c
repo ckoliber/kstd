@@ -56,7 +56,7 @@ int thread_stop(struct Thread* self) {
 }
 
 struct Thread* thread_new() {
-    struct Thread_* thread_ = memory_alloc(sizeof(struct Thread_));
+    struct Thread_* thread_ = heap_alloc(sizeof(struct Thread_));
 
     // init private methods
     thread_->self.start = thread_start;
@@ -69,7 +69,7 @@ struct Thread* thread_new() {
 void thread_free(struct Thread* thread) {
     struct Thread_* thread_ = (struct Thread_*)thread;
 
-    memory_free(thread_);
+    heap_free(thread_);
 }
 
 #endif

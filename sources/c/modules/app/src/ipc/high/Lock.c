@@ -40,7 +40,7 @@ Lock* lock_new(char* name) {
 
     // create internal mutex
     String* lockmutex_name = string_new_concat(name, "/lockmutex");
-    lock_->mutex = mutex_new(lockmutex_name);
+    lock_->mutex = mutex_new(lockmutex_name->value(lockmutex_name));
     string_free(lockmutex_name);
 
     return (Lock*)lock_;

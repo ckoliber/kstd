@@ -10,7 +10,7 @@ void* thread1(void* arg) {
     while (l->size(l) > 0) {
         int* item = l->remove(l, 0);
         printf("Thread 1 Remove Item = %d\n", *item);
-        memory_free(item);
+        heap_free(item);
     }
 
     //    assert(result == 0);
@@ -24,7 +24,7 @@ void* thread2(void* arg) {
     while (l->size(l) > 0) {
         int* item = l->remove(l, 0);
         printf("Thread 2 Remove Item = %d\n", *item);
-        memory_free(item);
+        heap_free(item);
     }
 
     //    assert(result == 0);
@@ -38,7 +38,7 @@ void* thread3(void* arg) {
     while (l->size(l) > 0) {
         int* item = l->remove(l, 0);
         printf("Thread 3 Remove Item = %d\n", *item);
-        memory_free(item);
+        heap_free(item);
     }
 
     //    assert(result == 0);
@@ -52,7 +52,7 @@ void* thread4(void* arg) {
     while (l->size(l) > 0) {
         int* item = l->remove(l, 0);
         printf("Thread 4 Remove Item = %d\n", *item);
-        memory_free(item);
+        heap_free(item);
     }
 
     return NULL;
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     Thread* t4 = thread_new();
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = memory_alloc(sizeof(int));
+        int* item = heap_alloc(sizeof(int));
         *item = cursor;
         l->add(l, item);
     }
