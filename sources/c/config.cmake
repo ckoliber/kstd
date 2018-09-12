@@ -49,23 +49,3 @@ include(CPack)
 ########################################################
 # End Package Configures
 ########################################################
-#-------------------------------------------------------
-#-------------------------------------------------------
-#-------------------------------------------------------
-########################################################
-# Start Target Configures
-########################################################
-
-# MakeFile Targets config
-add_custom_target(build make -j4)
-add_custom_target(start ./modules/app/app)
-add_custom_target(daemon nohup ./modules/app/app &> ../app.log &)
-add_custom_target(cpack cpack)
-add_custom_target(ctest ctest --verbose)
-
-########################################################
-# End Target Configures
-########################################################
-
-
-message("Enter command: make <build|start|daemon|cpack|ctest|install>")
