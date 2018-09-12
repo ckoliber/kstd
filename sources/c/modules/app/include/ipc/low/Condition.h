@@ -2,7 +2,7 @@
 
 typedef struct Condition {
     int (*wait)(struct Condition* self, uint_64 timeout);
-    int (*signal)(struct Condition* self, uint_32 count);
+    int (*signal)(struct Condition* self, int count);
 } Condition;
 
 Condition* condition_new(char* name);

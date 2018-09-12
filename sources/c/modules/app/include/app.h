@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #if defined(_WIN32) || defined(_WIN64)  // windows
 #define APP_WINDOWS
 #elif defined(__linux__)  // linux
@@ -19,3 +20,5 @@
 #elif defined(__ANDROID__)  // android
 #define APP_ANDROID
 #endif
+
+void app_init();

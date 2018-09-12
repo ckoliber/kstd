@@ -1,5 +1,5 @@
 project(app)
-set(LINK_LIBS "-lpthread")
+set(LINK_LIBS "-pthread")
 
 ########################################################
 # Don't change area !!!
@@ -26,7 +26,7 @@ target_compile_options(${PROJECT_NAME} PUBLIC ${OPTIONS})
 
 # enable ctest
 enable_testing()
-list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/app.c")
+# list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/app.c")
 file(GLOB_RECURSE TESTS "${CMAKE_CURRENT_SOURCE_DIR}/test/*.test.c" "${CMAKE_CURRENT_SOURCE_DIR}/test/*.test.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/test/*.test.cxx")
 
 # iterate test's and add_executable, add_test

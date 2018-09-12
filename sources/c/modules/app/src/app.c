@@ -1,7 +1,7 @@
-#include <io/memory/Memory.h>
-#include <pthread.h>
-#include <stdio.h>
-#include <zconf.h>
+#include <app.h>
 
-int main(int argc, char* argv[]) {
+#include <ipc/low/Atomic.h>
+
+void app_init() {
+    atomic_init();
 }

@@ -1,0 +1,359 @@
+@startuml
+
+' ********************************
+' ********************************
+' Begin Memory Hierachy
+' ********************************
+' ********************************
+class Memory
+
+class MemoryLow
+class MemoryHigh
+
+class Type{
+    windows
+    posix
+}
+class Heap{
+    windows
+    posix
+}
+class Share{
+    windows
+    linux
+    bsd
+    mac
+    ios
+}
+
+Memory <|-- MemoryLow
+Memory <|-- MemoryHigh
+
+MemoryLow <|-- Type
+MemoryLow <|-- Heap
+MemoryLow <|-- Share
+' ********************************
+' ********************************
+' End Memory Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin Local Hierachy
+' ********************************
+' ********************************
+class Local
+
+class LocalLow
+class LocalHigh
+
+class Time{
+    windows
+    posix
+}
+class Date{
+    windows
+    posix
+}
+class Locale{
+    windows
+    posix
+}
+
+Local <|-- LocalLow
+Local <|-- LocalHigh
+
+LocalLow <|-- Time
+LocalLow <|-- Date
+LocalLow <|-- Locale
+' ********************************
+' ********************************
+' End Local Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin IPC Hierachy
+' ********************************
+' ********************************
+class IPC
+
+class IPCLow
+class IPCHigh
+
+class Atomic{
+    windows
+    posix
+}
+class Mutex{
+    windows
+    posix
+}
+class Condition{
+    windows
+    posix
+}
+class Semaphore{
+    windows
+    posix
+}
+
+class Lock{
+    normal
+    reentrant
+    errorcheck
+}
+class RWLock{
+    normal
+    reentrant
+    errorcheck
+}
+class Message
+class Monitor
+class Barrier
+class Latch
+
+
+IPC <|-- IPCLow
+IPC <|-- IPCHigh
+
+IPCLow <|-- Atomic
+IPCLow <|-- Mutex
+IPCLow <|-- Condition
+IPCLow <|-- Semaphore
+
+IPCHigh <|-- Lock
+IPCHigh <|-- RWLock
+IPCHigh <|-- Message
+IPCHigh <|-- Monitor
+IPCHigh <|-- Barrier
+IPCHigh <|-- Latch
+' ********************************
+' ********************************
+' End IPC Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin DSA Hierachy
+' ********************************
+' ********************************
+class DSA
+
+class DSALow
+class DSAHigh
+
+class String{
+    windows
+    posix
+}
+
+class ArrayList
+class LinkedList
+class Dequeue
+class Set
+class Hash
+
+DSA <|-- DSALow
+DSA <|-- DSAHigh
+
+DSALow <|-- String
+
+DSAHigh <|-- ArrayList
+DSAHigh <|-- LinkedList
+DSAHigh <|-- Dequeue
+DSAHigh <|-- Set
+DSAHigh <|-- Hash
+' ********************************
+' ********************************
+' End DSA Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin Algo Hierachy
+' ********************************
+' ********************************
+class Algo
+
+class AlgoLow
+class AlgoHigh
+
+class Math{
+    windows
+    posix
+}
+
+class KRE
+
+Algo <|-- AlgoLow
+Algo <|-- AlgoHigh
+
+AlgoLow <|-- Math
+
+AlgoHigh <|-- KRE
+' ********************************
+' ********************************
+' End Algo Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin IO Hierachy
+' ********************************
+' ********************************
+class IO
+
+class IOLow
+class IOHigh
+
+class File{
+    windows
+    posix
+}
+class Poller{
+    windows
+    posix
+}
+
+IO <|-- IOLow
+IO <|-- IOHigh
+
+IOLow <|-- File
+IOLow <|-- Poller
+' ********************************
+' ********************************
+' End IO Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin Processor Hierachy
+' ********************************
+' ********************************
+class Processor
+
+class ProcessorLow
+class ProcessorHigh
+
+class Thread{
+    windows
+    posix
+}
+class Process{
+    windows
+    linux
+    bsd
+    mac
+    ios
+}
+
+class ThreadPool
+class ProcessPool
+
+Processor <|-- ProcessorLow
+Processor <|-- ProcessorHigh
+
+ProcessorLow <|-- Thread
+ProcessorLow <|-- Process
+
+ProcessorHigh <|-- ThreadPool
+ProcessorHigh <|-- ProcessPool
+' ********************************
+' ********************************
+' End Processor Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin Net Hierachy
+' ********************************
+' ********************************
+class Net
+
+class NetLow
+class NetHigh
+
+class TCP{
+    windows
+    posix
+}
+class UDP{
+    windows
+    posix
+}
+class TLS{
+    windows
+    posix
+}
+class DTLS{
+    windows
+    posix
+}
+
+class HTTP
+class WS
+class SSE
+
+Net <|-- NetLow
+Net <|-- NetHigh
+
+NetLow <|-- TCP
+NetLow <|-- UDP
+NetLow <|-- TLS
+NetLow <|-- DTLS
+
+NetHigh <|-- HTTP
+NetHigh <|-- WS
+NetHigh <|-- SSE
+' ********************************
+' ********************************
+' End Net Hierachy
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' ********************************
+' Begin Security Hierachy
+' ********************************
+' ********************************
+class Security
+
+class SecurityLow
+class SecurityHigh
+
+Security <|-- SecurityLow
+Security <|-- SecurityHigh
+' ********************************
+' ********************************
+' End Security Hierachy
+' ********************************
+' ********************************
+class kstd
+
+kstd <|-- Memory
+kstd <|-- Local
+kstd <|-- IPC
+kstd <|-- DSA
+kstd <|-- Algo
+kstd <|-- IO
+kstd <|-- Processor
+kstd <|-- Net
+kstd <|-- Security
+
+@enduml
