@@ -1,12 +1,14 @@
 #include <ipc/low/Message.h>
 
-#if defined(APP_ANDROID)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
 #include <dsa/low/String.h>
+#include <fcntl.h>
 #include <ipc/low/Mutex.h>
 #include <ipc/low/Semaphore.h>
 #include <local/low/Time.h>
 #include <memory/low/Heap.h>
+#include <sys/mman.h>
 
 struct Message_ {
     struct Message self;
@@ -47,9 +49,57 @@ void message_anonymous_free(void* memory) {
     heap_free(memory);
 }
 void* message_named_new(char* name, int max, tsize item) {
-    return NULL;
+    // check share memory exists
+    bool exists = true;
+    int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
+    if (exists_fd > 0) {
+        // not exists, create it
+        close(exists_fd);
+        exists = false;
+    }
+
+    // alocate share start and end and queue and connections
+    int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
+    void* result = mmap(NULL, sizeof(int) + sizeof(int) + (item * max) + sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+    close(fd);
+
+    // check error
+    if (result == NULL || result == MAP_FAILED) {
+        return NULL;
+    }
+
+    // get start and end and queue and connections address
+    int* start = result;
+    int* end = result + sizeof(int);
+    int* queue = result + sizeof(int) + sizeof(int);
+    int* connections = result + sizeof(int) + sizeof(int) + (item * max);
+
+    // create and init start and end or open and increase connections
+    if (!exists) {
+        *connections = 1;
+
+        // init share start and end
+        *start = 0;
+        *end = 0;
+    } else {
+        *connections += 1;
+    }
+
+    return result;
 }
-void message_named_free(void* memory, char* name, int max, tsize item) {}
+void message_named_free(void* memory, char* name, int max, tsize item) {
+    // get connections address
+    int* connections = memory + sizeof(int) + sizeof(int) + (item * max);
+
+    // destroy share memory on close all connections
+    if (connections <= 1) {
+        munmap(memory, sizeof(int) + sizeof(int) + (item * max) + sizeof(int));
+        shm_unlink(name);
+    } else {
+        *connections -= 1;
+        munmap(memory, sizeof(int) + sizeof(int) + (item * max) + sizeof(int));
+    }
+}
 
 // implement methods
 int message_enqueue(struct Message* self, void* item, uint64_t timeout) {
@@ -116,8 +166,32 @@ Message* message_new(char* name, int max, tsize item) {
         // create internal message queue
         message_->memory = message_anonymous_new(max, item);
     } else {
-        heap_free(message_);
-        message_ = NULL;
+        message_->name = string_new_concat(name, "/mutex");
+        message_->max = max;
+        message_->item = item;
+
+        // create internal full semaphore
+        String* full_semaphore_name = string_new_concat(name, "/mutex/full_semaphore");
+        message_->full_semaphore = semaphore_new(full_semaphore_name->value(full_semaphore_name));
+        string_free(full_semaphore_name);
+
+        // create internal empty semaphore
+        String* empty_semaphore_name = string_new_concat(name, "/mutex/empty_semaphore");
+        message_->empty_semaphore = semaphore_new(empty_semaphore_name->value(empty_semaphore_name));
+        string_free(empty_semaphore_name);
+
+        // try acquire critical mutex
+        if (critical != NULL) {
+            critical->acquire(critical, UINT_64_MAX);
+        }
+
+        // create and init or open internal share message queue
+        message_->memory = message_named_new(message_->name->value(message_->name), max, item);
+
+        // try release critical mutex
+        if (critical != NULL) {
+            critical->release(critical);
+        }
     }
 
     return (Message*)message_;
@@ -128,6 +202,21 @@ void message_free(Message* message) {
     if (message_->name == NULL) {
         // destroy internal message queue
         message_anonymous_free(message_->memory);
+    } else {
+        // try acquire critical mutex
+        if (critical != NULL) {
+            critical->acquire(critical, UINT_64_MAX);
+        }
+
+        // destroy and close or close internal share message queue
+        message_named_free(message_->memory, message_->name->value(message_->name), message_->max, message_->item);
+
+        // try release critical mutex
+        if (critical != NULL) {
+            critical->release(critical);
+        }
+
+        string_free(message_->name);
     }
 
     // destroy internal full and empty semaphore

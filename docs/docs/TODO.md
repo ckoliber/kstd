@@ -77,3 +77,8 @@
 12. implement Algo low (+math)
 13. implement Algo high (+kre)
 14. implement File low (+file +poller)
+
+## Now
+
+1. x_anonymous_new, _free below them
+2. comment mutex and cond and svalue check

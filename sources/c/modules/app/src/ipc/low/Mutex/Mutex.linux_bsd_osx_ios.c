@@ -21,8 +21,8 @@ int mutex_release(struct Mutex* self);
 
 // local methods
 void* mutex_anonymous_new(int mode);
-void* mutex_named_new(int mode, char* name);
 void mutex_anonymous_free(void* memory);
+void* mutex_named_new(int mode, char* name);
 void mutex_named_free(void* memory, char* name);
 
 void* mutex_anonymous_new(int mode) {
@@ -55,6 +55,15 @@ void* mutex_anonymous_new(int mode) {
 
     return result;
 }
+void mutex_anonymous_free(void* memory) {
+    // get mutex address
+    pthread_mutex_t* mutex = memory;
+
+    // destroy internal mutex
+    pthread_mutex_destroy(mutex);
+
+    heap_free(memory);
+}
 void* mutex_named_new(int mode, char* name) {
     // check share memory exists
     bool exists = true;
@@ -65,7 +74,7 @@ void* mutex_named_new(int mode, char* name) {
         exists = false;
     }
 
-    // alocate share mutex
+    // alocate share mutex and connections
     int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
     void* result = mmap(NULL, sizeof(pthread_mutex_t) + sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
     close(fd);
@@ -75,9 +84,11 @@ void* mutex_named_new(int mode, char* name) {
         return NULL;
     }
 
-    // create and increase connections
+    // get mutex and connections address
     pthread_mutex_t* mutex = result;
     int* connections = result + sizeof(pthread_mutex_t);
+
+    // create and init mutex or open and increase connections
     if (!exists) {
         *connections = 1;
 
@@ -107,17 +118,8 @@ void* mutex_named_new(int mode, char* name) {
 
     return result;
 }
-void mutex_anonymous_free(void* memory) {
-    // get mutex address
-    pthread_mutex_t* mutex = memory;
-
-    // destroy internal mutex
-    pthread_mutex_destroy(mutex);
-
-    heap_free(memory);
-}
 void mutex_named_free(void* memory, char* name) {
-    // get mutex address
+    // get mutex and connections address
     pthread_mutex_t* mutex = memory;
     int* connections = memory + sizeof(pthread_mutex_t);
 
@@ -127,6 +129,7 @@ void mutex_named_free(void* memory, char* name) {
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(int));
         shm_unlink(name);
     } else {
+        *connections -= 1;
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(int));
     }
 }

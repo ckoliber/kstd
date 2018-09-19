@@ -4,6 +4,7 @@
 
 #include <dsa/low/String.h>
 #include <fcntl.h>
+#include <ipc/low/Mutex.h>
 #include <local/low/Time.h>
 #include <memory/low/Heap.h>
 #include <pthread.h>
@@ -21,8 +22,8 @@ int condition_signal(struct Condition* self, int count);
 
 // local methods
 void* condition_anonymous_new();
-void* condition_named_new(char* name);
 void condition_anonymous_free(void* memory);
+void* condition_named_new(char* name);
 void condition_named_free(void* memory, char* name);
 
 void* condition_anonymous_new() {
@@ -49,6 +50,17 @@ void* condition_anonymous_new() {
 
     return result;
 }
+void condition_anonymous_free(void* memory) {
+    // get mutex and cond address
+    pthread_mutex_t* mutex = memory;
+    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
+
+    // destroy internal mutex
+    pthread_mutex_destroy(mutex);
+    pthread_cond_destroy(cond);
+
+    heap_free(memory);
+}
 void* condition_named_new(char* name) {
     // check share memory exists
     bool exists = true;
@@ -59,7 +71,7 @@ void* condition_named_new(char* name) {
         exists = false;
     }
 
-    // alocate share mutex and cond
+    // alocate share mutex and cond and connection
     int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
     void* result = mmap(NULL, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
     close(fd);
@@ -69,10 +81,12 @@ void* condition_named_new(char* name) {
         return NULL;
     }
 
-    // create and increase connections
+    // get mutex and cond and connections address
     pthread_mutex_t* mutex = result;
     pthread_mutex_t* cond = result + sizeof(pthread_mutex_t);
     int* connections = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
+
+    // create and init or open and increase connections
     if (!exists) {
         *connections = 1;
 
@@ -95,19 +109,8 @@ void* condition_named_new(char* name) {
 
     return result;
 }
-void condition_anonymous_free(void* memory) {
-    // get mutex and cond address
-    pthread_mutex_t* mutex = memory;
-    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
-
-    // destroy internal mutex
-    pthread_mutex_destroy(mutex);
-    pthread_cond_destroy(cond);
-
-    heap_free(memory);
-}
 void condition_named_free(void* memory, char* name) {
-    // get mutex and cond address
+    // get mutex and cond and connections address
     pthread_mutex_t* mutex = memory;
     pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
     int* connections = memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
@@ -119,6 +122,7 @@ void condition_named_free(void* memory, char* name) {
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
         shm_unlink(name);
     } else {
+        *connections -= 1;
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
     }
 }
@@ -226,7 +230,7 @@ void condition_free(Condition* condition) {
     struct Condition_* condition_ = (struct Condition_*)condition;
 
     if (condition_->name == NULL) {
-        // destroy internal cond and mutex
+        // destroy internal mutex and cond
         condition_anonymous_free(condition_->memory);
     } else {
         // try acquire critical mutex
@@ -234,7 +238,7 @@ void condition_free(Condition* condition) {
             critical->acquire(critical, UINT_64_MAX);
         }
 
-        // destroy and close or close internal share mutex
+        // destroy and close or close internal share mutex and cond
         condition_named_free(condition_->memory, condition_->name->value(condition_->name));
 
         // try release critical mutex
