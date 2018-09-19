@@ -21,12 +21,10 @@
     * Done
 2. __Heap__ -> `0.1.0`
     * Done
-3. __Share__ -> `0.1.0`
-    * Done
 
 ____________________________________________________
 
-### File
+### IO
 
 #### Low
 
@@ -62,6 +60,7 @@ ____________________________________________________
 #### Low
 
 1. __Mutex__ -> `0.1.0`
+    * __Comment__: `mode`-> `0`: normal, `1`-> recursive, `2`-> errorcheck
     * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
     * Done
@@ -72,12 +71,19 @@ ____________________________________________________
     * Done
 3. __Semaphore__ -> `0.1.0`
     * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
-    * __Comment__: `name`->
+    * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
+    * Done
+4. __Message__ -> `0.1.0`
+    * __Comment__: `max`-> Message queue max size
+    * __Comment__: `item`-> Message queue item size
+    * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
+    * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
     * Done
 
 #### High
 
 1. __Lock__ -> `0.1.0`
+    * __Comment__: `mode`-> `0`: normal, `1`-> reentrant(recursive), `2`-> errorcheck
     * __Comment__: `timeout`-> `0`: test, `number`: timed, `UNSIGNED_LONG_MAX`: infinity
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
     * Done
@@ -99,15 +105,9 @@ ____________________________________________________
 3. __Dequeue__ -> `0.1.0`
     * if `comperator` is not `NULL` queue is a `PriorityDequeue`
     * Done
-4. __Queue__ -> `0.1.0`
-    * if `comperator` is not `NULL` queue is a `PriorityQueue`
-    * Done
-5. __Stack__ -> `0.1.0`
-    * if `comperator` is not `NULL` stack is a `PriorityStack`
-    * Done
-6. __Set__ -> `0.2.0`
+4. __Set__ -> `0.2.0`
     * __concurrent, normal set (memory, speed optimization)__
-7. __Hash__ -> `0.2.0`
+5. __Hash__ -> `0.2.0`
     * __concurrent, normal hashmap (memory, speed optimization - sparsehash + densehash)__
 
 ____________________________________________________

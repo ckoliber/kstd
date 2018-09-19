@@ -1,7 +1,7 @@
 #include <app.h>
 
-#include <ipc/low/Atomic.h>
+#include <ipc/low/Mutex.h>
 
 void app_init() {
-    atomic_init();
+    critical = mutex_new(1, "/critical");
 }

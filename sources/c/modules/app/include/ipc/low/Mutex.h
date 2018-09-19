@@ -5,5 +5,8 @@ typedef struct Mutex {
     int (*release)(struct Mutex* self);
 } Mutex;
 
-Mutex* mutex_new(char* name);
+// critical section global mutex
+Mutex* critical = NULL;
+
+Mutex* mutex_new(int mode, char* name);
 void mutex_free(Mutex* mutex);

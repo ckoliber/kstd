@@ -5,5 +5,5 @@ typedef struct Lock {
     int (*unlock)(struct Lock* self);
 } Lock;
 
-Lock* lock_new(char* name);
+Lock* lock_new(int mode, char* name);
 void lock_free(Lock* lock);

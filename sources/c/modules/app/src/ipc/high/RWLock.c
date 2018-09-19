@@ -92,15 +92,15 @@ RWLock* rwlock_new(char* name) {
     rwlock_->self.write_lock = rwlock_write_lock;
     rwlock_->self.write_unlock = rwlock_write_unlock;
 
-    // create internal mutexes
-    String* criticalmutex_name = string_new_concat(name, "/criticalmutex");
-    rwlock_->critical_mutex = mutex_new(criticalmutex_name->value(criticalmutex_name));
-    string_free(criticalmutex_name);
+    // create internal critical mutex
+    String* rwlock_critical_mutex_name = string_new_concat(name, "/rwlock_critical_mutex");
+    rwlock_->critical_mutex = mutex_new(0, rwlock_critical_mutex_name->value(rwlock_critical_mutex_name));
+    string_free(rwlock_critical_mutex_name);
 
-    // create internal mutexes
-    String* writemutex_name = string_new_concat(name, "/writemutex");
-    rwlock_->write_mutex = mutex_new(writemutex_name->value(writemutex_name));
-    string_free(writemutex_name);
+    // create internal write mutex
+    String* rwlock_write_mutex_name = string_new_concat(name, "/rwlock_write_mutex");
+    rwlock_->write_mutex = mutex_new(0, rwlock_write_mutex_name->value(rwlock_write_mutex_name));
+    string_free(rwlock_write_mutex_name);
 
     rwlock_->readers_count = 0;
 

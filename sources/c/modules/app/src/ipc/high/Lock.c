@@ -31,7 +31,7 @@ int lock_unlock(struct Lock* self) {
     return result;
 }
 
-Lock* lock_new(char* name) {
+Lock* lock_new(int mode, char* name) {
     struct Lock_* lock_ = heap_alloc(sizeof(struct Lock_));
 
     // init private methods
@@ -39,9 +39,9 @@ Lock* lock_new(char* name) {
     lock_->self.unlock = lock_unlock;
 
     // create internal mutex
-    String* lockmutex_name = string_new_concat(name, "/lockmutex");
-    lock_->mutex = mutex_new(lockmutex_name->value(lockmutex_name));
-    string_free(lockmutex_name);
+    String* lock_mutex_name = string_new_concat(name, "/lock_mutex");
+    lock_->mutex = mutex_new(mode, lock_mutex_name->value(lock_mutex_name));
+    string_free(lock_mutex_name);
 
     return (Lock*)lock_;
 }

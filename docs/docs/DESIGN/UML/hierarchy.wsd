@@ -18,20 +18,12 @@ class Heap{
     windows
     posix
 }
-class Share{
-    windows
-    linux
-    bsd
-    mac
-    ios
-}
 
 Memory <|-- MemoryLow
 Memory <|-- MemoryHigh
 
 MemoryLow <|-- Type
 MemoryLow <|-- Heap
-MemoryLow <|-- Share
 ' ********************************
 ' ********************************
 ' End Memory Hierachy
@@ -85,10 +77,6 @@ class IPC
 class IPCLow
 class IPCHigh
 
-class Atomic{
-    windows
-    posix
-}
 class Mutex{
     windows
     posix
@@ -101,18 +89,17 @@ class Semaphore{
     windows
     posix
 }
+class Message{
+    windows
+    posix
+}
 
 class Lock{
     normal
-    reentrant
+    reentrant(recursive)
     errorcheck
 }
-class RWLock{
-    normal
-    reentrant
-    errorcheck
-}
-class Message
+class RWLock
 class Monitor
 class Barrier
 class Latch
@@ -121,14 +108,13 @@ class Latch
 IPC <|-- IPCLow
 IPC <|-- IPCHigh
 
-IPCLow <|-- Atomic
 IPCLow <|-- Mutex
 IPCLow <|-- Condition
 IPCLow <|-- Semaphore
+IPCLow <|-- Message
 
 IPCHigh <|-- Lock
 IPCHigh <|-- RWLock
-IPCHigh <|-- Message
 IPCHigh <|-- Monitor
 IPCHigh <|-- Barrier
 IPCHigh <|-- Latch
