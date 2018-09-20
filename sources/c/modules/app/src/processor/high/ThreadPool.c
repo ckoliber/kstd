@@ -1,3 +1,48 @@
+#include <processor/high/ThreadPool.h>
+
+#if defined(APP_LINUX)
+
+#include <memory/low/Heap.h>
+#include <processor/low/Thread.h>
+
+struct ThreadPool_ {
+    ThreadPool self;
+    int size;
+    tsize arg;
+    Thread** pool;
+};
+
+// link methods
+int threadpool_start(struct ThreadPool* self);
+int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg);
+int threadpool_stop(struct ThreadPool* self, bool force);
+
+// implement methods
+int threadpool_start(struct ThreadPool* self) {}
+int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg) {}
+int threadpool_stop(struct ThreadPool* self, bool force) {}
+
+ThreadPool* threadpool_new(int size, tsize arg) {
+    struct ThreadPool_* threadpool_ = heap_alloc(sizeof(struct ThreadPool_));
+
+    // link
+
+    return (ThreadPool*)threadpool_;
+}
+void threadpool_free(ThreadPool* threadpool) {
+    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)threadpool;
+
+    // destroy internal threads
+    for (int cursor = 0; cursor < threadpool_->size; cursor++) {
+        thread_free(threadpool_->pool[cursor]);
+    }
+    heap_free(threadpool_->pool);
+
+    heap_free(threadpool_);
+}
+
+#endif
+
 // #include <low/processor/high/ThreadPool.h>
 
 // #include <io/memory/Memory.h>
@@ -24,7 +69,7 @@
 //     int index;
 // };
 
-// // link methods
+//
 // int threadpool_start(struct ThreadPool* self);
 // int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg);
 // int threadpool_stop(struct ThreadPool* self, int force);

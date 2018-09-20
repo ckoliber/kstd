@@ -72,8 +72,8 @@
 7. implement Process (+affinity +priority)
 8. implement ThreadPool
 9. implement ProcessPool
-10. implement DSA low
-11. implement DSA high
+10. __OK__ - implement DSA low
+11. __OK__ - implement DSA high
 12. implement Algo low (+math)
 13. implement Algo high (+kre)
 14. implement File low (+file +poller)

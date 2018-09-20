@@ -66,7 +66,7 @@ ____________________________________________________
     * Done
 2. __Condition__ -> `0.1.0`
     * __Comment__: `timeout`-> `number`: timed, `UNSIGNED_LONG_MAX`: infinity
-    * __Comment__: `count`-> `1`: signal, `number`: signal count, `UNSIGNED_INT_MAX`: broadcast
+    * __Comment__: `count`-> `number`: signal, `<=0`: broadcast
     * __Comment__: `name`-> `NULL`: anonymous (between threads), `name`: named (between processes)
     * Done
 3. __Semaphore__ -> `0.1.0`
