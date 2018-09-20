@@ -11,3 +11,7 @@ typedef struct Thread {
 
 Thread* thread_new(tsize stack);
 void thread_free(Thread* thread);
+
+// get self id or parent id
+int thread_self();
+int thread_parent();

@@ -3,7 +3,7 @@
 typedef struct ProcessPool {
     int (*start)(struct ProcessPool* self);
     int (*post)(struct ProcessPool* self, void (*function)(void*), void* arg);
-    int (*stop)(struct ProcessPool* self, bool force);
+    int (*stop)(struct ProcessPool* self);
 } ProcessPool;
 
 ProcessPool* processpool_new(int size, tsize arg);

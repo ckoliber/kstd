@@ -3,7 +3,7 @@
 typedef struct ThreadPool {
     int (*start)(struct ThreadPool* self);
     int (*post)(struct ThreadPool* self, void (*function)(void*), void* arg);
-    int (*stop)(struct ThreadPool* self, bool force);
+    int (*stop)(struct ThreadPool* self);
 } ThreadPool;
 
 ThreadPool* threadpool_new(int size, tsize arg);

@@ -11,3 +11,7 @@ typedef struct Process {
 
 Process* process_new();
 void process_free(Process* process);
+
+// get self id or parent id
+int process_self();
+int process_parent();
