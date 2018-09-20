@@ -1,12 +1,12 @@
 #include <processor/low/Thread.h>
 
-#if defined(APP_LINUX)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
 #include <memory/low/Heap.h>
 #include <pthread.h>
 
 struct Thread_ {
-    struct Thread self;
+    Thread self;
     pthread_t id;
     tsize stack;
 };
