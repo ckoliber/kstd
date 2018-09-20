@@ -38,8 +38,8 @@
         1. __KRE__ -> `0.1.0`
 6. __Processor__
     1. __Low__: kernel
-        1. __Thread__ -> `0.1.0`
-        2. __Process__ -> `0.1.0`
+        1. __Thread__ -> `0.1.0` (affinity + priority => `0.3.0`)
+        2. __Process__ -> `0.1.0` (affinity + priority => `0.3.0`)
     2. __High__
         1. __ThreadPool__ -> `0.1.0`
         2. __ProcessPool__ -> `0.1.0`
@@ -68,10 +68,10 @@
 3. __OK__ - implement IPC high (+Message)
 4. __OK__ - Change struct X self -> X self
 5. __OK__ - atomic _new, _free IPC low
-6. implement Thread (+affinity +priority)
-7. implement Process (+affinity +priority)
-8. implement ThreadPool
-9. implement ProcessPool
+6. __OK__ - implement Thread (+affinity +priority)
+7. __OK__ - implement Process (+affinity +priority)
+8. __OK__ - implement ThreadPool
+9. __OK__ - implement ProcessPool
 10. __OK__ - implement DSA low
 11. __OK__ - implement DSA high
 12. implement Algo low (+math)

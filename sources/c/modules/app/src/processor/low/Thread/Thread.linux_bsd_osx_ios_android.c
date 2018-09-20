@@ -1,6 +1,6 @@
 #include <processor/low/Thread.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <memory/low/Heap.h>
 #include <pthread.h>
@@ -20,22 +20,6 @@ int thread_id(struct Thread* self);
 int thread_stop(struct Thread* self);
 
 // implement methods
-int thread_priority(struct Thread* self, int priority) {
-    struct Thread_* thread_ = (struct Thread_*)self;
-
-    // set priority
-    int result = -1;
-
-    return result;
-}
-int thread_affinity(struct Thread* self, int affinity) {
-    struct Thread_* thread_ = (struct Thread_*)self;
-
-    // set affinity
-    int result = -1;
-
-    return result;
-}
 int thread_start(struct Thread* self, int (*function)(void*), void* arg) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
@@ -43,7 +27,7 @@ int thread_start(struct Thread* self, int (*function)(void*), void* arg) {
     int result = -1;
     pthread_attr_t tattr;
     pthread_attr_init(&tattr);
-    if (thread_->stack != -1) {
+    if (thread_->stack > 0) {
         pthread_attr_setstacksize(&tattr, thread_->stack);
     }
     if (pthread_create(&(thread_->id), &tattr, function, arg) == 0) {
@@ -83,8 +67,6 @@ Thread* thread_new(tsize stack) {
     struct Thread_* thread_ = heap_alloc(sizeof(struct Thread_));
 
     // init private methods
-    thread_->self.priority = thread_priority;
-    thread_->self.affinity = thread_affinity;
     thread_->self.start = thread_start;
     thread_->self.join = thread_join;
     thread_->self.id = thread_id;
