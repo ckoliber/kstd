@@ -11,7 +11,7 @@
 #include <sys/mman.h>
 
 struct Message_ {
-    struct Message self;
+    Message self;
     void* memory;
     int max;
     tsize item;
@@ -159,9 +159,11 @@ Message* message_new(char* name, int max, tsize item) {
 
         // create internal full semaphore
         message_->full_semaphore = semaphore_new(NULL);
+        message_->full_semaphore->init(message_->full_semaphore, max);
 
         // create internal empty semaphore
         message_->empty_semaphore = semaphore_new(NULL);
+        message_->empty_semaphore->init(message_->empty_semaphore, 0);
 
         // create internal message queue
         message_->memory = message_anonymous_new(max, item);
@@ -173,11 +175,13 @@ Message* message_new(char* name, int max, tsize item) {
         // create internal full semaphore
         String* full_semaphore_name = string_new_concat(name, "/mutex/full_semaphore");
         message_->full_semaphore = semaphore_new(full_semaphore_name->value(full_semaphore_name));
+        message_->full_semaphore->init(message_->full_semaphore, max);
         string_free(full_semaphore_name);
 
         // create internal empty semaphore
         String* empty_semaphore_name = string_new_concat(name, "/mutex/empty_semaphore");
         message_->empty_semaphore = semaphore_new(empty_semaphore_name->value(empty_semaphore_name));
+        message_->empty_semaphore->init(message_->empty_semaphore, 0);
         string_free(empty_semaphore_name);
 
         // try acquire critical mutex

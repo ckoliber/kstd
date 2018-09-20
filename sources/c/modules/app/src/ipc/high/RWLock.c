@@ -6,7 +6,7 @@
 #include <memory/low/Heap.h>
 
 struct RWLock_ {
-    struct RWLock self;
+    RWLock self;
     Mutex* critical_mutex;
     Mutex* write_mutex;
     int readers_count;

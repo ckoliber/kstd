@@ -3,13 +3,15 @@
 #if defined(APP_ANDROID)
 
 #include <dsa/low/String.h>
+#include <fcntl.h>
 #include <ipc/low/Mutex.h>
 #include <ipc/low/Semaphore.h>
 #include <local/low/Time.h>
 #include <memory/low/Heap.h>
+#include <sys/mman.h>
 
 struct Message_ {
-    struct Message self;
+    Message self;
     void* memory;
     int max;
     tsize item;
@@ -109,9 +111,11 @@ Message* message_new(char* name, int max, tsize item) {
 
         // create internal full semaphore
         message_->full_semaphore = semaphore_new(NULL);
+        message_->full_semaphore->init(message_->full_semaphore, max);
 
         // create internal empty semaphore
         message_->empty_semaphore = semaphore_new(NULL);
+        message_->empty_semaphore->init(message_->empty_semaphore, 0);
 
         // create internal message queue
         message_->memory = message_anonymous_new(max, item);

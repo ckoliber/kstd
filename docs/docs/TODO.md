@@ -64,10 +64,10 @@
 ## Check List
 
 1. __OK__ - implement Local low
-2. implement IPC low (+Atomic)
-3. implement IPC high (+Message)
-4. Change struct X self -> X self
-5. atomic _new, _free IPC low
+2. __OK__ - implement IPC low (+Atomic)
+3. __OK__ - implement IPC high (+Message)
+4. __OK__ - Change struct X self -> X self
+5. __OK__ - atomic _new, _free IPC low
 6. implement Thread (+affinity +priority)
 7. implement Process (+affinity +priority)
 8. implement ThreadPool
@@ -80,5 +80,5 @@
 
 ## Now
 
-1. x_anonymous_new, _free below them
-2. comment mutex and cond and svalue check
+1. __OK__ - x_anonymous_new, _free below them
+2. __OK__ - comment mutex and cond and svalue check

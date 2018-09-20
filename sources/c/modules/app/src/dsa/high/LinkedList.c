@@ -4,7 +4,7 @@
 #include <memory/low/Heap.h>
 
 struct LinkedList_ {
-    struct LinkedList self;
+    LinkedList self;
     struct LinkedItem* head;
     int size;
     RWLock* rwlock;
@@ -18,7 +18,7 @@ struct LinkedItem {
 };
 
 struct LinkedListIterator_ {
-    struct LinkedListIterator self;
+    LinkedListIterator self;
     struct LinkedItem* item;
     struct LinkedItem* end;
 };

@@ -5,7 +5,7 @@
 #include <memory/low/Heap.h>
 
 struct Lock_ {
-    struct Lock self;
+    Lock self;
     Mutex* mutex;
 };
 

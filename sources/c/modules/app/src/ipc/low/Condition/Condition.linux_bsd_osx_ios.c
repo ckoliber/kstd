@@ -11,7 +11,7 @@
 #include <sys/mman.h>
 
 struct Condition_ {
-    struct Condition self;
+    Condition self;
     void* memory;
     String* name;
 };
@@ -176,17 +176,17 @@ int condition_signal(struct Condition* self, int count) {
 
     // signal the pthread cond
     int result = -1;
-    if (count == INT_MAX) {
-        // broadcast
-        if (pthread_cond_broadcast(cond) == 0) {
-            result = 0;
-        }
-    } else {
+    if (count > 0) {
         // signal
         for (int cursor = 0; cursor < count; cursor++) {
             pthread_cond_signal(cond);
         }
         result = 0;
+    } else {
+        // broadcast
+        if (pthread_cond_broadcast(cond) == 0) {
+            result = 0;
+        }
     }
 
     // release the pthread mutex

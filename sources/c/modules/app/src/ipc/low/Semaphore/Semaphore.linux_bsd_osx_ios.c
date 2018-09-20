@@ -12,7 +12,7 @@
 #include <sys/mman.h>
 
 struct Semaphore_ {
-    struct Semaphore self;
+    Semaphore self;
     void* memory;
     String* name;
 };

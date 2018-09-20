@@ -8,7 +8,7 @@
 #include <pthread.h>
 
 struct Mutex_ {
-    struct Mutex self;
+    Mutex self;
     void* memory;
     String* name;
 };

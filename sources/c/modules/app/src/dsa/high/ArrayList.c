@@ -4,7 +4,7 @@
 #include <memory/low/Heap.h>
 
 struct ArrayList_ {
-    struct ArrayList self;
+    ArrayList self;
     int length;
     int cursor;
     void** array;

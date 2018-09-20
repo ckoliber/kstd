@@ -5,7 +5,7 @@
 #include <memory/low/Heap.h>
 
 struct Dequeue_ {
-    struct Dequeue self;
+    Dequeue self;
     struct DequeueItem* head;
     int size;
     int max;
@@ -264,8 +264,19 @@ Dequeue* dequeue_new(int mode, int max, int (*comperator)(void*, void*)) {
             dequeue_->self.get = dequeue_get_blocking;
             dequeue_->self.size = dequeue_size_blocking;
             dequeue_->rwlock = rwlock_new(NULL);
-            dequeue_->empty_semaphore = semaphore_new(NULL, 0);
-            dequeue_->full_semaphore = max > 0 ? semaphore_new(NULL, max) : NULL;
+
+            // init empty semaphore
+            dequeue_->empty_semaphore = semaphore_new(NULL);
+            dequeue_->empty_semaphore->init(dequeue_->empty_semaphore, 0);
+
+            // init full semaphore
+            if (max > 0) {
+                dequeue_->full_semaphore = semaphore_new(NULL);
+                dequeue_->full_semaphore->init(dequeue_->full_semaphore, max);
+            } else {
+                dequeue_->full_semaphore = NULL;
+            }
+
             break;
     }
 

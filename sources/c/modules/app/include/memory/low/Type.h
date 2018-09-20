@@ -1,7 +1,5 @@
 #include <app.h>
 
-#include <limits.h>
-
 #if defined(APP_WINDOWS)
 
 #include <windows.h>
