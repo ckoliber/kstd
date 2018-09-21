@@ -8,10 +8,18 @@
 #include <pthread.h>
 
 struct Mutex_ {
+    // self public object
     Mutex self;
-    void* memory;
+
+    // constructor data
     String* name;
+
+    // private data
+    void* memory;
 };
+
+// vtable
+Mutex_VTable* mutex_vtable;
 
 // link methods
 int mutex_acquire(struct Mutex* self, uint_64 timeout);
@@ -23,6 +31,7 @@ void mutex_anonymous_free(void* memory);
 void* mutex_named_new(int mode, char* name);
 void mutex_named_free(void* memory, char* name);
 
+// implement methods
 void* mutex_anonymous_new(int mode) {
     // alocate mutex
     void* result = heap_alloc(sizeof(pthread_mutex_t));
@@ -63,11 +72,14 @@ void mutex_anonymous_free(void* memory) {
     heap_free(memory);
 }
 void* mutex_named_new(int mode, char* name) {
+    // android does not support posix share memory
     return NULL;
 }
-void mutex_named_free(void* memory, char* name) {}
+void mutex_named_free(void* memory, char* name) {
+    // android does not support posix share memory
+}
 
-// implement methods
+// vtable operators
 int mutex_acquire(struct Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
@@ -117,34 +129,67 @@ int mutex_release(struct Mutex* self) {
     return result;
 }
 
-Mutex* mutex_new(int mode, char* name) {
+// object allocation and deallocation operators
+void mutex_init() {
+    // init vtable
+    mutex_vtable = heap_alloc(sizeof(Mutex_VTable));
+    mutex_vtable->acquire = mutex_acquire;
+    mutex_vtable->release = mutex_release;
+}
+Mutex* mutex_new() {
     struct Mutex_* mutex_ = heap_alloc(sizeof(struct Mutex_));
 
-    // init private methods
-    mutex_->self.acquire = mutex_acquire;
-    mutex_->self.release = mutex_release;
+    // set vtable
+    mutex_->self.vtable = mutex_vtable;
 
-    if (name == NULL) {
-        mutex_->name = NULL;
+    // set constructor data
+    mutex_->name = NULL;
 
-        // create internal mutex
-        mutex_->memory = mutex_anonymous_new(mode);
-    } else {
-        heap_free(mutex_);
-        mutex_ = NULL;
-    }
+    // set private data
+    mutex_->memory = NULL;
 
     return (Mutex*)mutex_;
 }
 void mutex_free(Mutex* mutex) {
     struct Mutex_* mutex_ = (struct Mutex_*)mutex;
 
-    if (mutex_->name == NULL) {
-        // destroy internal mutex
-        mutex_anonymous_free(mutex_->memory);
+    // free private data
+    if (mutex_->memory != NULL) {
+        if (mutex_->name != NULL) {
+            // android does not support posix share memory
+        } else {
+            // destroy internal mutex
+            mutex_anonymous_free(mutex_->memory);
+        }
     }
 
+    // free constructor data
+    if (mutex_->name != NULL) {
+        string_free(mutex_->name);
+    }
+
+    // free self
     heap_free(mutex_);
+}
+Mutex* mutex_new_object(int mode, char* name) {
+    struct Mutex_* mutex_ = (struct Mutex_*)mutex_new();
+
+    // set constructor data
+    if (name != NULL) {
+        mutex_->name = string_new_concat(name, "/mutex");
+    }
+
+    // set private data
+    if (name != NULL) {
+        // android does not support posix share memory
+        mutex_free(mutex_);
+        mutex_ = NULL;
+    } else {
+        // create internal mutex
+        mutex_->memory = mutex_anonymous_new(mode);
+    }
+
+    return (Mutex*)mutex_;
 }
 
 #endif

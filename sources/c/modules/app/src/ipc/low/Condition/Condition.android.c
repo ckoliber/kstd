@@ -3,18 +3,24 @@
 #if defined(APP_ANDROID)
 
 #include <dsa/low/String.h>
-#include <fcntl.h>
 #include <ipc/low/Mutex.h>
 #include <local/low/Time.h>
 #include <memory/low/Heap.h>
 #include <pthread.h>
-#include <sys/mman.h>
 
 struct Condition_ {
+    // self public object
     Condition self;
-    void* memory;
+
+    // constructor data
     String* name;
+
+    // private data
+    void* memory;
 };
+
+// vtable
+Condition_VTable* condition_vtable;
 
 // link methods
 int condition_wait(struct Condition* self, uint_64 timeout);
@@ -26,6 +32,7 @@ void condition_anonymous_free(void* memory);
 void* condition_named_new(char* name);
 void condition_named_free(void* memory, char* name);
 
+// implement methods
 void* condition_anonymous_new() {
     // alocate mutex
     void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t));
@@ -62,11 +69,14 @@ void condition_anonymous_free(void* memory) {
     heap_free(memory);
 }
 void* condition_named_new(char* name) {
+    // android does not support posix share memory
     return NULL;
 }
-void condition_named_free(void* memory, char* name) {}
+void condition_named_free(void* memory, char* name) {
+    // android does not support posix share memory
+}
 
-// implement methods
+// vtable operators
 int condition_wait(struct Condition* self, uint_64 timeout) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
@@ -134,34 +144,67 @@ int condition_signal(struct Condition* self, int count) {
     return result;
 }
 
-Condition* condition_new(char* name) {
+// object allocation and deallocation operators
+void condition_init() {
+    // init vtable
+    condition_vtable = heap_alloc(sizeof(Condition_VTable));
+    condition_vtable->wait = condition_wait;
+    condition_vtable->signal = condition_signal;
+}
+Condition* condition_new() {
     struct Condition_* condition_ = heap_alloc(sizeof(struct Condition_));
 
-    // init private methods
-    condition_->self.wait = condition_wait;
-    condition_->self.signal = condition_signal;
+    // set vtable
+    condition_->self.vtable = condition_vtable;
 
-    if (name == NULL) {
-        condition_->name = NULL;
+    // set constructor data
+    condition_->name = NULL;
 
-        // create internal mutex
-        condition_->memory = mutex_anonymous_new();
-    } else {
-        heap_free(condition_);
-        condition_ = NULL;
-    }
+    // set private data
+    condition_->memory = NULL;
 
     return (Condition*)condition_;
 }
 void condition_free(Condition* condition) {
     struct Condition_* condition_ = (struct Condition_*)condition;
 
-    if (condition_->name == NULL) {
-        // destroy internal mutex and cond
-        condition_anonymous_free(condition_->memory);
+    // free private data
+    if (condition_->memory != NULL) {
+        if (condition_->name != NULL) {
+            // android does not support posix share memory
+        } else {
+            // destroy internal mutex and cond
+            condition_anonymous_free(condition_->memory);
+        }
     }
 
+    // free constructor data
+    if (condition_->name != NULL) {
+        string_free(condition_->name);
+    }
+
+    // free self
     heap_free(condition_);
+}
+Condition* condition_new_object(char* name) {
+    struct Condition_* condition_ = (struct Condition_*)condition_new();
+
+    // set constructor data
+    if (name != NULL) {
+        condition_->name = string_new_concat(name, "/condition");
+    }
+
+    // set private data
+    if (name != NULL) {
+        // android does not support posix share memory
+        condition_free(condition_);
+        condition_ = NULL;
+    } else {
+        // create internal mutex
+        condition_->memory = mutex_anonymous_new();
+    }
+
+    return (Condition*)condition_;
 }
 
 #endif

@@ -12,10 +12,18 @@
 #include <sys/mman.h>
 
 struct Semaphore_ {
+    // self public object
     Semaphore self;
-    void* memory;
+
+    // constructor data
     String* name;
+
+    // private data
+    void* memory;
 };
+
+// vtable
+Semaphore_VTable* semaphore_vtable;
 
 // link methods
 int semaphore_init(struct Semaphore* self, int value);
@@ -29,6 +37,7 @@ void semaphore_anonymous_free(void* memory);
 void* semaphore_named_new(char* name);
 void semaphore_named_free(void* memory, char* name);
 
+// implement methods
 void* semaphore_anonymous_new() {
     // alocate mutex and cond and svalue
     void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
@@ -140,7 +149,7 @@ void semaphore_named_free(void* memory, char* name) {
     }
 }
 
-// implement methods
+// vtable operators
 int semaphore_init(struct Semaphore* self, int value) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
@@ -251,63 +260,89 @@ int semaphore_get(struct Semaphore* self) {
     return result;
 }
 
-Semaphore* semaphore_new(char* name) {
+// object allocation and deallocation operators
+void semaphore_init() {
+    // init vtable
+    semaphore_vtable = heap_alloc(sizeof(Semaphore_VTable));
+    semaphore_vtable->init = semaphore_init;
+    semaphore_vtable->wait = semaphore_wait;
+    semaphore_vtable->post = semaphore_post;
+    semaphore_vtable->get = semaphore_get;
+}
+Semaphore* semaphore_new() {
     struct Semaphore_* semaphore_ = heap_alloc(sizeof(struct Semaphore_));
 
-    // init private methods
-    semaphore_->self.init = semaphore_init;
-    semaphore_->self.wait = semaphore_wait;
-    semaphore_->self.post = semaphore_post;
-    semaphore_->self.get = semaphore_get;
+    // set vtable
+    semaphore_->self.vtable = semaphore_vtable;
 
-    if (name == NULL) {
-        semaphore_->name = NULL;
+    // set constructor data
+    semaphore_->name = NULL;
 
-        // create internal mutex and cond and svalue
-        semaphore_->memory = semaphore_anonymous_new();
-    } else {
-        semaphore_->name = string_new_concat(name, "/semaphore");
-
-        // try acquire critical mutex
-        if (critical != NULL) {
-            critical->acquire(critical, UINT_64_MAX);
-        }
-
-        // create and init or open internal share mutex and cond and svalue
-        semaphore_->memory = semaphore_named_new(semaphore_->name->value(semaphore_->name));
-
-        // try release critical mutex
-        if (critical != NULL) {
-            critical->release(critical);
-        }
-    }
+    // set private data
+    semaphore_->memory = NULL;
 
     return (Semaphore*)semaphore_;
 }
 void semaphore_free(Semaphore* semaphore) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore;
 
-    if (semaphore_->name == NULL) {
-        // destroy internal mutex and cond and svalue
-        semaphore_anonymous_free(semaphore_->memory);
-    } else {
-        // try acquire critical mutex
-        if (critical != NULL) {
-            critical->acquire(critical, UINT_64_MAX);
+    // free private data
+    if (semaphore_->memory != NULL) {
+        if (semaphore_->name != NULL) {
+            // try acquire critical mutex
+            if (critical != NULL) {
+                critical->vtable->acquire(critical, UINT_64_MAX);
+            }
+
+            // destroy and close or close internal share mutex and cond and svalue
+            semaphore_named_free(semaphore_->memory, semaphore_->name->vtable->value(semaphore_->name));
+
+            // try release critical mutex
+            if (critical != NULL) {
+                critical->vtable->release(critical);
+            }
+        } else {
+            // destroy internal mutex and cond and svalue
+            semaphore_anonymous_free(semaphore_->memory);
         }
+    }
 
-        // destroy and close or close internal share mutex and cond and svalue
-        semaphore_named_free(semaphore_->memory, semaphore_->name->value(semaphore_->name));
-
-        // try release critical mutex
-        if (critical != NULL) {
-            critical->release(critical);
-        }
-
+    // free constructor data
+    if (semaphore_->name != NULL) {
         string_free(semaphore_->name);
     }
 
+    // free self
     heap_free(semaphore_);
+}
+Semaphore* semaphore_new_object(char* name) {
+    struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
+
+    // set constructor data
+    if (name != NULL) {
+        semaphore_->name = string_new_concat(name, "/semaphore");
+    }
+
+    // set private data
+    if (name != NULL) {
+        // try acquire critical mutex
+        if (critical != NULL) {
+            critical->vtable->acquire(critical, UINT_64_MAX);
+        }
+
+        // create and init or open internal share mutex and cond and svalue
+        semaphore_->memory = semaphore_named_new(semaphore_->name->vtable->value(semaphore_->name));
+
+        // try release critical mutex
+        if (critical != NULL) {
+            critical->vtable->release(critical);
+        }
+    } else {
+        // create internal mutex and cond and svalue
+        semaphore_->memory = semaphore_anonymous_new();
+    }
+
+    return (Semaphore*)semaphore_;
 }
 
 #endif

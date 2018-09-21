@@ -11,14 +11,22 @@
 #include <sys/mman.h>
 
 struct Message_ {
+    // self public object
     Message self;
-    void* memory;
+
+    // constructor data
+    String* name;
     int max;
     tsize item;
+
+    // private data
+    void* memory;
     Semaphore* full_semaphore;
     Semaphore* empty_semaphore;
-    String* name;
 };
+
+// vtable
+Message_VTable* message_vtable;
 
 // link methods
 int message_enqueue(struct Message* self, void* item, uint64_t timeout);
@@ -30,6 +38,7 @@ void message_anonymous_free(void* memory);
 void* message_named_new(char* name, int max, tsize item);
 void message_named_free(void* memory, char* name, int max, tsize item);
 
+// implement methods
 void* message_anonymous_new(int max, tsize item) {
     // alocate start and end and queue
     void* result = heap_alloc(sizeof(int) + sizeof(int) + (item * max));
@@ -101,7 +110,7 @@ void message_named_free(void* memory, char* name, int max, tsize item) {
     }
 }
 
-// implement methods
+// vtable operators
 int message_enqueue(struct Message* self, void* item, uint64_t timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
@@ -112,13 +121,13 @@ int message_enqueue(struct Message* self, void* item, uint64_t timeout) {
 
     // wait on full semaphore
     int result = -1;
-    if (message_->full_semaphore->wait(message_->full_semaphore, timeout) == 0) {
+    if (message_->full_semaphore->vtable->wait(message_->full_semaphore, timeout) == 0) {
         // add item to queue
         heap_copy(queue + *end, item, message_->item);
         *end = (*end + 1) % message_->max;
 
         // signal on empty semaphore
-        result = message_->empty_semaphore->post(message_->empty_semaphore);
+        result = message_->empty_semaphore->vtable->post(message_->empty_semaphore);
     }
 
     return result;
@@ -133,101 +142,131 @@ int message_dequeue(struct Message* self, void* item, uint64_t timeout) {
 
     // wait on empty semaphore
     int result = -1;
-    if (message_->empty_semaphore->wait(message_->empty_semaphore, timeout) == 0) {
+    if (message_->empty_semaphore->vtable->wait(message_->empty_semaphore, timeout) == 0) {
         // add item to queue
         heap_copy(item, queue + *start, message_->item);
         *start = (*start + 1) % message_->max;
 
         // signal on full semaphore
-        result = message_->full_semaphore->post(message_->full_semaphore);
+        result = message_->full_semaphore->vtable->post(message_->full_semaphore);
     }
 
     return result;
 }
 
-Message* message_new(char* name, int max, tsize item) {
+// object allocation and deallocation operators
+void message_init() {
+    // init vtable
+    message_vtable = heap_alloc(sizeof(Message_VTable));
+    message_vtable->enqueue = message_enqueue;
+    message_vtable->dequeueu = message_dequeue;
+}
+Message* message_new() {
     struct Message_* message_ = heap_alloc(sizeof(struct Message_));
 
-    // init private methods
-    message_->self.enqueue = message_enqueue;
-    message_->self.dequeueu = message_dequeue;
+    // set vtable
+    message_->self.vtable = message_vtable;
 
-    if (name == NULL) {
-        message_->name = NULL;
-        message_->max = max;
-        message_->item = item;
+    // set constructor data
+    message_->name = NULL;
+    message_->max = 0;
+    message_->item = 0;
 
-        // create internal full semaphore
-        message_->full_semaphore = semaphore_new(NULL);
-        message_->full_semaphore->init(message_->full_semaphore, max);
-
-        // create internal empty semaphore
-        message_->empty_semaphore = semaphore_new(NULL);
-        message_->empty_semaphore->init(message_->empty_semaphore, 0);
-
-        // create internal message queue
-        message_->memory = message_anonymous_new(max, item);
-    } else {
-        message_->name = string_new_concat(name, "/mutex");
-        message_->max = max;
-        message_->item = item;
-
-        // create internal full semaphore
-        String* full_semaphore_name = string_new_concat(name, "/mutex/full_semaphore");
-        message_->full_semaphore = semaphore_new(full_semaphore_name->value(full_semaphore_name));
-        message_->full_semaphore->init(message_->full_semaphore, max);
-        string_free(full_semaphore_name);
-
-        // create internal empty semaphore
-        String* empty_semaphore_name = string_new_concat(name, "/mutex/empty_semaphore");
-        message_->empty_semaphore = semaphore_new(empty_semaphore_name->value(empty_semaphore_name));
-        message_->empty_semaphore->init(message_->empty_semaphore, 0);
-        string_free(empty_semaphore_name);
-
-        // try acquire critical mutex
-        if (critical != NULL) {
-            critical->acquire(critical, UINT_64_MAX);
-        }
-
-        // create and init or open internal share message queue
-        message_->memory = message_named_new(message_->name->value(message_->name), max, item);
-
-        // try release critical mutex
-        if (critical != NULL) {
-            critical->release(critical);
-        }
-    }
+    // set private data
+    message_->memory = NULL;
+    message_->full_semaphore = NULL;
+    message_->empty_semaphore = NULL;
 
     return (Message*)message_;
 }
 void message_free(Message* message) {
     struct Message_* message_ = (struct Message_*)message;
 
-    if (message_->name == NULL) {
-        // destroy internal message queue
-        message_anonymous_free(message_->memory);
-    } else {
-        // try acquire critical mutex
-        if (critical != NULL) {
-            critical->acquire(critical, UINT_64_MAX);
+    // free private data
+    if (message_->memory != NULL) {
+        if (message_->name != NULL) {
+            // try acquire critical mutex
+            if (critical != NULL) {
+                critical->vtable->acquire(critical, UINT_64_MAX);
+            }
+
+            // destroy and close or close internal share message queue
+            message_named_free(message_->memory, message_->name->vtable->value(message_->name), message_->max, message_->item);
+
+            // try release critical mutex
+            if (critical != NULL) {
+                critical->vtable->release(critical);
+            }
+        } else {
+            // destroy internal message queue
+            message_anonymous_free(message_->memory);
         }
+    }
+    if (message_->full_semaphore != NULL) {
+        semaphore_free(message_->full_semaphore);
+    }
+    if (message_->empty_semaphore != NULL) {
+        semaphore_free(message_->empty_semaphore);
+    }
 
-        // destroy and close or close internal share message queue
-        message_named_free(message_->memory, message_->name->value(message_->name), message_->max, message_->item);
-
-        // try release critical mutex
-        if (critical != NULL) {
-            critical->release(critical);
-        }
-
+    // free constructor data
+    if (message_->name != NULL) {
         string_free(message_->name);
     }
 
-    // destroy internal full and empty semaphore
-    semaphore_free(message_->full_semaphore);
-    semaphore_free(message_->empty_semaphore);
-
+    // free self
     heap_free(message_);
+}
+Message* message_new_object(char* name, int max, tsize item) {
+    struct Message_* message_ = (struct Condition_*)message_new();
+
+    // set constructor data
+    if (name != NULL) {
+        message_->name = string_new_concat(name, "/message");
+    }
+    message_->max = max;
+    message_->item = item;
+
+    // set private data
+    if (name != NULL) {
+        // create internal full semaphore
+        String* full_semaphore_name = string_new_concat(name, "/message/full_semaphore");
+        message_->full_semaphore = semaphore_new(full_semaphore_name->vtable->value(full_semaphore_name));
+        message_->full_semaphore->vtable->init(message_->full_semaphore, max);
+        string_free(full_semaphore_name);
+
+        // create internal empty semaphore
+        String* empty_semaphore_name = string_new_concat(name, "/message/empty_semaphore");
+        message_->empty_semaphore = semaphore_new(empty_semaphore_name->vtable->value(empty_semaphore_name));
+        message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
+        string_free(empty_semaphore_name);
+
+        // try acquire critical mutex
+        if (critical != NULL) {
+            critical->vtable->acquire(critical, UINT_64_MAX);
+        }
+
+        // create and init or open internal share message queue
+        message_->memory = message_named_new(message_->name->vtable->value(message_->name), max, item);
+
+        // try release critical mutex
+        if (critical != NULL) {
+            critical->vtable->release(critical);
+        }
+    } else {
+        // create internal full semaphore
+        message_->full_semaphore = semaphore_new(NULL);
+        message_->full_semaphore->vtable->init(message_->full_semaphore, max);
+
+        // create internal empty semaphore
+        message_->empty_semaphore = semaphore_new(NULL);
+        message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
+
+        // create internal message queue
+        message_->memory = message_anonymous_new(max, item);
+    }
+
+    return (Message*)message_;
 }
 
 #endif

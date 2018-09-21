@@ -10,10 +10,18 @@
 #include <sys/mman.h>
 
 struct Mutex_ {
+    // self public object
     Mutex self;
-    void* memory;
+
+    // constructor data
     String* name;
+
+    // private data
+    void* memory;
 };
+
+// vtable
+Mutex_VTable* mutex_vtable;
 
 // link methods
 int mutex_acquire(struct Mutex* self, uint_64 timeout);
@@ -25,6 +33,7 @@ void mutex_anonymous_free(void* memory);
 void* mutex_named_new(int mode, char* name);
 void mutex_named_free(void* memory, char* name);
 
+// implement methods
 void* mutex_anonymous_new(int mode) {
     // alocate mutex
     void* result = heap_alloc(sizeof(pthread_mutex_t));
@@ -134,7 +143,7 @@ void mutex_named_free(void* memory, char* name) {
     }
 }
 
-// implement methods
+// vtable operators
 int mutex_acquire(struct Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
@@ -184,61 +193,87 @@ int mutex_release(struct Mutex* self) {
     return result;
 }
 
-Mutex* mutex_new(int mode, char* name) {
+// object allocation and deallocation operators
+void mutex_init() {
+    // init vtable
+    mutex_vtable = heap_alloc(sizeof(Mutex_VTable));
+    mutex_vtable->acquire = mutex_acquire;
+    mutex_vtable->release = mutex_release;
+}
+Mutex* mutex_new() {
     struct Mutex_* mutex_ = heap_alloc(sizeof(struct Mutex_));
 
-    // init private methods
-    mutex_->self.acquire = mutex_acquire;
-    mutex_->self.release = mutex_release;
+    // set vtable
+    mutex_->self.vtable = mutex_vtable;
 
-    if (name == NULL) {
-        mutex_->name = NULL;
+    // set constructor data
+    mutex_->name = NULL;
 
-        // create internal mutex
-        mutex_->memory = mutex_anonymous_new(mode);
-    } else {
-        mutex_->name = string_new_concat(name, "/mutex");
-
-        // try acquire critical mutex
-        if (critical != NULL) {
-            critical->acquire(critical, UINT_64_MAX);
-        }
-
-        // create and init or open internal share mutex
-        mutex_->memory = mutex_named_new(mode, mutex_->name->value(mutex_->name));
-
-        // try release critical mutex
-        if (critical != NULL) {
-            critical->release(critical);
-        }
-    }
+    // set private data
+    mutex_->memory = NULL;
 
     return (Mutex*)mutex_;
 }
 void mutex_free(Mutex* mutex) {
     struct Mutex_* mutex_ = (struct Mutex_*)mutex;
 
-    if (mutex_->name == NULL) {
-        // destroy internal mutex
-        mutex_anonymous_free(mutex_->memory);
-    } else {
-        // try acquire critical mutex
-        if (critical != NULL) {
-            critical->acquire(critical, UINT_64_MAX);
+    // free private data
+    if (mutex_->memory != NULL) {
+        if (mutex_->name != NULL) {
+            // try acquire critical mutex
+            if (critical != NULL) {
+                critical->vtable->acquire(critical, UINT_64_MAX);
+            }
+
+            // destroy and close or close internal share mutex
+            mutex_named_free(mutex_->memory, mutex_->name->vtable->value(mutex_->name));
+
+            // try release critical mutex
+            if (critical != NULL) {
+                critical->vtable->release(critical);
+            }
+        } else {
+            // destroy internal mutex
+            mutex_anonymous_free(mutex_->memory);
         }
+    }
 
-        // destroy and close or close internal share mutex
-        mutex_named_free(mutex_->memory, mutex_->name->value(mutex_->name));
-
-        // try release critical mutex
-        if (critical != NULL) {
-            critical->release(critical);
-        }
-
+    // free constructor data
+    if (mutex_->name != NULL) {
         string_free(mutex_->name);
     }
 
+    // free self
     heap_free(mutex_);
+}
+Mutex* mutex_new_object(int mode, char* name) {
+    struct Mutex_* mutex_ = (struct Mutex_*)mutex_new();
+
+    // set constructor data
+    if (name != NULL) {
+        mutex_->name = string_new_concat(name, "/mutex");
+    }
+
+    // set private data
+    if (name != NULL) {
+        // try acquire critical mutex
+        if (critical != NULL) {
+            critical->vtable->acquire(critical, UINT_64_MAX);
+        }
+
+        // create and init or open internal share mutex
+        mutex_->memory = mutex_named_new(mode, mutex_->name->vtable->value(mutex_->name));
+
+        // try release critical mutex
+        if (critical != NULL) {
+            critical->vtable->release(critical);
+        }
+    } else {
+        // create internal mutex
+        mutex_->memory = mutex_anonymous_new(mode);
+    }
+
+    return (Mutex*)mutex_;
 }
 
 #endif
