@@ -1,6 +1,7 @@
 #include <memory/low/Type.h>
 
-typedef struct String {
+// vtable
+typedef struct String_VTable {
     // convert operators
     int (*to_int)(struct String* self);
     long (*to_long)(struct String* self);
@@ -17,6 +18,11 @@ typedef struct String {
     tsize (*length)(struct String* self);
     int (*compare)(struct String* self, char* data);
     char* (*value)(struct String* self);
+} String_VTable;
+
+// vtable + private data problem solve
+typedef struct String {
+    String_VTable* vtable;
 } String;
 
 // init vtable

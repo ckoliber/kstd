@@ -361,51 +361,77 @@ void* linkedlistiterator_next(struct LinkedListIterator* self) {
 }
 
 // object allocation and deallocation operators
+void linkedlist_init() {
+    // init normal vtable
+    linkedlist_vtable_normal = heap_alloc(sizeof(LinkedList_VTable));
+    linkedlist_vtable_normal->add = linkedlist_add_normal;
+    linkedlist_vtable_normal->addto = linkedlist_addto_normal;
+    linkedlist_vtable_normal->put = linkedlist_put_normal;
+    linkedlist_vtable_normal->remove = linkedlist_remove_normal;
+    linkedlist_vtable_normal->get = linkedlist_get_normal;
+    linkedlist_vtable_normal->indexof = linkedlist_indexof_normal;
+    linkedlist_vtable_normal->size = linkedlist_size_normal;
 
-LinkedList* linkedlist_new(int mode, int (*comperator)(void* item1, void* item2)) {
+    // init concurrent vtable
+    linkedlist_vtable_concurrent = heap_alloc(sizeof(LinkedList_VTable));
+    linkedlist_vtable_concurrent->add = linkedlist_add_concurrent;
+    linkedlist_vtable_concurrent->addto = linkedlist_addto_concurrent;
+    linkedlist_vtable_concurrent->put = linkedlist_put_concurrent;
+    linkedlist_vtable_concurrent->remove = linkedlist_remove_concurrent;
+    linkedlist_vtable_concurrent->get = linkedlist_get_concurrent;
+    linkedlist_vtable_concurrent->indexof = linkedlist_indexof_concurrent;
+    linkedlist_vtable_concurrent->size = linkedlist_size_concurrent;
+}
+void linkedlistiterator_init() {
+    // init vtable
+    linkedlistiterator_vtable = heap_alloc(sizeof(LinkedListIterator_VTable));
+    linkedlistiterator_vtable->hasnext = linkedlistiterator_hasnext;
+    linkedlistiterator_vtable->next = linkedlistiterator_next;
+}
+LinkedList* linkedlist_new(int mode) {
     struct LinkedList_* linkedlist_ = heap_alloc(sizeof(struct LinkedList_));
 
-    // init private methods
+    // set vtable
     switch (mode) {
         case 0:
-            linkedlist_->self.add = linkedlist_add_normal;
-            linkedlist_->self.addto = linkedlist_addto_normal;
-            linkedlist_->self.put = linkedlist_put_normal;
-            linkedlist_->self.remove = linkedlist_remove_normal;
-            linkedlist_->self.get = linkedlist_get_normal;
-            linkedlist_->self.indexof = linkedlist_indexof_normal;
-            linkedlist_->self.size = linkedlist_size_normal;
-            linkedlist_->rwlock = NULL;
+            linkedlist_->self.vtable = linkedlist_vtable_normal;
             break;
         case 1:
-            linkedlist_->self.add = linkedlist_add_concurrent;
-            linkedlist_->self.addto = linkedlist_addto_concurrent;
-            linkedlist_->self.put = linkedlist_put_concurrent;
-            linkedlist_->self.remove = linkedlist_remove_concurrent;
-            linkedlist_->self.get = linkedlist_get_concurrent;
-            linkedlist_->self.indexof = linkedlist_indexof_concurrent;
-            linkedlist_->self.size = linkedlist_size_concurrent;
-            linkedlist_->rwlock = rwlock_new(NULL);
+            linkedlist_->self.vtable = linkedlist_vtable_concurrent;
             break;
     }
 
-    // init size and head and comperator
+    // set constructor data
+    linkedlist_->comperator = NULL;
+
+    // set private data
     linkedlist_->size = 0;
-    linkedlist_->head = heap_alloc(sizeof(struct LinkedItem));
-    linkedlist_->head->next = linkedlist_->head;
-    linkedlist_->head->previews = linkedlist_->head;
-    linkedlist_->head->item = NULL;
-    linkedlist_->comperator = comperator;
+    linkedlist_->head = NULL;
+    linkedlist_->rwlock = NULL;
 
     return (LinkedList*)linkedlist_;
+}
+LinkedListIterator* linkedlistiterator_new() {
+    struct LinkedListIterator_* linkedlistiterator_ = heap_alloc(sizeof(struct LinkedListIterator_));
+
+    // set vtable
+    linkedlistiterator_->self.vtable = linkedlistiterator_vtable;
+
+    // set constructor data
+
+    // set private data
+    linkedlistiterator_->item = NULL;
+    linkedlistiterator_->end = NULL;
+
+    return (LinkedListIterator*)linkedlistiterator_;
 }
 void linkedlist_free(LinkedList* linkedlist) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)linkedlist;
 
-    // break linkedlist circle
-    linkedlist_->head->previews->next = NULL;
+    // free private data
 
     // iterate linkedlist and remove linkeditems
+    linkedlist_->head->previews->next = NULL;
     struct LinkedItem* remove_item = NULL;
     do {
         remove_item = linkedlist_->head;
@@ -413,30 +439,52 @@ void linkedlist_free(LinkedList* linkedlist) {
         heap_free(remove_item);
     } while (linkedlist_->head != NULL);
 
-    // destry internal rwlock
     if (linkedlist_->rwlock != NULL) {
         rwlock_free(linkedlist_->rwlock);
     }
 
+    // free self
     heap_free(linkedlist_);
 }
+void linkedlistiterator_free(LinkedListIterator* linkedlistiterator) {
+    struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedList_*)linkedlistiterator;
 
-LinkedListIterator* linkedlistiterator_new(struct LinkedList* linkedlist) {
-    struct LinkedListIterator_* linkedlistiterator_ = heap_alloc(sizeof(struct LinkedListIterator_));
+    // free private data
 
-    // init private methods
-    linkedlistiterator_->self.hasnext = linkedlistiterator_hasnext;
-    linkedlistiterator_->self.next = linkedlistiterator_next;
+    // free self
+    heap_free(linkedlistiterator_);
+}
+LinkedList* linkedlist_new_object(int mode, int (*comperator)(void*, void*)) {
+    struct LinkedList_* linkedlist_ = (struct LinkedList_*)linkedlist_new(mode);
 
-    // init size and head
+    // set constructor data
+    linkedlist_->comperator = comperator;
+
+    // set private data
+    linkedlist_->size = 0;
+
+    // init head
+    linkedlist_->head = heap_alloc(sizeof(struct LinkedItem));
+    linkedlist_->head->next = linkedlist_->head;
+    linkedlist_->head->previews = linkedlist_->head;
+    linkedlist_->head->item = NULL;
+
+    if (mode == 1) {
+        linkedlist_->rwlock = rwlock_new(NULL);
+    }
+
+    return (LinkedList*)linkedlist_;
+}
+LinkedListIterator* linkedlistiterator_new_object(LinkedList* linkedlist) {
+    struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)linkedlistiterator_new();
+
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)linkedlist;
+
+    // set constructor data
+
+    // set private data
     linkedlistiterator_->item = linkedlist_->head->next;
     linkedlistiterator_->end = linkedlist_->head;
 
     return (LinkedListIterator*)linkedlistiterator_;
-}
-void linkedlistiterator_free(LinkedListIterator* linkedlistiterator) {
-    struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)linkedlistiterator;
-
-    heap_free(linkedlistiterator_);
 }
