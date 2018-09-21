@@ -1,15 +1,23 @@
 #include <processor/low/Thread.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
 #include <memory/low/Heap.h>
 #include <pthread.h>
 
 struct Thread_ {
+    // self public object
     Thread self;
-    pthread_t id;
+
+    // constructor data
     tsize stack;
+
+    // private data
+    pthread_t id;
 };
+
+// vtable
+Thread_VTable* thread_vtable;
 
 // link methods
 int thread_priority(struct Thread* self, int priority);
@@ -20,6 +28,7 @@ int thread_id(struct Thread* self);
 int thread_stop(struct Thread* self);
 
 // implement methods
+// vtable operators
 int thread_start(struct Thread* self, int (*function)(void*), void* arg) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
@@ -63,24 +72,45 @@ int thread_stop(struct Thread* self) {
     return result;
 }
 
-Thread* thread_new(tsize stack) {
+// object allocation and deallocation operators
+void pool_init() {
+    // init vtable
+    thread_vtable = heap_alloc(sizeof(Thread_VTable));
+    thread_vtable->start = thread_start;
+    thread_vtable->join = thread_join;
+    thread_vtable->id = thread_id;
+    thread_vtable->stop = thread_stop;
+}
+Thread* thread_new() {
     struct Thread_* thread_ = heap_alloc(sizeof(struct Thread_));
 
-    // init private methods
-    thread_->self.start = thread_start;
-    thread_->self.join = thread_join;
-    thread_->self.id = thread_id;
-    thread_->self.stop = thread_stop;
+    // set vtable
+    thread_->self.vtable = thread_vtable;
 
-    // set stack size
-    thread_->stack = stack;
+    // set constructor data
+
+    // set private data
+    thread_->id = 0;
 
     return (Thread*)thread_;
 }
 void thread_free(Thread* thread) {
     struct Thread_* thread_ = (struct Thread_*)thread;
 
+    // free private data
+
+    // free self
     heap_free(thread_);
+}
+Thread* thread_new_object(tsize stack) {
+    struct Thread_* thread_ = (struct Thread_*)thread_new();
+
+    // set constructor data
+    thread_->stack = stack;
+
+    // set private data
+
+    return (Thread*)thread_;
 }
 
 #endif

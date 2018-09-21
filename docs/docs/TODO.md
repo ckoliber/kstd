@@ -76,9 +76,9 @@
 11. __OK__ - implement DSA high
 12. implement Algo low (+math)
 13. implement Algo high (+kre)
-14. implement File low (+file +poller)
-15. refactor code with vtable
-16. app_init -> call x_init all parts
+14. __!!! NO !!!__ - implement File low (+file +poller)
+15. __OK__ - refactor code with vtable
+16. __OK__ - app_init -> call x_init all parts
 
 ## Now
 

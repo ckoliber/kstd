@@ -5,9 +5,14 @@
 #include <processor/low/Thread.h>
 
 struct ThreadPool_ {
+    // self public object
     ThreadPool self;
+
+    // constructor data
     int size;
     tsize arg;
+
+    // private data
     Thread** pool;
     Message* message;
 };
@@ -16,6 +21,9 @@ struct ThreadArg {
     Message* message;
     tsize arg;
 };
+
+// vtable
+ThreadPool_VTable* threadpool_vtable;
 
 // link methods
 int threadpool_start(struct ThreadPool* self);
@@ -32,7 +40,7 @@ int threadpool_looper(struct ThreadArg* thread_arg) {
 
     // start looper
     int result = 0;
-    while (thread_arg->message->dequeueu(thread_arg->message, item, UINT_64_MAX) == 0) {
+    while (thread_arg->message->vtable->dequeueu(thread_arg->message, item, UINT_64_MAX) == 0) {
         // extract function and arg from package
         void (*function)(void*) = item;
         void* arg = item + sizeof(void (*)(void*));
@@ -46,6 +54,7 @@ int threadpool_looper(struct ThreadArg* thread_arg) {
     return result;
 }
 
+// vtable operators
 int threadpool_start(struct ThreadPool* self) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
@@ -58,7 +67,7 @@ int threadpool_start(struct ThreadPool* self) {
         thread_arg->arg = threadpool_->arg;
 
         // start thread
-        if (threadpool_->pool[cursor]->start(threadpool_->pool[cursor], threadpool_looper, thread_arg) != 0) {
+        if (threadpool_->pool[cursor]->vtable->start(threadpool_->pool[cursor], threadpool_looper, thread_arg) != 0) {
             result = -1;
         }
     }
@@ -76,7 +85,7 @@ int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg)
     heap_copy(item + sizeof(void (*)(void*)), arg, threadpool_->arg);
 
     // post message to queue
-    int result = threadpool_->message->enqueue(threadpool_->message, item, UINT_64_MAX);
+    int result = threadpool_->message->vtable->enqueue(threadpool_->message, item, UINT_64_MAX);
 
     // free temp package item
     heap_free(item);
@@ -90,7 +99,7 @@ int threadpool_stop(struct ThreadPool* self) {
     int result = 0;
     for (int cursor = 0; cursor < threadpool_->size; cursor++) {
         // stop thread
-        if (threadpool_->pool[cursor]->stop(threadpool_->pool[cursor]) != 0) {
+        if (threadpool_->pool[cursor]->vtable->stop(threadpool_->pool[cursor]) != 0) {
             result = -1;
         }
     }
@@ -98,17 +107,58 @@ int threadpool_stop(struct ThreadPool* self) {
     return result;
 }
 
-ThreadPool* threadpool_new(int size, tsize arg) {
+// object allocation and deallocation operators
+void threadpool_init() {
+    // init vtable
+    threadpool_vtable = heap_alloc(sizeof(ThreadPool_VTable));
+    threadpool_vtable->start = threadpool_start;
+    threadpool_vtable->post = threadpool_post;
+    threadpool_vtable->stop = threadpool_stop;
+}
+ThreadPool* threadpool_new() {
     struct ThreadPool_* threadpool_ = heap_alloc(sizeof(struct ThreadPool_));
 
-    // init private methods
-    threadpool_->self.start = threadpool_start;
-    threadpool_->self.post = threadpool_post;
-    threadpool_->self.stop = threadpool_stop;
+    // set vtable
+    threadpool_->self.vtable = threadpool_vtable;
 
-    // create internal threads
+    // set constructor data
+    threadpool_->size = 0;
+    threadpool_->arg = 0;
+
+    // set private data
+    threadpool_->pool = NULL;
+    threadpool_->message = NULL;
+
+    return (ThreadPool*)threadpool_;
+}
+void threadpool_free(ThreadPool* threadpool) {
+    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)threadpool;
+
+    // free private data
+
+    // destroy internal threads
+    if (threadpool_->pool != NULL) {
+        for (int cursor = 0; cursor < threadpool_->size; cursor++) {
+            thread_free(threadpool_->pool[cursor]);
+        }
+        heap_free(threadpool_->pool);
+    }
+
+    if (threadpool_->message != NULL) {
+        message_free(threadpool_->message);
+    }
+
+    // free self
+    heap_free(threadpool_);
+}
+ThreadPool* threadpool_new_object(int size, tsize arg) {
+    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)threadpool_new();
+
+    // set constructor data
     threadpool_->size = size;
     threadpool_->arg = arg;
+
+    // set private data
     threadpool_->pool = heap_alloc(sizeof(ThreadPool*) * size);
     for (int cursor = 0; cursor < size; cursor++) {
         threadpool_->pool[cursor] = thread_new(0);
@@ -118,18 +168,4 @@ ThreadPool* threadpool_new(int size, tsize arg) {
     threadpool_->message = message_new(NULL, 1024, arg);
 
     return (ThreadPool*)threadpool_;
-}
-void threadpool_free(ThreadPool* threadpool) {
-    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)threadpool;
-
-    // destroy internal threads
-    for (int cursor = 0; cursor < threadpool_->size; cursor++) {
-        thread_free(threadpool_->pool[cursor]);
-    }
-    heap_free(threadpool_->pool);
-
-    // destroy message queue
-    message_free(threadpool_->message);
-
-    heap_free(threadpool_);
 }
