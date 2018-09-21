@@ -77,6 +77,8 @@
 12. implement Algo low (+math)
 13. implement Algo high (+kre)
 14. implement File low (+file +poller)
+15. refactor code with vtable
+16. Optimize linkedlist (get - temp item) => instead of iterator
 
 ## Now
 

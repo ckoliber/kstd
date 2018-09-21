@@ -5,8 +5,17 @@ typedef struct Mutex {
     int (*release)(struct Mutex* self);
 } Mutex;
 
+// init vtable
+void mutex_init();
+
+// new raw mutex
+Mutex* mutex_new();
+
+// free raw mutex
+void mutex_free(Mutex* mutex);
+
+// new mutex
+Mutex* mutex_new_object(int mode, char* name);
+
 // critical section global mutex
 Mutex* critical = NULL;
-
-Mutex* mutex_new(int mode, char* name);
-void mutex_free(Mutex* mutex);

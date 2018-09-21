@@ -7,5 +7,14 @@ typedef struct Thread {
     int (*stop)(struct Thread* self);
 } Thread;
 
-Thread* thread_new(tsize stack);
+// init vtable
+void pool_init();
+
+// new raw thread
+Thread* thread_new();
+
+// free raw thread
 void thread_free(Thread* thread);
+
+// new thread
+Thread* thread_new_object(tsize stack);

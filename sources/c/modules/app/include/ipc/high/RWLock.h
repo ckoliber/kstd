@@ -7,5 +7,14 @@ typedef struct RWLock {
     int (*write_unlock)(struct RWLock* self);
 } RWLock;
 
-RWLock* rwlock_new(char* name);
+// init vtable
+void rwlock_init();
+
+// new raw rwlock
+RWLock* rwlock_new();
+
+// free raw rwlock
 void rwlock_free(RWLock* rwlock);
+
+// new rwlock
+RWLock* rwlock_new_object(char* name);

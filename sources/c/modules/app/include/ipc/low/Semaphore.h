@@ -7,5 +7,14 @@ typedef struct Semaphore {
     int (*get)(struct Semaphore* self);
 } Semaphore;
 
-Semaphore* semaphore_new(char* name);
+// init vtable
+void semaphore_init();
+
+// new raw semaphore
+Semaphore* semaphore_new();
+
+// free raw semaphore
 void semaphore_free(Semaphore* semaphore);
+
+// new semaphore
+Semaphore* semaphore_new_object(char* name);

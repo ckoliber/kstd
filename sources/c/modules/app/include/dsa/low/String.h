@@ -19,10 +19,19 @@ typedef struct String {
     char* (*value)(struct String* self);
 } String;
 
+// init vtable
+void string_init();
+
+// new raw string
+String* string_new();
+
+// free raw string
+void string_free(String* string);
+
+// new string
 String* string_new_printf(char* format, ...);
 String* string_new_lower(char* value);
 String* string_new_upper(char* value);
 String* string_new_reverse(char* value);
 String* string_new_copy(char* value);
 String* string_new_concat(char* value, char* data);
-void string_free(String* string);

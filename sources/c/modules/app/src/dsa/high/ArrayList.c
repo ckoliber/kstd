@@ -4,14 +4,23 @@
 #include <memory/low/Heap.h>
 
 struct ArrayList_ {
+    // self public object
     ArrayList self;
+
+    // constructor data
+    float factor;
+    int (*comperator)(void*, void*);
+
+    // private data
     int length;
     int cursor;
     void** array;
-    float factor;
     RWLock* rwlock;
-    int (*comperator)(void*, void*);
 };
+
+// vtable
+ArrayList_VTable* arraylist_vtable_normal;
+ArrayList_VTable* arraylist_vtable_concurrent;
 
 // link methods
 int arraylist_add_normal(struct ArrayList* self, void* item);
@@ -30,6 +39,8 @@ void* arraylist_get_concurrent(struct ArrayList* self, int position);
 int arraylist_indexof_concurrent(struct ArrayList* self, void* item);
 int arraylist_size_concurrent(struct ArrayList* self);
 
+// implement methods
+// normal mode vtable operators
 int arraylist_add_normal(struct ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
@@ -150,6 +161,7 @@ int arraylist_size_normal(struct ArrayList* self) {
     return result;
 }
 
+// concurrent mode vtable operators
 int arraylist_add_concurrent(struct ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
@@ -269,50 +281,81 @@ int arraylist_size_concurrent(struct ArrayList* self) {
     return result;
 }
 
-ArrayList* arraylist_new(int mode, float factor, int (*comperator)(void*, void*)) {
+// object allocation and deallocation operators
+void arraylist_init() {
+    // init normal vtable
+    arraylist_vtable_normal = heap_alloc(sizeof(ArrayList_VTable));
+    arraylist_vtable_normal->add = arraylist_add_normal;
+    arraylist_vtable_normal->addto = arraylist_addto_normal;
+    arraylist_vtable_normal->put = arraylist_put_normal;
+    arraylist_vtable_normal->remove = arraylist_remove_normal;
+    arraylist_vtable_normal->get = arraylist_get_normal;
+    arraylist_vtable_normal->indexof = arraylist_indexof_normal;
+    arraylist_vtable_normal->size = arraylist_size_normal;
+
+    // init concurrent vtable
+    arraylist_vtable_concurrent = heap_alloc(sizeof(ArrayList_VTable));
+    arraylist_vtable_concurrent->add = arraylist_add_concurrent;
+    arraylist_vtable_concurrent->addto = arraylist_addto_concurrent;
+    arraylist_vtable_concurrent->put = arraylist_put_concurrent;
+    arraylist_vtable_concurrent->remove = arraylist_remove_concurrent;
+    arraylist_vtable_concurrent->get = arraylist_get_concurrent;
+    arraylist_vtable_concurrent->indexof = arraylist_indexof_concurrent;
+    arraylist_vtable_concurrent->size = arraylist_size_concurrent;
+}
+ArrayList* arraylist_new(int mode) {
     struct ArrayList_* arraylist_ = heap_alloc(sizeof(struct ArrayList_));
 
-    // init private methods
+    // set vtable
     switch (mode) {
         case 0:
-            arraylist_->self.add = arraylist_add_normal;
-            arraylist_->self.addto = arraylist_addto_normal;
-            arraylist_->self.put = arraylist_put_normal;
-            arraylist_->self.remove = arraylist_remove_normal;
-            arraylist_->self.get = arraylist_get_normal;
-            arraylist_->self.indexof = arraylist_indexof_normal;
-            arraylist_->self.size = arraylist_size_normal;
-            arraylist_->rwlock = NULL;
+            arraylist_->self.vtable = arraylist_vtable_normal;
             break;
         case 1:
-            arraylist_->self.add = arraylist_add_concurrent;
-            arraylist_->self.addto = arraylist_addto_concurrent;
-            arraylist_->self.put = arraylist_put_concurrent;
-            arraylist_->self.remove = arraylist_remove_concurrent;
-            arraylist_->self.get = arraylist_get_concurrent;
-            arraylist_->self.indexof = arraylist_indexof_concurrent;
-            arraylist_->self.size = arraylist_size_concurrent;
-            arraylist_->rwlock = rwlock_new(NULL);
+            arraylist_->self.vtable = arraylist_vtable_concurrent;
             break;
     }
 
-    // create internal cursor and length and array and factor
-    arraylist_->length = 1;
+    // set constructor data
+    arraylist_->factor = 0;
+    arraylist_->comperator = NULL;
+
+    // set private data
+    arraylist_->length = 0;
     arraylist_->cursor = 0;
-    arraylist_->array = heap_alloc(arraylist_->length * sizeof(void*));
-    arraylist_->factor = factor;
-    arraylist_->comperator = comperator;
+    arraylist_->array = NULL;
+    arraylist_->rwlock = NULL;
 
     return (ArrayList*)arraylist_;
 }
 void arraylist_free(ArrayList* arraylist) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)arraylist;
 
-    // destry internal array and rwlock
-    heap_free(arraylist_->array);
+    // free private data
+    if (arraylist_->array != NULL) {
+        heap_free(arraylist_->array);
+    }
     if (arraylist_->rwlock != NULL) {
         rwlock_free(arraylist_->rwlock);
     }
 
+    // free self
     heap_free(arraylist_);
+}
+ArrayList* arraylist_new_object(int mode, float factor, int (*comperator)(void*, void*)) {
+    struct ArrayList_* arraylist_ = (struct ArrayList_*)arraylist_new(mode);
+
+    // set constructor data
+    arraylist_->factor = factor;
+    arraylist_->comperator = comperator;
+
+    // set private data
+    arraylist_->length = 1;
+    arraylist_->cursor = 0;
+    arraylist_->array = heap_alloc(arraylist_->length * sizeof(void*));
+    if (mode == 1) {
+        arraylist_->rwlock = rwlock_new_object(NULL);
+    }
+
+    return (ArrayList*)arraylist_;
 }

@@ -7,8 +7,17 @@ typedef struct Process {
     int (*stop)(struct Process* self);
 } Process;
 
+// init vtable
+void process_init();
+
+// new raw process
 Process* process_new();
+
+// free raw thread
 void process_free(Process* process);
+
+// new process
+Process* process_new_object();
 
 // get self id or parent id
 int process_self();

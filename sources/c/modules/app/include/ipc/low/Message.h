@@ -5,5 +5,14 @@ typedef struct Message {
     int (*dequeueu)(struct Message* self, void* item, uint64_t timeout);
 } Message;
 
-Message* message_new(char* name, int max, tsize item);
+// init vtable
+void message_init();
+
+// new raw message
+Message* message_new();
+
+// free raw message
 void message_free(Message* message);
+
+// new message
+Message* message_new_object(char* name, int max, tsize item);

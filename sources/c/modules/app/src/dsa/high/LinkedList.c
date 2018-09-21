@@ -4,11 +4,16 @@
 #include <memory/low/Heap.h>
 
 struct LinkedList_ {
+    // self public object
     LinkedList self;
-    struct LinkedItem* head;
-    int size;
-    RWLock* rwlock;
+
+    // constructor data
     int (*comperator)(void*, void*);
+
+    // private data
+    int size;
+    struct LinkedItem* head;
+    RWLock* rwlock;
 };
 
 struct LinkedItem {
@@ -18,10 +23,21 @@ struct LinkedItem {
 };
 
 struct LinkedListIterator_ {
+    // self public object
     LinkedListIterator self;
+
+    // constructor data
+
+    // private data
     struct LinkedItem* item;
     struct LinkedItem* end;
 };
+
+// vtable
+LinkedList_VTable* linkedlist_vtable_normal;
+LinkedList_VTable* linkedlist_vtable_concurrent;
+
+LinkedListIterator_VTable* linkedlistiterator_vtable;
 
 // link methods
 int linkedlist_add_normal(struct LinkedList* self, void* item);
@@ -46,6 +62,7 @@ void* linkedlistiterator_next(struct LinkedListIterator* self);
 // local methods
 struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position);
 
+// implement methods
 struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)linkedlist;
 
@@ -77,6 +94,7 @@ struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position) {
     return result;
 }
 
+// normal mode vtable operators
 int linkedlist_add_normal(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
@@ -204,6 +222,7 @@ int linkedlist_size_normal(struct LinkedList* self) {
     return result;
 }
 
+// concurrent mode vtable operators
 int linkedlist_add_concurrent(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
@@ -340,6 +359,8 @@ void* linkedlistiterator_next(struct LinkedListIterator* self) {
 
     return result;
 }
+
+// object allocation and deallocation operators
 
 LinkedList* linkedlist_new(int mode, int (*comperator)(void* item1, void* item2)) {
     struct LinkedList_* linkedlist_ = heap_alloc(sizeof(struct LinkedList_));

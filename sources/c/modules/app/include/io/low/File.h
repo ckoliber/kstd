@@ -1,20 +1,43 @@
+#include <memory/low/Type.h>
+
 typedef struct File {
-    int (*read)(struct File* self, void** data, int* size);
-    int (*write)(struct File* self, void* data, int size);
+    // io operators
+    tsize (*read)(struct File* self, void* data, tsize size);
+    tsize (*write)(struct File* self, void* data, tsize size);
     int (*flush)(struct File* self);
-    int (*wait)(struct File* self);
     int (*cancel)(struct File* self);
 
-    int (*reopen)(struct File* self, int access, int share, int flags);
-    int (*type)(struct File* self);
+    // fd operators
+    int (*reopen)(struct File* self, int access, int lock, int mode, int flags);
     int (*fd)(struct File* self);
+    char* (*uri)(struct File* self);
 
-    int (*seek)(struct File* self, int from, int position);
-    int (*lock)(struct File* self, int lock);
+    // cursor operators
+    tsize (*seek)(struct File* self, tsize from, tsize position);
+    tsize (*cursor)(struct File* self);
+    tsize (*size)(struct File* self);
 
-    struct File* (*duplicate)(struct File* self);
-    struct File* (*accept)(struct File* self);
+    // advisory lock operators
+    // int (*lock)(struct File* self, int lock);
+    // int (*unlock)(struct File* self, int lock);
 } File;
+
+// init vtable
+void file_init();
+
+// new raw file
+File* file_new();
+
+// free raw file
+void file_free(File* file);
+
+// new file
+File* file_new_open(char* uri, int access, int lock, int mode, int flags);
+File* file_new_duplicate(File* file);
+File* file_new_accept(File* file);
+
+// file move, copy, remove, link
+int file_move(char* from_uri, char* to_uri, int mode);
 
 // file://{path}
 // dir://{path}
@@ -24,5 +47,3 @@ typedef struct File {
 // pipe://{name}
 // socket://{host}:{port}
 // socket://{backlog}:{host}:{port}
-struct File* file_new(char* uri);
-void file_free(struct File* file, int remove);

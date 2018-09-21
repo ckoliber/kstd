@@ -5,5 +5,14 @@ typedef struct Condition {
     int (*signal)(struct Condition* self, int count);
 } Condition;
 
-Condition* condition_new(char* name);
+// init vtable
+void condition_init();
+
+// new raw condition
+Condition* condition_new();
+
+// free raw condition
 void condition_free(Condition* condition);
+
+// new condition
+Condition* condition_new_object(char* name);
