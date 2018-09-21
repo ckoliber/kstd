@@ -78,6 +78,7 @@
 13. implement Algo high (+kre)
 14. implement File low (+file +poller)
 15. refactor code with vtable
+16. app_init -> call x_init all parts
 
 ## Now
 

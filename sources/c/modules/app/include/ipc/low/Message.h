@@ -1,8 +1,14 @@
 #include <memory/low/Type.h>
 
-typedef struct Message {
+// vtable
+typedef struct Message_VTable {
     int (*enqueue)(struct Message* self, void* item, uint64_t timeout);
     int (*dequeueu)(struct Message* self, void* item, uint64_t timeout);
+} Message_VTable;
+
+// vtable + private data problem solve
+typedef struct Message {
+    Message_VTable* vtable;
 } Message;
 
 // init vtable

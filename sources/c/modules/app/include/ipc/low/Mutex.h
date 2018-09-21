@@ -1,8 +1,14 @@
 #include <memory/low/Type.h>
 
-typedef struct Mutex {
+// vtable
+typedef struct Mutex_VTable {
     int (*acquire)(struct Mutex* self, uint_64 timeout);
     int (*release)(struct Mutex* self);
+} Mutex_VTable;
+
+// vtable + private data problem solve
+typedef struct Mutex {
+    Mutex_VTable* vtable;
 } Mutex;
 
 // init vtable

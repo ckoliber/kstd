@@ -1,8 +1,14 @@
 #include <memory/low/Type.h>
 
-typedef struct Condition {
+// vtable
+typedef struct Condition_VTable {
     int (*wait)(struct Condition* self, uint_64 timeout);
     int (*signal)(struct Condition* self, int count);
+} Condition_VTable;
+
+// vtable + private data problem solve
+typedef struct Condition {
+    Condition_VTable* vtable;
 } Condition;
 
 // init vtable

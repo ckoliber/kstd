@@ -1,8 +1,14 @@
 #include <memory/low/Type.h>
 
-typedef struct Lock {
+// vtable
+typedef struct Lock_VTable {
     int (*lock)(struct Lock* self, uint_64 timeout);
     int (*unlock)(struct Lock* self);
+} Lock_VTable;
+
+// vtable + private data problem solve
+typedef struct Lock {
+    Lock_VTable* vtable;
 } Lock;
 
 // init vtable
