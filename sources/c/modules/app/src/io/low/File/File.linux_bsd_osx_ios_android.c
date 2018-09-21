@@ -93,7 +93,7 @@ File* file_new_open(char* uri, int access, int lock, int mode, int flags) {
     switch (uri[0]) {
         case 0:
             // file
-            file_->fd = open("");
+            file_->fd = open("", );
             break;
         case 2:
             // folder
