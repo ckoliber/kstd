@@ -1,6 +1,29 @@
 #include <memory/low/Type.h>
 
-typedef struct File {
+#define FILE_ACCESS_READ   // file read access
+#define FILE_ACCESS_WRITE  // file write access
+
+#define FILE_LOCK_READ   // mandatory read lock
+#define FILE_LOCK_WRITE  // mandatory write lock
+
+#define FILE_MODE_OPEN       // exists => open, not exists => create and open
+#define FILE_MODE_CREATE     // exists => truncate, not exists => create and open
+#define FILE_MODE_TRYOPEN    // exists => open, not exists => error
+#define FILE_MODE_TRYCREATE  // exists => error, not exists => create and open
+
+#define FILE_FLAG_APPEND
+#define FILE_FLAG_SYNC
+#define FILE_FLAG_ASYNC
+#define FILE_FLAG_NONBLOCK
+#define FILE_FLAG_NOBUFFER
+
+#define FILE_FLAG_NOBUFFER
+#define FILE_FLAG_NOBUFFER
+#define FILE_FLAG_NOBUFFER
+#define FILE_FLAG_NOBUFFER
+
+// vtable
+typedef struct File_VTable {
     // io operators
     tsize (*read)(struct File* self, void* data, tsize size);
     tsize (*write)(struct File* self, void* data, tsize size);
@@ -20,6 +43,11 @@ typedef struct File {
     // advisory lock operators
     // int (*lock)(struct File* self, int lock);
     // int (*unlock)(struct File* self, int lock);
+} File_VTable;
+
+// vtable + private data problem solve
+typedef struct File {
+    File_VTable* vtable;
 } File;
 
 // init vtable
