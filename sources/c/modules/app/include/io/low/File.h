@@ -35,10 +35,8 @@ typedef struct File_VTable {
     int (*fd)(struct File* self);
     char* (*uri)(struct File* self);
 
-    // cursor operators
-    tsize (*seek)(struct File* self, tsize from, tsize position);
-    tsize (*cursor)(struct File* self);
-    tsize (*size)(struct File* self);
+    // cursor operators -> get size, seek, get cursor
+    tsize (*seek)(struct File* self, tsize from, int position);
 
     // advisory lock operators
     // int (*lock)(struct File* self, int lock);
