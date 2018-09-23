@@ -8,7 +8,7 @@
         2. __Heap__ -> `0.1.0`
 2. __IO__
     1. __Low__: kernel
-        1. __File__ -> `0.1.0`
+        1. __File__ -> `0.1.0` (full+kre => `0.2.0`)
         2. __Poller__ -> `0.1.0`
 3. __IPC__
     1. __Low__: kernel
@@ -76,9 +76,10 @@
 11. __OK__ - implement DSA high
 12. implement Algo low (+math)
 13. implement Algo high (+kre)
-14. __!!! NO !!!__ - implement File low (+file +poller)
+14. __OK__ - implement File low (+file +poller)
 15. __OK__ - refactor code with vtable
 16. __OK__ - app_init -> call x_init all parts
+17. implement KRE
 
 ## Now
 
