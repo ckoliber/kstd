@@ -4,8 +4,9 @@
 
 // vtable
 typedef struct KRE_VTable {
-    int (*match)(struct KRE* self, char* text);
+    int (*match)(struct KRE* self, char* text, int count);
     int (*replace)(struct KRE* self, char* text, char* replace, int count);
+
     LinkedList* (*export)(struct KRE* self, char* text);
     String* (*import)(struct KRE* self, LinkedList* linkedlist);
 } KRE_VTable;

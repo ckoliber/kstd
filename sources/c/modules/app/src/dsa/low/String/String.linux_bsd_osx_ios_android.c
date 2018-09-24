@@ -30,6 +30,7 @@ void string_upper(struct String* self);
 void string_reverse(struct String* self);
 void string_copy(struct String* self, char* data);
 void string_concat(struct String* self, char* data);
+void string_cut(struct String* self, int begin, int end);
 tsize string_length(struct String* self);
 int string_compare(struct String* self, char* data);
 char* string_value(struct String* self);
@@ -109,6 +110,16 @@ void string_concat(struct String* self, char* data) {
     string_->string = heap_realloc(string_->string, strlen(string_->string) + strlen(data) + 1);
     strcat(string_->string, data);
 }
+void string_cut(struct String* self, int begin, int end) {
+    struct String_* string_ = (struct String_*)self;
+
+    // cut data from string
+    string_->string = heap_realloc(string_->string, end - begin + 1);
+    for (int cursor = begin; cursor <= end; cursor++) {
+        string_->string[cursor - begin] = string_->string[cursor];
+    }
+    string_->string[end - begin + 1] = '\0';
+}
 tsize string_length(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
@@ -146,6 +157,7 @@ void string_init() {
     string_vtable->reverse = string_reverse;
     string_vtable->copy = string_copy;
     string_vtable->concat = string_concat;
+    string_vtable->cut = string_cut;
     string_vtable->length = string_length;
     string_vtable->compare = string_compare;
     string_vtable->value = string_value;
@@ -219,6 +231,13 @@ String* string_new_concat(char* value, char* data) {
     // init new string then concat
     String* string = string_new_printf("%s", value);
     string->vtable->concat(string, data);
+
+    return string;
+}
+String* string_new_cut(char* value, int begin, int end) {
+    // init new string then cut
+    String* string = string_new_printf("%s", value);
+    string->vtable->cut(string, begin, end);
 
     return string;
 }
