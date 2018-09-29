@@ -72,6 +72,7 @@ struct KREItem* kre_graph_item_new_set(KRE* kre, int begin, int end);
 bool is_kre_graph_item_group_begin(String* kregexp, int cursor);
 int find_kre_graph_item_group_end(String* kregexp, int begin);
 int find_kre_graph_item_group_next(String* kregexp, int end);
+int find_kre_graph_item_group_or(String* kregexp, int cursor, int begin, int end);
 struct KREItem* kre_graph_item_new_group(KRE* kre, int begin, int end);
 
 // quantifier position detect {...}
@@ -295,23 +296,77 @@ int find_kre_graph_item_group_next(String* kregexp, int end) {
     }
     return end + 1;
 }
+int find_kre_graph_item_group_or(String* kregexp, int cursor, int begin, int end) {
+    int open = 0;
+
+    // not started from begining of group (set open to 1)
+    if (cursor > begin) {
+        open = 1;
+    }
+
+    // check this cursor is not or
+    if (kregexp->vtable->value(kregexp)[cursor] == '|') {
+        cursor++;
+    }
+
+    // iterate group characters
+    while (cursor < end) {
+        if (kregexp->vtable->value(kregexp)[cursor] == '(') {
+            // open internal group
+            open++;
+        } else if (kregexp->vtable->value(kregexp)[cursor] == ')') {
+            // close internal group
+            open--;
+        } else if (kregexp->vtable->value(kregexp)[cursor] == '|') {
+            // now, check open is 1 (we are in main group (not internal group))
+            if (open == 1) {
+                return cursor;
+            }
+        }
+
+        // add cursor
+        cursor++;
+    }
+
+    return -1;
+}
 struct KREItem* kre_graph_item_new_group(KRE* kre, int begin, int end) {
     struct KRE_* kre_ = (struct KRE_*)kre;
 
     // create new item
     struct KREItem* result = heap_alloc(sizeof(struct KREItem));
 
+    // group: (mode|item1|item2|item3|...)
     // fill item
     result->next = NULL;
     result->type = KRE_ITEM_GROUP;
     result->value.group.items = arraylist_new_object(0, 2, NULL);
     result->value.group.links = arraylist_new_object(0, 2, NULL);
-    result->value.group.mode = 0;
+    result->value.group.mode = kre_->kregexp->vtable->value(kre_->kregexp)[begin + 1] - '0';
     result->value.group.start = get_kre_graph_item_quantifier_start(kre_->kregexp, end);
     result->value.group.stop = get_kre_graph_item_quantifier_stop(kre_->kregexp, end);
 
-    // TODO: first item of group is mode (1|...)
-    // TODO: iterate group => (O|O|O|...), and call kre_graph_new(kre, beginX, endX) if not \i (else peek that item's link from kre->links)
+    // if group type is capture (1) or record + capture (3) then add it to graph_links
+    if (result->value.group.mode == 1 || result->value.group.mode == 3) {
+        kre_->graph_links->vtable->add(kre_->graph_links, result);
+    }
+
+    // find or positions and iterate group items
+    int item_cursor = begin + 1;
+    do {
+        int item_begin_before = find_kre_graph_item_group_or(kre_->kregexp, item_cursor, begin, end);
+        int item_end_after = find_kre_graph_item_group_or(kre_->kregexp, item_cursor + 1, begin, end);
+
+        // check end has error (end of group)
+        if (item_end_after < 0) {
+            item_end_after = end;
+        }
+
+        // TODO: first item of group is mode (1|...)
+        // TODO: iterate group => (O|O|O|...), and call kre_graph_new(kre, beginX, endX) if not \i (else peek that item's link from kre->links)
+
+        item_cursor = item_end_after - 1;
+    } while (item_cursor >= 0);
 
     return result;
 }
