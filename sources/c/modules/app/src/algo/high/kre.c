@@ -50,6 +50,7 @@ KRE_VTable* kre_vtable;
 
 // local methods
 // kre compiler methods
+struct KREItem* kre_graph_link(KRE* kre, int begin, int end);
 struct KREItem* kre_graph_new(KRE* kre, int begin, int end);
 void kre_graph_free(struct KREItem* graph);
 
@@ -84,6 +85,24 @@ int get_kre_graph_item_quantifier_start(String* kregexp, int item_end);
 int get_kre_graph_item_quantifier_stop(String* kregexp, int item_end);
 
 // implement methods
+struct KREItem* kre_graph_link(KRE* kre, int begin, int end) {
+    struct KRE_* kre_ = (struct KRE_*)kre;
+
+    // check item is link (\i) then get target linked item
+    struct KREItem* result = NULL;
+    if (
+        kre_->kregexp->vtable->value(kre_->kregexp)[begin] == '\\' &&
+        kre_->kregexp->vtable->value(kre_->kregexp)[begin + 1] >= '0' &&
+        kre_->kregexp->vtable->value(kre_->kregexp)[begin + 1] <= '9') {
+        // parse string to number
+        String* number = string_new_cut(kre_->kregexp->vtable->value(kre_->kregexp), begin + 1, end);
+        int link_number = number->vtable->to_int(number);
+        string_free(number);
+        result = (struct KREItem*)kre_->graph_links->vtable->get(kre_->graph_links, link_number);
+    }
+
+    return result;
+}
 struct KREItem* kre_graph_new(KRE* kre, int begin, int end) {
     // create new dequeue(stack) for linking items and return first
     Dequeue* stack = dequeue_new_object(0, -1, NULL);
@@ -362,11 +381,19 @@ struct KREItem* kre_graph_item_new_group(KRE* kre, int begin, int end) {
             item_end_after = end;
         }
 
-        // TODO: first item of group is mode (1|...)
-        // TODO: iterate group => (O|O|O|...), and call kre_graph_new(kre, beginX, endX) if not \i (else peek that item's link from kre->links)
+        // check item is link get item else create new item and add to links or items
+        struct KREItem* item = kre_graph_link(kre, item_begin_before + 1, item_end_after - 1);
+        if (item != NULL) {
+            // add link item to links
+            result->value.group.links->vtable->add(result->value.group.links, item);
+        } else {
+            // add new item to items
+            item = kre_graph_new(kre, item_begin_before + 1, item_end_after - 1);
+            result->value.group.items->vtable->add(result->value.group.items, item);
+        }
 
         item_cursor = item_end_after - 1;
-    } while (item_cursor >= 0);
+    } while (item_cursor >= 0 && item_cursor < end - 1);
 
     return result;
 }
