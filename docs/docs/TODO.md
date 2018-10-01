@@ -78,8 +78,8 @@
 13. implement Algo high (+kre)
 14. __OK__ - implement File low (+file +poller)
 15. __OK__ - refactor code with vtable
-16. app_init -> call x_init all parts
-17. implement KRE
+16. refactor code with (convert return result; at methods do not need Builder Pattern (return x;))
+17. app_init -> call x_init all parts
 
 ## Now
 

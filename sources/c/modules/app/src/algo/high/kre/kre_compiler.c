@@ -1,55 +1,6 @@
-#include <algo/high/kre.h>
-
-#include <dsa/high/ArrayList.h>
-#include <dsa/high/Dequeue.h>
-#include <memory/low/Heap.h>
-
-struct KRE_ {
-    // self public object
-    KRE self;
-
-    // constructor data
-    String* kregexp;
-
-    // private data
-    ArrayList* graph_links;
-    struct KREItem* graph;
-};
-
-struct KREItem {
-    // item next pointer
-    struct KREItem* next;
-
-    // item type
-    enum KREItemType {
-        KRE_ITEM_MATCH,
-        KRE_ITEM_GROUP
-    } type;
-
-    // item value (match, group)
-    union KREItemValue {
-        struct KREItemValueMatch {
-            String* match;
-            int start;
-            int stop;
-        } match;
-        struct KREItemValueGroup {
-            ArrayList* items;
-            ArrayList* links;
-            int mode;
-            int start;
-            int stop;
-        } group;
-    } value;
-};
-
-// vtable
-KRE_VTable* kre_vtable;
-
-// link methods
+#include "kre.c"
 
 // local methods
-// kre compiler methods
 struct KREItem* kre_graph_link(KRE* kre, int begin, int end);
 struct KREItem* kre_graph_new(KRE* kre, int begin, int end);
 void kre_graph_free(struct KREItem* graph);
@@ -510,58 +461,4 @@ int get_kre_graph_item_quantifier_stop(String* kregexp, int item_end) {
     } else {
         return 1;
     }
-}
-
-// vtable operators
-
-// object allocation and deallocation operators
-void kre_init() {
-    // init vtable
-    kre_vtable = heap_alloc(sizeof(KRE_VTable));
-}
-KRE* kre_new() {
-    struct KRE_* kre_ = heap_alloc(sizeof(struct KRE_));
-
-    // set vtable
-    kre_->self.vtable = kre_vtable;
-
-    // set constructor data
-    kre_->kregexp = NULL;
-
-    // set private data
-    kre_->graph_links = NULL;
-    kre_->graph = NULL;
-
-    return (KRE*)kre_;
-}
-void kre_free(KRE* kre) {
-    struct KRE_* kre_ = (struct KRE_*)kre;
-
-    // free private data
-    if (kre_->graph_links != NULL) {
-        arraylist_free(kre_->graph_links);
-    }
-    if (kre_->graph != NULL) {
-        kre_graph_free(kre_->graph);
-    }
-
-    // free constructor data
-    if (kre_->kregexp != NULL) {
-        string_free(kre_->kregexp);
-    }
-
-    // free self
-    heap_free(kre_);
-}
-KRE* kre_new_object(char* kregexp) {
-    struct KRE_* kre_ = (struct KRE_*)kre_new();
-
-    // set constructor data
-    kre_->kregexp = string_new_copy(kregexp);
-
-    // set private data
-    kre_->graph_links = arraylist_new_object(0, 2, NULL);
-    kre_->graph = kre_graph_new((KRE*)kre_, 0, kre_->kregexp->vtable->length(kre_->kregexp));
-
-    return (KRE*)kre_;
 }
