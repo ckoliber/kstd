@@ -1,5 +1,8 @@
 #include "kre.c"
 
+// link methods
+struct KREItem* kre_graph_compile(KRE* kre);
+
 // local methods
 struct KREItem* kre_graph_link(KRE* kre, int begin, int end);
 struct KREItem* kre_graph_new(KRE* kre, int begin, int end);
@@ -461,4 +464,13 @@ int get_kre_graph_item_quantifier_stop(String* kregexp, int item_end) {
     } else {
         return 1;
     }
+}
+
+struct KREItem* kre_graph_compile(KRE* kre) {
+    struct KRE_* kre_ = (struct KRE_*)kre;
+
+    // base compiler
+    struct KREItem* result = kre_graph_new((KRE*)kre_, 0, kre_->kregexp->vtable->length(kre_->kregexp));
+
+    return result;
 }
