@@ -77,30 +77,29 @@
 14. __OK__ refactor code with (convert return result; at methods do not need Builder Pattern (return x;)) + _new => _new_object
 15. __OK__ - app_init -> call x_init all parts
 16. implement algo high kre
-17. implement algo high fsm + esm (extended) + hsm (herachical)
-18. implement ipc low Win32
-19. implement ipc low Android
-20. implement processor high ThreadPool, ProcessPool
-21. implement processor low Thread, Process Posix
-22. implement processor low Thread, Process(MinGW fork) Win32
-23. implement processor low Thread, Process Android
-24. implement io low File Posix
-25. implement io low File Win32
-26. implement io low Poller Linux(epoll)
-27. implement io low Poller Mac, BSD, IOS(kqueue)
-28. implement io low Poller Win32(iocp)
-29. implement io low Poller Android(poll)
-30. launch (0.1.0) -> test
-31. implement ipc high Monitor, Barrier, Latch
-32. implement dsa high Set, Hash
-33. implement processor low Thread, Process (affinity, priority, policy) Posix
-34. implement processor low Thread, Process (affinity, priority, policy) Win32
-35. implement processor low Thread, Process (affinity, priority, policy) Android
-36. implement local low Time, Date Posix
-37. implement local low Time, Date Win32
-38. launch (0.2.0) -> test
-39. launch (0.3.0) -> test => Network
-40. launch (0.4.0) -> test => (Security)?
+17. implement ipc low Win32
+18. implement ipc low Android
+19. implement processor high ThreadPool, ProcessPool
+20. implement processor low Thread, Process Posix
+21. implement processor low Thread, Process(MinGW fork) Win32
+22. implement processor low Thread, Process Android
+23. implement io low File Posix
+24. implement io low File Win32
+25. implement io low Poller Linux(epoll)
+26. implement io low Poller Mac, BSD, IOS(kqueue)
+27. implement io low Poller Win32(iocp)
+28. implement io low Poller Android(poll)
+29. launch (0.1.0) -> test
+30. implement ipc high Monitor, Barrier, Latch
+31. implement dsa high Set, Hash
+32. implement processor low Thread, Process (affinity, priority, policy) Posix
+33. implement processor low Thread, Process (affinity, priority, policy) Win32
+34. implement processor low Thread, Process (affinity, priority, policy) Android
+35. implement local low Time, Date Posix
+36. implement local low Time, Date Win32
+37. launch (0.2.0) -> test
+38. launch (0.3.0) -> test => Network
+39. launch (0.4.0) -> test => (Security)?
 
 ## Now
 

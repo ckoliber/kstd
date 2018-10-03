@@ -1,19 +1,17 @@
-#include <dsa/high/ArrayList.h>
-#include <dsa/low/String.h>
 #include <memory/low/Type.h>
 
 // vtable
 typedef struct KRE_VTable {
     bool (*test)(struct KRE* self, char* text);
 
-    ArrayList* (*match)(struct KRE* self, char* text, int count);
-    String* (*replace)(struct KRE* self, char* text, char* replace, int count);
+    struct ArrayList* (*match)(struct KRE* self, char* text, int count);
+    struct String* (*replace)(struct KRE* self, char* text, char* replace, int count);
 
-    ArrayList* (*split)(struct KRE* self, char* text);
-    String* (*merge)(struct KRE* self, ArrayList* data);
+    struct ArrayList* (*split)(struct KRE* self, char* text);
+    struct String* (*merge)(struct KRE* self, struct ArrayList* data);
 
-    ArrayList* (*export)(struct KRE* self, char* text);
-    String* (*import)(struct KRE* self, ArrayList* data);
+    struct ArrayList* (*export)(struct KRE* self, char* text);
+    struct String* (*import)(struct KRE* self, struct ArrayList* data);
 } KRE_VTable;
 
 // vtable + private data problem solve
