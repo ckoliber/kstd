@@ -151,16 +151,15 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
     pthread_mutex_t* mutex = mutex_->memory;
 
     // aquire the pthread mutex
-    int result = -1;
     if (timeout == 0) {
         // try
         if (pthread_mutex_trylock(mutex) == 0) {
-            result = 0;
+            return 0;
         }
     } else if (timeout == UINT_64_MAX) {
         // infinity
         if (pthread_mutex_lock(mutex) == 0) {
-            result = 0;
+            return 0;
         }
     } else {
         // timed
@@ -170,13 +169,12 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
         while ((time_epochmillis() - time) <= timeout) {
             // try
             if (pthread_mutex_trylock(mutex) == 0) {
-                result = 0;
-                break;
+                return 0;
             }
         }
     }
 
-    return result;
+    return -1;
 }
 int mutex_release(struct Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
@@ -185,12 +183,11 @@ int mutex_release(struct Mutex* self) {
     pthread_mutex_t* mutex = mutex_->memory;
 
     // release the pthread mutex
-    int result = -1;
     if (pthread_mutex_unlock(mutex) == 0) {
-        result = 0;
+        return 0;
     }
 
-    return result;
+    return -1;
 }
 
 // object allocation and deallocation operators

@@ -44,7 +44,7 @@ void* semaphore_anonymous_new() {
 
     // get mutex and cond and svalue address
     pthread_mutex_t* mutex = result;
-    pthread_mutex_t* cond = result + sizeof(pthread_mutex_t);
+    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
     int* svalue = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
 
     // init mutex
@@ -100,7 +100,7 @@ void* semaphore_named_new(char* name) {
 
     // get mutex and cond and svalue and connections address
     pthread_mutex_t* mutex = result;
-    pthread_mutex_t* cond = result + sizeof(pthread_mutex_t);
+    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
     int* svalue = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
     int* connections = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int);
 
@@ -133,7 +133,7 @@ void* semaphore_named_new(char* name) {
 void semaphore_named_free(void* memory, char* name) {
     // get mutex and cond and svalue and connections address
     pthread_mutex_t* mutex = memory;
-    pthread_mutex_t* cond = memory + sizeof(pthread_mutex_t);
+    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
     int* svalue = memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
     int* connections = memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int);
 

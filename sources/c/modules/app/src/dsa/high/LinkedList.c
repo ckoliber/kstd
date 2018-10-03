@@ -187,31 +187,26 @@ int linkedlist_indexof_normal(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // search in items to find item
-    int result = -1;
+    int cursor = 0;
     struct LinkedItem* search_item = linkedlist_->head;
     do {
         // check comperator function is not NULL
         if (linkedlist_->comperator != NULL) {
             if (linkedlist_->comperator(item, search_item->item)) {
-                break;
+                return cursor;
             }
         } else {
             if (item == search_item->item) {
-                break;
+                return cursor;
             }
         }
 
         // go to next item
-        result++;
+        cursor++;
         search_item = search_item->next;
-    } while (search_item == linkedlist_->head);
+    } while (search_item != linkedlist_->head);
 
-    // check result is size -> not found
-    if (result == linkedlist_->size) {
-        result = -1;
-    }
-
-    return result;
+    return -1;
 }
 int linkedlist_size_normal(struct LinkedList* self) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
@@ -227,13 +222,13 @@ int linkedlist_add_concurrent(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
-    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
+    linkedlist_->rwlock->vtable->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal add
     int result = linkedlist_add_normal(self, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->vtable->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -246,13 +241,13 @@ int linkedlist_addto_concurrent(struct LinkedList* self, int position, void* ite
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
+    linkedlist_->rwlock->vtable->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal addto
     int result = linkedlist_addto_normal(self, position, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->vtable->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -265,13 +260,13 @@ void* linkedlist_put_concurrent(struct LinkedList* self, int position, void* ite
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
+    linkedlist_->rwlock->vtable->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal put
     void* result = linkedlist_put_normal(self, position, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->vtable->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -284,13 +279,13 @@ void* linkedlist_remove_concurrent(struct LinkedList* self, int position) {
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->write_lock(linkedlist_->rwlock, UINT_64_MAX);
+    linkedlist_->rwlock->vtable->write_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal remove
     void* result = linkedlist_remove_normal(self, position);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->write_unlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->vtable->write_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -303,13 +298,13 @@ void* linkedlist_get_concurrent(struct LinkedList* self, int position) {
     }
 
     // concurrent writelock
-    linkedlist_->rwlock->read_lock(linkedlist_->rwlock, UINT_64_MAX);
+    linkedlist_->rwlock->vtable->read_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal get
     void* result = linkedlist_get_normal(self, position);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->read_unlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->vtable->read_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -317,13 +312,13 @@ int linkedlist_indexof_concurrent(struct LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
-    linkedlist_->rwlock->read_lock(linkedlist_->rwlock, UINT_64_MAX);
+    linkedlist_->rwlock->vtable->read_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal indexof
     int result = linkedlist_indexof_normal(self, item);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->read_unlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->vtable->read_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -331,13 +326,13 @@ int linkedlist_size_concurrent(struct LinkedList* self) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
-    linkedlist_->rwlock->read_lock(linkedlist_->rwlock, UINT_64_MAX);
+    linkedlist_->rwlock->vtable->read_lock(linkedlist_->rwlock, UINT_64_MAX);
 
     // normal size
     int result = linkedlist_size_normal(self);
 
     // concurrent writeunlock
-    linkedlist_->rwlock->read_unlock(linkedlist_->rwlock);
+    linkedlist_->rwlock->vtable->read_unlock(linkedlist_->rwlock);
 
     return result;
 }
@@ -470,7 +465,7 @@ LinkedList* linkedlist_new_object(int mode, int (*comperator)(void*, void*)) {
     linkedlist_->head->item = NULL;
 
     if (mode == 1) {
-        linkedlist_->rwlock = rwlock_new(NULL);
+        linkedlist_->rwlock = rwlock_new_object(NULL);
     }
 
     return (LinkedList*)linkedlist_;

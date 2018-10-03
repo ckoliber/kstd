@@ -120,17 +120,16 @@ int message_enqueue(struct Message* self, void* item, uint64_t timeout) {
     void* queue = message_->memory + sizeof(int) + sizeof(int);
 
     // wait on full semaphore
-    int result = -1;
     if (message_->full_semaphore->vtable->wait(message_->full_semaphore, timeout) == 0) {
         // add item to queue
         heap_copy(queue + *end, item, message_->item);
         *end = (*end + 1) % message_->max;
 
         // signal on empty semaphore
-        result = message_->empty_semaphore->vtable->post(message_->empty_semaphore);
+        return message_->empty_semaphore->vtable->post(message_->empty_semaphore);
     }
 
-    return result;
+    return -1;
 }
 int message_dequeue(struct Message* self, void* item, uint64_t timeout) {
     struct Message_* message_ = (struct Message_*)self;
@@ -141,17 +140,16 @@ int message_dequeue(struct Message* self, void* item, uint64_t timeout) {
     void* queue = message_->memory + sizeof(int) + sizeof(int);
 
     // wait on empty semaphore
-    int result = -1;
     if (message_->empty_semaphore->vtable->wait(message_->empty_semaphore, timeout) == 0) {
         // add item to queue
         heap_copy(item, queue + *start, message_->item);
         *start = (*start + 1) % message_->max;
 
         // signal on full semaphore
-        result = message_->full_semaphore->vtable->post(message_->full_semaphore);
+        return message_->full_semaphore->vtable->post(message_->full_semaphore);
     }
 
-    return result;
+    return -1;
 }
 
 // object allocation and deallocation operators
@@ -231,13 +229,13 @@ Message* message_new_object(char* name, int max, tsize item) {
     if (name != NULL) {
         // create internal full semaphore
         String* full_semaphore_name = string_new_concat(name, "/message/full_semaphore");
-        message_->full_semaphore = semaphore_new(full_semaphore_name->vtable->value(full_semaphore_name));
+        message_->full_semaphore = semaphore_new_object(full_semaphore_name->vtable->value(full_semaphore_name));
         message_->full_semaphore->vtable->init(message_->full_semaphore, max);
         string_free(full_semaphore_name);
 
         // create internal empty semaphore
         String* empty_semaphore_name = string_new_concat(name, "/message/empty_semaphore");
-        message_->empty_semaphore = semaphore_new(empty_semaphore_name->vtable->value(empty_semaphore_name));
+        message_->empty_semaphore = semaphore_new_object(empty_semaphore_name->vtable->value(empty_semaphore_name));
         message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
         string_free(empty_semaphore_name);
 
@@ -255,11 +253,11 @@ Message* message_new_object(char* name, int max, tsize item) {
         }
     } else {
         // create internal full semaphore
-        message_->full_semaphore = semaphore_new(NULL);
+        message_->full_semaphore = semaphore_new_object(NULL);
         message_->full_semaphore->vtable->init(message_->full_semaphore, max);
 
         // create internal empty semaphore
-        message_->empty_semaphore = semaphore_new(NULL);
+        message_->empty_semaphore = semaphore_new_object(NULL);
         message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
 
         // create internal message queue

@@ -55,24 +55,21 @@ struct DequeueItem* dequeueitem_get(struct Dequeue* dequeue, int front, void* it
     struct Dequeue_* dequeue_ = (struct Dequeue_*)dequeue;
 
     // return item before adding position
-    struct DequeueItem* result = NULL;
     if (dequeue_->comperator != NULL) {
         // search for item position (insertion sort)
-        result = dequeue_->head->next;
-        while (result != dequeue_->head) {
-            if (dequeue_->comperator(item, result->item) <= 0) {
+        struct DequeueItem* temp = dequeue_->head->next;
+        while (temp != dequeue_->head) {
+            if (dequeue_->comperator(item, temp->item) <= 0) {
                 break;
             }
-            result = result->next;
+            temp = temp->next;
         }
-        result = result->previews;
+        return temp->previews;
     } else if (front) {
-        result = dequeue_->head;
+        return dequeue_->head;
     } else {
-        result = dequeue_->head->previews;
+        return dequeue_->head->previews;
     }
-
-    return result;
 }
 
 // normal mode vtable operators
@@ -127,14 +124,13 @@ void* dequeue_get_normal(struct Dequeue* self, int front) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // get dequeue item
-    void* result = NULL;
     if (front) {
-        result = dequeue_->head->next;
+        return dequeue_->head->next;
     } else {
-        result = dequeue_->head->previews;
+        return dequeue_->head->previews;
     }
 
-    return result;
+    return NULL;
 }
 int dequeue_size_normal(struct Dequeue* self) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
@@ -150,13 +146,13 @@ int dequeue_enqueue_concurrent(struct Dequeue* self, int front, void* item, uint
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
-    dequeue_->rwlock->write_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->rwlock->vtable->write_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal enqueue
     int result = dequeue_enqueue_normal(self, front, item, timeout);
 
     // concurrent writeunlock
-    dequeue_->rwlock->write_unlock(dequeue_->rwlock);
+    dequeue_->rwlock->vtable->write_unlock(dequeue_->rwlock);
 
     return result;
 }
@@ -164,13 +160,13 @@ void* dequeue_dequeue_concurrent(struct Dequeue* self, int front, uint_64 timeou
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
-    dequeue_->rwlock->write_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->rwlock->vtable->write_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal dequeue
     void* result = dequeue_dequeue_normal(self, front, timeout);
 
     // concurrent writeunlock
-    dequeue_->rwlock->write_unlock(dequeue_->rwlock);
+    dequeue_->rwlock->vtable->write_unlock(dequeue_->rwlock);
 
     return result;
 }
@@ -178,13 +174,13 @@ void* dequeue_get_concurrent(struct Dequeue* self, int front) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent readlock
-    dequeue_->rwlock->read_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->rwlock->vtable->read_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal get
     void* result = dequeue_get_normal(self, front);
 
     // concurrent readunlock
-    dequeue_->rwlock->read_unlock(dequeue_->rwlock);
+    dequeue_->rwlock->vtable->read_unlock(dequeue_->rwlock);
 
     return result;
 }
@@ -192,13 +188,13 @@ int dequeue_size_concurrent(struct Dequeue* self) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent readlock
-    dequeue_->rwlock->read_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->rwlock->vtable->read_lock(dequeue_->rwlock, UINT_64_MAX);
 
     // normal size
     int result = dequeue_size_normal(self);
 
     // concurrent readunlock
-    dequeue_->rwlock->read_unlock(dequeue_->rwlock);
+    dequeue_->rwlock->vtable->read_unlock(dequeue_->rwlock);
 
     return result;
 }
@@ -209,14 +205,14 @@ int dequeue_enqueue_blocking(struct Dequeue* self, int front, void* item, uint_6
 
     // wait on full semaphore
     if (dequeue_->full_semaphore != NULL) {
-        dequeue_->full_semaphore->wait(dequeue_->full_semaphore, timeout);
+        dequeue_->full_semaphore->vtable->wait(dequeue_->full_semaphore, timeout);
     }
 
     // concurrent enqueue
     int result = dequeue_enqueue_concurrent(self, front, item, timeout);
 
     // signal on empty semaphore
-    dequeue_->empty_semaphore->post(dequeue_->empty_semaphore);
+    dequeue_->empty_semaphore->vtable->post(dequeue_->empty_semaphore);
 
     return result;
 }
@@ -224,14 +220,14 @@ void* dequeue_dequeue_blocking(struct Dequeue* self, int front, uint_64 timeout)
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on empty semaphore
-    dequeue_->empty_semaphore->wait(dequeue_->empty_semaphore, timeout);
+    dequeue_->empty_semaphore->vtable->wait(dequeue_->empty_semaphore, timeout);
 
     // concurrent dequeue
     void* result = dequeue_dequeue_concurrent(self, front, timeout);
 
     // signal on full semaphore
     if (dequeue_->full_semaphore != NULL) {
-        dequeue_->full_semaphore->post(dequeue_->full_semaphore);
+        dequeue_->full_semaphore->vtable->post(dequeue_->full_semaphore);
     }
 
     return result;
@@ -344,17 +340,17 @@ Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(void*, void*)) 
     dequeue_->head->item = NULL;
 
     if (mode == 1 || mode == 2) {
-        dequeue_->rwlock = rwlock_new(NULL);
+        dequeue_->rwlock = rwlock_new_object(NULL);
     }
     if (mode == 2) {
         // init empty semaphore
-        dequeue_->empty_semaphore = semaphore_new(NULL);
-        dequeue_->empty_semaphore->init(dequeue_->empty_semaphore, 0);
+        dequeue_->empty_semaphore = semaphore_new_object(NULL);
+        dequeue_->empty_semaphore->vtable->init(dequeue_->empty_semaphore, 0);
 
         // init full semaphore
         if (max > 0) {
-            dequeue_->full_semaphore = semaphore_new(NULL);
-            dequeue_->full_semaphore->init(dequeue_->full_semaphore, max);
+            dequeue_->full_semaphore = semaphore_new_object(NULL);
+            dequeue_->full_semaphore->vtable->init(dequeue_->full_semaphore, max);
         }
     }
 

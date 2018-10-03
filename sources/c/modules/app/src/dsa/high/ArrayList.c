@@ -134,23 +134,20 @@ int arraylist_indexof_normal(struct ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // search in items to find item
-    int result = -1;
     for (int cursor = 0; cursor < arraylist_->cursor; cursor++) {
         // check comperator function is not NULL
         if (arraylist_->comperator != NULL) {
             if (arraylist_->comperator(item, arraylist_->array[cursor])) {
-                result = cursor;
-                break;
+                return cursor;
             }
         } else {
             if (item == arraylist_->array[cursor]) {
-                result = cursor;
-                break;
+                return cursor;
             }
         }
     }
 
-    return result;
+    return -1;
 }
 int arraylist_size_normal(struct ArrayList* self) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
@@ -166,13 +163,13 @@ int arraylist_add_concurrent(struct ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent writelock
-    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
+    arraylist_->rwlock->vtable->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal add
     int result = arraylist_add_normal(self, item);
 
     // concurrent writeunlock
-    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
+    arraylist_->rwlock->vtable->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -185,13 +182,13 @@ int arraylist_addto_concurrent(struct ArrayList* self, int position, void* item)
     }
 
     // concurrent writelock
-    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
+    arraylist_->rwlock->vtable->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal addto
     int result = arraylist_addto_normal(self, position, item);
 
     // concurrent writeunlock
-    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
+    arraylist_->rwlock->vtable->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -204,13 +201,13 @@ void* arraylist_put_concurrent(struct ArrayList* self, int position, void* item)
     }
 
     // concurrent writelock
-    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
+    arraylist_->rwlock->vtable->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal put
     void* result = arraylist_put_normal(self, position, item);
 
     // concurrent writeunlock
-    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
+    arraylist_->rwlock->vtable->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -223,13 +220,13 @@ void* arraylist_remove_concurrent(struct ArrayList* self, int position) {
     }
 
     // concurrent writelock
-    arraylist_->rwlock->write_lock(arraylist_->rwlock, UINT_64_MAX);
+    arraylist_->rwlock->vtable->write_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal remove
     void* result = arraylist_remove_normal(self, position);
 
     // concurrent writeunlock
-    arraylist_->rwlock->write_unlock(arraylist_->rwlock);
+    arraylist_->rwlock->vtable->write_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -242,13 +239,13 @@ void* arraylist_get_concurrent(struct ArrayList* self, int position) {
     }
 
     // concurrent readlock
-    arraylist_->rwlock->read_lock(arraylist_->rwlock, UINT_64_MAX);
+    arraylist_->rwlock->vtable->read_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal get
     void* result = arraylist_get_normal(self, position);
 
     // concurrent readunlock
-    arraylist_->rwlock->read_unlock(arraylist_->rwlock);
+    arraylist_->rwlock->vtable->read_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -256,13 +253,13 @@ int arraylist_indexof_concurrent(struct ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent readlock
-    arraylist_->rwlock->read_lock(arraylist_->rwlock, UINT_64_MAX);
+    arraylist_->rwlock->vtable->read_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal indexof
     int result = arraylist_indexof_normal(self, item);
 
     // concurrent readunlock
-    arraylist_->rwlock->read_unlock(arraylist_->rwlock);
+    arraylist_->rwlock->vtable->read_unlock(arraylist_->rwlock);
 
     return result;
 }
@@ -270,13 +267,13 @@ int arraylist_size_concurrent(struct ArrayList* self) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent readlock
-    arraylist_->rwlock->read_lock(arraylist_->rwlock, UINT_64_MAX);
+    arraylist_->rwlock->vtable->read_lock(arraylist_->rwlock, UINT_64_MAX);
 
     // normal size
     int result = arraylist_size_normal(self);
 
     // concurrent readunlock
-    arraylist_->rwlock->read_unlock(arraylist_->rwlock);
+    arraylist_->rwlock->vtable->read_unlock(arraylist_->rwlock);
 
     return result;
 }

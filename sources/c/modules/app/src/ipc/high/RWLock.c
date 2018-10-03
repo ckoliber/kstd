@@ -138,12 +138,12 @@ RWLock* rwlock_new_object(char* name) {
 
     // create internal critical mutex
     String* rwlock_critical_mutex_name = string_new_concat(name, "/rwlock_critical_mutex");
-    rwlock_->critical_mutex = mutex_new(0, rwlock_critical_mutex_name->vtable->value(rwlock_critical_mutex_name));
+    rwlock_->critical_mutex = mutex_new_object(0, rwlock_critical_mutex_name->vtable->value(rwlock_critical_mutex_name));
     string_free(rwlock_critical_mutex_name);
 
     // create internal write mutex
     String* rwlock_write_mutex_name = string_new_concat(name, "/rwlock_write_mutex");
-    rwlock_->write_mutex = mutex_new(0, rwlock_write_mutex_name->vtable->value(rwlock_write_mutex_name));
+    rwlock_->write_mutex = mutex_new_object(0, rwlock_write_mutex_name->vtable->value(rwlock_write_mutex_name));
     string_free(rwlock_write_mutex_name);
 
     return (RWLock*)rwlock_;

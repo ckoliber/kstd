@@ -36,12 +36,12 @@ void condition_named_free(void* memory, char* name);
 
 // implement methods
 void* condition_anonymous_new() {
-    // alocate mutex
+    // alocate condition and mutex
     void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t));
 
     // get mutex and cond address
     pthread_mutex_t* mutex = result;
-    pthread_mutex_t* cond = result + sizeof(pthread_mutex_t);
+    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
 
     // init mutex
     pthread_mutexattr_t mattr;
@@ -92,7 +92,7 @@ void* condition_named_new(char* name) {
 
     // get mutex and cond and connections address
     pthread_mutex_t* mutex = result;
-    pthread_mutex_t* cond = result + sizeof(pthread_mutex_t);
+    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
     int* connections = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
 
     // create and init or open and increase connections
@@ -273,7 +273,7 @@ Condition* condition_new_object(char* name) {
         }
 
         // create and init or open internal share mutex
-        condition_->memory = mutex_named_new(condition_->name->vtable->value(condition_->name));
+        condition_->memory = condition_named_new(condition_->name->vtable->value(condition_->name));
 
         // try release critical mutex
         if (critical != NULL) {
@@ -281,7 +281,7 @@ Condition* condition_new_object(char* name) {
         }
     } else {
         // create internal mutex
-        condition_->memory = mutex_anonymous_new();
+        condition_->memory = condition_anonymous_new();
     }
 
     return (Condition*)condition_;

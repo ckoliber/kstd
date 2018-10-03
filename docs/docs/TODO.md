@@ -35,7 +35,8 @@
     1. __Low__
         1. __Math__ -> `0.2.0`
     2. __High__
-        1. __KRE__ -> `0.1.0`
+        1. __FSM__ -> `0.1.0`
+        2. __KRE__ -> `0.1.0`
 6. __Processor__
     1. __Low__: kernel
         1. __Thread__ -> `0.1.0` (affinity + priority => `0.3.0`)
@@ -74,12 +75,12 @@
 9. __OK__ - implement ProcessPool
 10. __OK__ - implement DSA low
 11. __OK__ - implement DSA high
-12. implement Algo low (+math)
-13. implement Algo high (+kre)
-14. __OK__ - implement File low (+file +poller)
-15. __OK__ - refactor code with vtable
-16. refactor code with (convert return result; at methods do not need Builder Pattern (return x;))
-17. app_init -> call x_init all parts
+12. implement Algo high kre
+13. __OK__ - implement File low (+file +poller)
+14. __OK__ - refactor code with vtable
+15. __OK__ refactor code with (convert return result; at methods do not need Builder Pattern (return x;)) + _new => _new_object
+16. __OK__ - app_init -> call x_init all parts
+17. implement Algo high fsm + efs m + hsm
 
 ## Now
 
