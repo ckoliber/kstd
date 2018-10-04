@@ -14,6 +14,7 @@ typedef struct String_VTable {
     void (*copy)(struct String* self, char* data);
     void (*concat)(struct String* self, char* data);
     void (*cut)(struct String* self, int begin, int end);
+    void (*replace)(struct String* self, int begin, int end, char* replace);
 
     // information operators
     tsize (*length)(struct String* self);
@@ -43,3 +44,8 @@ String* string_new_reverse(char* value);
 String* string_new_copy(char* value);
 String* string_new_concat(char* value, char* data);
 String* string_new_cut(char* value, int begin, int end);
+String* string_new_replace(char* value, int begin, int end, char* replace);
+
+// local string methods
+tsize string_get_length(char* value);
+int string_get_compare(char* value, char* data);

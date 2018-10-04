@@ -59,10 +59,13 @@ KRE_VTable* kre_vtable;
 
 // link methods
 bool kre_test(struct KRE* self, char* text);
-ArrayList* kre_match(struct KRE* self, char* text, int count);
-String* kre_replace(struct KRE* self, char* text, char* replace, int count);
+
+ArrayList* kre_match(struct KRE* self, char* text);
+String* kre_replace(struct KRE* self, char* text, char* replace);
+
 ArrayList* kre_split(struct KRE* self, char* text);
 String* kre_merge(struct KRE* self, ArrayList* data);
+
 ArrayList* kre_export(struct KRE* self, char* text);
 String* kre_import(struct KRE* self, ArrayList* data);
 
@@ -92,6 +95,7 @@ bool kre_match_set(String* set, char character);
 // link methods
 struct KREState* kre_compile_new(KRE* kre);
 void kre_compile_free(struct KREState* graph);
+bool kre_compile_is_packable(struct KREState* graph, int strict);  // strict = 2 -> merge, 1 -> import, 0 -> X
 
 // local methods
 struct KREState* kre_compile_graph_link(KRE* kre, int begin, int end);
@@ -128,6 +132,10 @@ int kre_compile_find_quantifier_comma(String* kregexp, int begin, int end);
 int kre_compile_get_quantifier_start(String* kregexp, int item_end);
 int kre_compile_get_quantifier_stop(String* kregexp, int item_end);
 
+// packable character detect . [ \s \S \w \W \d \D
+bool kre_compile_is_match_multistate(struct KREState* state, int cursor, int strict);
+bool kre_compile_is_group_multistate(struct KREState* state, int strict);
+
 ///////////////////////////////////////////////////////////////
 // compile methods end
 ///////////////////////////////////////////////////////////////
@@ -137,16 +145,17 @@ int kre_compile_get_quantifier_stop(String* kregexp, int item_end);
 ///////////////////////////////////////////////////////////////
 
 // link methods
-ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin);
-String* kre_regex_pack(struct KRE* self, ArrayList* data);
+// low level methods
+ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin, int* end, bool record);
+String* kre_regex_pack(struct KRE* self, ArrayList* data, bool record);
+
+// high level methods
+ArrayList* kre_regex_match_new(struct KRE* self, char* text, int begin, int count);
+void kre_regex_match_free(ArrayList* matches);
 
 // local methods
 struct KREItem* kre_regex_item_new(struct KREState* state);
 void kre_regex_item_free(struct KREItem* item);
-
-// range checker
-bool kre_regex_match_in_range(struct KREItem* item);
-bool kre_regex_group_in_range(struct KREItem* item);
 
 ///////////////////////////////////////////////////////////////
 // regex methods end
@@ -399,14 +408,15 @@ void kre_compile_state_free(struct KREState* state) {
 
 // character position detect a or b or ... or :{ or :} or :: or :< or :> or :* or :? or :+ or :[ or :] or :. or . or \t or \n or \w or
 bool kre_compile_is_character_begin(String* kregexp, int cursor) {
-    if (
-        (kregexp->vtable->value(kregexp)[cursor] == '.') ||
-        (kregexp->vtable->value(kregexp)[cursor] == '\\' && kregexp->vtable->value(kregexp)[cursor + 1] == 's') ||
-        (kregexp->vtable->value(kregexp)[cursor] == '\\' && kregexp->vtable->value(kregexp)[cursor + 1] == 'S') ||
-        (kregexp->vtable->value(kregexp)[cursor] == '\\' && kregexp->vtable->value(kregexp)[cursor + 1] == 'w') ||
-        (kregexp->vtable->value(kregexp)[cursor] == '\\' && kregexp->vtable->value(kregexp)[cursor + 1] == 'W') ||
-        (kregexp->vtable->value(kregexp)[cursor] == '\\' && kregexp->vtable->value(kregexp)[cursor + 1] == 'd') ||
-        (kregexp->vtable->value(kregexp)[cursor] == '\\' && kregexp->vtable->value(kregexp)[cursor + 1] == 'D')) {
+    if (kregexp->vtable->value(kregexp)[cursor] != '[' &&
+        kregexp->vtable->value(kregexp)[cursor] != ']' &&
+        kregexp->vtable->value(kregexp)[cursor] != '(' &&
+        kregexp->vtable->value(kregexp)[cursor] != ')' &&
+        kregexp->vtable->value(kregexp)[cursor] != '{' &&
+        kregexp->vtable->value(kregexp)[cursor] != '}' &&
+        kregexp->vtable->value(kregexp)[cursor] != '?' &&
+        kregexp->vtable->value(kregexp)[cursor] != '+' &&
+        kregexp->vtable->value(kregexp)[cursor] != '*') {
         return true;
     }
     return false;
@@ -715,9 +725,114 @@ int kre_compile_get_quantifier_stop(String* kregexp, int item_end) {
     }
 }
 
+// packable character detect . [ \s \S \w \W \d \D
+bool kre_compile_is_match_multistate(struct KREState* state, int cursor, int strict) {
+    if (strict == 2 || strict == 1) {
+        // check is multi state match character
+        if (state->value.match.match->vtable->value(state->value.match.match)[cursor] == '.' ||
+            state->value.match.match->vtable->value(state->value.match.match)[cursor] == '[' ||
+            (state->value.match.match->vtable->value(state->value.match.match)[cursor] == '\\' && state->value.match.match->vtable->value(state->value.match.match)[cursor + 1] == 's') ||
+            (state->value.match.match->vtable->value(state->value.match.match)[cursor] == '\\' && state->value.match.match->vtable->value(state->value.match.match)[cursor + 1] == 'S') ||
+            (state->value.match.match->vtable->value(state->value.match.match)[cursor] == '\\' && state->value.match.match->vtable->value(state->value.match.match)[cursor + 1] == 'w') ||
+            (state->value.match.match->vtable->value(state->value.match.match)[cursor] == '\\' && state->value.match.match->vtable->value(state->value.match.match)[cursor + 1] == 'W') ||
+            (state->value.match.match->vtable->value(state->value.match.match)[cursor] == '\\' && state->value.match.match->vtable->value(state->value.match.match)[cursor + 1] == 'd') ||
+            (state->value.match.match->vtable->value(state->value.match.match)[cursor] == '\\' && state->value.match.match->vtable->value(state->value.match.match)[cursor + 1] == 'D')) {
+            return true;
+        }
+
+        // check quantifier range is absolute
+        if (state->value.match.start != state->value.match.stop) {
+            return true;
+        }
+    }
+
+    return false;
+}
+bool kre_compile_is_group_multistate(struct KREState* state, int strict) {
+    if (strict == 2) {
+        // check mode is 0 (no capture, no record)
+        if (state->value.group.mode != 0) {
+            return true;
+        }
+
+        // check group items length is 1
+        if (state->value.group.items->vtable->size(state->value.group.items) == 1) {
+            // check internal group item
+            if (!kre_compile_is_packable(state->value.group.items->vtable->get(state->value.group.items, 0), strict)) {
+                return true;
+            }
+        } else {
+            return true;
+        }
+
+        // check group items length is 0
+        if (state->value.group.links->vtable->size(state->value.group.links) > 0) {
+            return true;
+        }
+
+        // check quantifier range is absolute
+        if (state->value.group.start != state->value.group.stop) {
+            return true;
+        }
+    } else if (strict == 1) {
+        // check mode
+        if (state->value.group.mode == 0 || state->value.group.mode == 1) {
+            // x capture, no record mode
+
+            // check group items length is 1
+            if (state->value.group.items->vtable->size(state->value.group.items) == 1) {
+                // check internal group item
+                if (!kre_compile_is_packable(state->value.group.items->vtable->get(state->value.group.items, 0), strict)) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+
+            // check group items length is 0
+            if (state->value.group.links->vtable->size(state->value.group.links) > 0) {
+                return true;
+            }
+        } else if (state->value.group.mode == 2 || state->value.group.mode == 3) {
+            // x capture, yes record mode
+
+            // iterate items and check with strict 0 (record group internal)
+            for (int cursor = 0; cursor < state->value.group.items->vtable->size(state->value.group.items); cursor++) {
+                if (!kre_compile_is_packable(state->value.group.items->vtable->get(state->value.group.items, cursor), 0)) {
+                    return true;
+                }
+            }
+        }
+
+        // check quantifier range is absolute and is 1
+        if (state->value.group.start != 1 || state->value.group.stop != 1) {
+            return true;
+        }
+    } else if (strict == 0) {
+        // check mode is 0 (no capture, no record)
+        if (state->value.group.mode != 0) {
+            return true;
+        }
+
+        // iterate items and check with strict 0 (record group internal)
+        for (int cursor = 0; cursor < state->value.group.items->vtable->size(state->value.group.items); cursor++) {
+            if (!kre_compile_is_packable(state->value.group.items->vtable->get(state->value.group.items, cursor), strict)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 // kre base compiler
 struct KREState* kre_compile_new(KRE* kre) {
     struct KRE_* kre_ = (struct KRE_*)kre;
+
+    // set regex to group mode for handling or
+    String* kregexp = string_new_printf("(0|%s)", kre_->kregexp->vtable->value(kre_->kregexp));
+    string_free(kre_->kregexp);
+    kre_->kregexp = kregexp;
 
     // base compiler
     struct KREState* result = kre_compile_graph_new((KRE*)kre_, 0, kre_->kregexp->vtable->length(kre_->kregexp));
@@ -726,6 +841,26 @@ struct KREState* kre_compile_new(KRE* kre) {
 }
 void kre_compile_free(struct KREState* graph) {
     kre_compile_graph_free(graph);
+}
+bool kre_compile_is_packable(struct KREState* graph, int strict) {
+    while (graph != NULL) {
+        if (graph->type == KRE_ITEM_MATCH) {
+            // check is not multi state match
+            if (kre_compile_is_match_multistate(graph->value.match.match, 0, strict)) {
+                return false;
+            }
+        } else if (graph->type = KRE_ITEM_GROUP) {
+            // check is not multi state group
+            if (kre_compile_is_group_multistate(graph, strict)) {
+                return false;
+            }
+        }
+
+        // move to next graph item
+        graph = graph->next;
+    }
+
+    return true;
 }
 
 ///////////////////////////////////////////////////////////////
@@ -737,6 +872,51 @@ void kre_compile_free(struct KREState* graph) {
 ///////////////////////////////////////////////////////////////
 
 // implement methods
+// high level methods
+ArrayList* kre_regex_match_new(struct KRE* self, char* text, int begin, int count) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // try match text parts with regex
+    ArrayList* result = arraylist_new_object(0, 2, NULL);
+    String* text_string = string_new_copy(text);
+
+    for (int cursor = begin; cursor < text_string->vtable->length(text_string) && count > 0; cursor++) {
+        // try get end of match
+        int match_end = -1;
+        kre_regex_parse(self, text_string, cursor, &match_end, false);
+
+        // check end of match
+        if (match_end >= 0) {
+            // add item (begin, end) to result array
+            int* item = heap_alloc(sizeof(int) * 2);
+            item[0] = cursor;     // begin
+            item[1] = match_end;  // end
+            result->vtable->add(result, item);
+
+            // add to cursor
+            cursor = match_end + 1;
+
+            // reduce counter
+            count--;
+        }
+    }
+
+    // free allocated items
+    string_free(text_string);
+
+    return result;
+}
+void kre_regex_match_free(ArrayList* matches) {
+    // free matches items
+    while (matches->vtable->size(matches) > 0) {
+        heap_free(matches->vtable->remove(matches, matches->vtable->size(matches) - 1));
+    }
+
+    // free array
+    arraylist_free(matches);
+}
+
+// local methods
 struct KREItem* kre_regex_item_new(struct KREState* state) {
     struct KREItem* result = heap_alloc(sizeof(struct KREItem));
 
@@ -750,13 +930,9 @@ void kre_regex_item_free(struct KREItem* item) {
     heap_free(item);
 }
 
-bool kre_regex_match_in_range(struct KREItem* item) {
-}
-bool kre_regex_group_in_range(struct KREItem* item) {
-}
-
+// low level methods
 // kre base regex
-ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin) {
+ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin, int* end, bool record) {
     struct KRE_* kre_ = (struct KRE_*)self;
 
     /*
@@ -793,9 +969,9 @@ ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin) {
 
     // init requirements
     bool force = false;
-    ArrayList* result = arraylist_new(0);
-    Dequeue* items = dequeue_new(0);
-    Dequeue* recorders = dequeue_new(0);
+    Dequeue* items = dequeue_new_object(0, -1, NULL);
+    Dequeue* recorders = dequeue_new_object(0, -1, NULL);
+    ArrayList* result = arraylist_new_object(0, 2, NULL);
 
     // push first item
     items->vtable->enqueue(items, 0, kre_regex_item_new(kre_->graph), 0);
@@ -852,7 +1028,7 @@ ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin) {
 
     return result;
 }
-String* kre_regex_pack(struct KRE* self, ArrayList* data) {
+String* kre_regex_pack(struct KRE* self, ArrayList* data, bool record) {
 }
 
 ///////////////////////////////////////////////////////////////
@@ -861,18 +1037,129 @@ String* kre_regex_pack(struct KRE* self, ArrayList* data) {
 
 // vtable operators
 bool kre_test(struct KRE* self, char* text) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // match items
+    bool result = false;
+    ArrayList* matches = kre_regex_match_new(self, text, 0, 1);
+
+    // check matches count
+    if (matches->vtable->size(matches) == 1) {
+        // get item
+        int* item = matches->vtable->get(matches, 0);
+
+        // check item is matches with entire of text
+        if (item[0] == 0 && item[1] == string_get_length(text) - 1) {
+            result = true;
+        }
+    }
+
+    // free allocated items
+    kre_regex_match_free(matches);
+
+    return result;
 }
-ArrayList* kre_match(struct KRE* self, char* text, int count) {
+
+ArrayList* kre_match(struct KRE* self, char* text) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // match items
+    ArrayList* result = kre_regex_match_new(self, text, 0, string_get_length(text));
+
+    return result;
 }
-String* kre_replace(struct KRE* self, char* text, char* replace, int count) {
+String* kre_replace(struct KRE* self, char* text, char* replace) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // match items
+    ArrayList* matches = kre_regex_match_new(self, text, 0, 1);
+
+    // check matches count
+    String* result = string_new_copy(text);
+    if (matches->vtable->size(matches) == 1) {
+        // get item
+        int* item = matches->vtable->get(matches, 0);
+
+        // replace string
+        result->vtable->replace(result, item[0], item[1], replace);
+    }
+
+    // free allocated items
+    kre_regex_match_free(matches);
+
+    return result;
 }
+
 ArrayList* kre_split(struct KRE* self, char* text) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // match items
+    ArrayList* matches = kre_regex_match_new(self, text, 0, string_get_length(text));
+
+    // reverse matches items for result
+    ArrayList* result = arraylist_new_object(0, 2, NULL);
+
+    int start = 0;
+    int end = -1;
+    for (int cursor = 0; cursor < matches->vtable->size(matches); cursor++) {
+        // get item
+        int* item = matches->vtable->get(matches, 0);
+
+        // inverse item start to end
+        end = item[0];
+
+        if (start != end) {
+            // add item (begin, end) to result array
+            int* item = heap_alloc(sizeof(int) * 2);
+            item[0] = start;  // begin
+            item[1] = end;    // end
+            result->vtable->add(result, item);
+        }
+
+        // inverse item end to start
+        start = item[1];
+    }
+
+    // free allocated items
+    kre_regex_match_free(matches);
+
+    return result;
 }
 String* kre_merge(struct KRE* self, ArrayList* data) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // pack data with regex (merge - no record - strict 2)
+    String* result = NULL;
+    if (kre_compile_is_packable(kre_->graph, 2)) {
+        result = kre_regex_pack(self, data, false);
+    }
+
+    return result;
 }
+
 ArrayList* kre_export(struct KRE* self, char* text) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // parse text with regex (export - record - strict 1)
+    int end = -1;
+    String* text_string = string_new_copy(text);
+    ArrayList* result = kre_regex_parse(self, text_string, 0, &end, true);
+
+    // free text string
+    string_free(text_string);
+
+    return result;
 }
 String* kre_import(struct KRE* self, ArrayList* data) {
+    struct KRE_* kre_ = (struct KRE_*)self;
+
+    // pack data with regex (import - record - strict 1)
+    String* result = NULL;
+    if (kre_compile_is_packable(kre_->graph, 1)) {
+        result = kre_regex_pack(self, data, true);
+    }
+
+    return result;
 }
 
 // object allocation and deallocation operators
@@ -880,10 +1167,13 @@ void kre_init() {
     // init vtable
     kre_vtable = heap_alloc(sizeof(KRE_VTable));
     kre_vtable->test = kre_test;
+
     kre_vtable->match = kre_match;
     kre_vtable->replace = kre_replace;
+
     kre_vtable->split = kre_split;
     kre_vtable->merge = kre_merge;
+
     kre_vtable->export = kre_export;
     kre_vtable->import = kre_import;
 }

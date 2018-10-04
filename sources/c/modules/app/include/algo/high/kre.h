@@ -4,8 +4,8 @@
 typedef struct KRE_VTable {
     bool (*test)(struct KRE* self, char* text);
 
-    struct ArrayList* (*match)(struct KRE* self, char* text, int count);
-    struct String* (*replace)(struct KRE* self, char* text, char* replace, int count);
+    struct ArrayList* (*match)(struct KRE* self, char* text);
+    struct String* (*replace)(struct KRE* self, char* text, char* replace);
 
     struct ArrayList* (*split)(struct KRE* self, char* text);
     struct String* (*merge)(struct KRE* self, struct ArrayList* data);

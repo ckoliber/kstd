@@ -31,6 +31,7 @@ void string_reverse(struct String* self);
 void string_copy(struct String* self, char* data);
 void string_concat(struct String* self, char* data);
 void string_cut(struct String* self, int begin, int end);
+void string_replace(struct String* self, int begin, int end, char* replace);
 tsize string_length(struct String* self);
 int string_compare(struct String* self, char* data);
 char* string_value(struct String* self);
@@ -120,11 +121,39 @@ void string_cut(struct String* self, int begin, int end) {
     }
     string_->string[end - begin + 1] = '\0';
 }
+void string_replace(struct String* self, int begin, int end, char* replace) {
+    struct String_* string_ = (struct String_*)self;
+
+    // split part 1
+    String* part_1 = NULL;
+    if (begin > 0) {
+        part_1 = string_new_cut(string_->string, 0, begin - 1);
+    } else {
+        part_1 = string_new_copy("");
+    }
+
+    // split part 2
+    String* part_2 = NULL;
+    if (end < string_get_length(string_->string) - 1) {
+        part_2 = string_new_cut(string_->string, end + 1, string_get_length(string_->string));
+    } else {
+        part_2 = string_new_copy("");
+    }
+
+    // replace parts
+    self->vtable->copy(self, part_1->vtable->value(part_1));
+    self->vtable->concat(self, replace);
+    self->vtable->concat(self, part_2->vtable->value(part_2));
+
+    // free parts
+    string_free(part_1);
+    string_free(part_2);
+}
 tsize string_length(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // compute string length
-    tsize result = strlen(string_->string);
+    tsize result = string_get_length(string_->string);
 
     return result;
 }
@@ -132,7 +161,7 @@ int string_compare(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // compare string
-    int result = strcmp(string_->string, data);
+    int result = string_get_compare(string_->string, data);
 
     return result;
 }
@@ -158,6 +187,7 @@ void string_init() {
     string_vtable->copy = string_copy;
     string_vtable->concat = string_concat;
     string_vtable->cut = string_cut;
+    string_vtable->replace = string_replace;
     string_vtable->length = string_length;
     string_vtable->compare = string_compare;
     string_vtable->value = string_value;
@@ -240,6 +270,25 @@ String* string_new_cut(char* value, int begin, int end) {
     string->vtable->cut(string, begin, end);
 
     return string;
+}
+String* string_new_replace(char* value, int begin, int end, char* replace) {
+    // init new string then cut
+    String* string = string_new_printf("%s", value);
+    string->vtable->replace(string, begin, end, replace);
+
+    return string;
+}
+
+// local string methods
+tsize string_get_length(char* value) {
+    tsize result = strlen(value);
+
+    return result;
+}
+int string_get_compare(char* value, char* data) {
+    int result = strcmp(value, data);
+
+    return result;
 }
 
 #endif
