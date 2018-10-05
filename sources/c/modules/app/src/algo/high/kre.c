@@ -938,13 +938,13 @@ ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin, int* end, 
     /*
         Algorithm:
             1. force_add = false;
-            2. init stack graph
-            3. init stack recorder
-            3. push KREStackItem{head, 0}
-            4. while(stack->size > 0)
-                1. pop sitem
-                2. if(sitem->item->type == MATCH)
-                    1. if(sitem->value range sitem->item && !force)
+            2. Stack items;
+            3. Stack recorders;
+            3. items->push(KREStackItem{head, 0});
+            4. while(items->size() > 0)
+                1. item = items->pop();
+                2. if(item->type == MATCH)
+                    1. if(item->value  sitem->item && !force)
                         1. push sitem
                         2. if(sitem->item->next != null)
                             1. push sitem->item->next
@@ -960,7 +960,9 @@ ArrayList* kre_regex_parse(struct KRE* self, String* text, int begin, int* end, 
                     3. else
                         1. cursor -= sitem->value;
                         2. force_add = true;
-                3. else if(sitme->item->type == GROUP)
+                3. else if(item->type == GROUP)
+                    1. if(item->group->mode == 2 || item->group->mode == 3)
+                        1. 
                     1. if(sitem->value range items)
                         1. sitem->value++;
                         2. push sitem
