@@ -1,6 +1,6 @@
 #include <low/Heap.h>
 
-#if !defined(APP_WINDOWS)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <memory.h>
 #include <stdlib.h>

@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+
 #if defined(_WIN32) || defined(_WIN64)  // windows
 #define APP_WINDOWS
 #elif defined(__linux__)  // linux
@@ -9,12 +10,12 @@
 #define APP_BSD
 #elif defined(__APPLE__) && defined(__MACH__)
 #include <TargetConditionals.h>
-#if TARGET_IPHONE_SIMULATOR == 1
+#if TARGET_OS_MAC == 1
+#define APP_OSX
+#elif TARGET_IPHONE_SIMULATOR == 1
 #define APP_IOS
 #elif TARGET_OS_IPHONE == 1
 #define APP_IOS
-#elif TARGET_OS_MAC == 1
-#define APP_OSX
 #endif
 #endif
 #elif defined(__ANDROID__)  // android
