@@ -1,4 +1,6 @@
 project(algo)
-set(LINK_LIBS "")
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/package.cmake")
+set(LIBS "")
+set(LINK "dynamic")
+
+# include("${CMAKE_CURRENT_SOURCE_DIR}/../../module.cmake")

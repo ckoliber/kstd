@@ -24,8 +24,13 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/package.cmake")
 project(${KPS_PROJECT_NAME})
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/app")
-# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/ui")
-# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/core")
-# add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/net")
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/algo")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/dsa")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/io")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/ipc")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/local")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/memory")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/processor")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/config.cmake")
