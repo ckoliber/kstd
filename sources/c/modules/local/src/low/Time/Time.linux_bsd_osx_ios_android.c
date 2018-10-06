@@ -1,6 +1,6 @@
-#include <local/low/Time.h>
+#include <low/Time.h>
 
-#if defined(APP_LINUX)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <stdlib.h>
 #include <sys/time.h>

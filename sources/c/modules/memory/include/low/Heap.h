@@ -1,4 +1,4 @@
-#include <memory/low/Type.h>
+#include <low/Type.h>
 
 void* heap_alloc(tsize size);
 void heap_copy(void* address, void* source, tsize size);
