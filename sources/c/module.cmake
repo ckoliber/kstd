@@ -2,7 +2,7 @@
 #   LIBS: "..."
 #   LINK: "dynamic|static"
 # auto:
-#   [APP]:  src/app.c (if not exists project is lib type)
+#   [APP]:  src/app.(c|cpp|cxx) (if not exists project is lib type)
 #   SOURCE: src/x.(c|cpp|cxx)
 #   HEADER: include/x.(h|hpp|hxx)
 #   LIB:    lib/x.(so|a)
