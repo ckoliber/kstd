@@ -9,15 +9,6 @@ void* heap_alloc(tsize size) {
     }
     return result;
 }
-void heap_copy(void* address, void* source, tsize size) {
-    CopyMemory(address, source, size);
-}
-void heap_move(void* address, void* source, tsize size) {
-    MoveMemory(address, source, size);
-}
-void heap_set(void* address, char source, tsize size) {
-    FillMemory(address, size, source);
-}
 void* heap_realloc(void* address, tsize size) {
     void* result = NULL;
     while (result == NULL) {
@@ -29,6 +20,15 @@ void heap_free(void* address) {
     if (address != NULL) {
         HeapFree(GetProcessHeap(), 0, address);
     }
+}
+void heap_copy(void* address, void* source, tsize size) {
+    CopyMemory(address, source, size);
+}
+void heap_move(void* address, void* source, tsize size) {
+    MoveMemory(address, source, size);
+}
+void heap_set(void* address, char source, tsize size) {
+    FillMemory(address, size, source);
 }
 
 #endif

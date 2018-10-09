@@ -12,15 +12,6 @@ void* heap_alloc(tsize size) {
     }
     return result;
 }
-void heap_copy(void* address, void* source, tsize size) {
-    memcpy(address, source, size);
-}
-void heap_move(void* address, void* source, tsize size) {
-    memmove(address, source, size);
-}
-void heap_set(void* address, char source, tsize size) {
-    memset(address, source, size);
-}
 void* heap_realloc(void* address, tsize size) {
     void* result = NULL;
     while (result == NULL) {
@@ -32,6 +23,15 @@ void heap_free(void* address) {
     if (address != NULL) {
         free(address);
     }
+}
+void heap_copy(void* address, void* source, tsize size) {
+    memcpy(address, source, size);
+}
+void heap_move(void* address, void* source, tsize size) {
+    memmove(address, source, size);
+}
+void heap_set(void* address, char source, tsize size) {
+    memset(address, source, size);
 }
 
 #endif
