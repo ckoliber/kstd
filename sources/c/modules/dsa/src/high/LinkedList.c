@@ -1,7 +1,7 @@
-#include <dsa/high/LinkedList.h>
+#include <high/LinkedList.h>
 
-#include <ipc/high/RWLock.h>
-#include <memory/low/Heap.h>
+#include <high/RWLock.h>
+#include <low/Heap.h>
 
 struct LinkedList_ {
     // self public object
@@ -56,7 +56,7 @@ void* linkedlist_get_concurrent(struct LinkedList* self, int position);
 int linkedlist_indexof_concurrent(struct LinkedList* self, void* item);
 int linkedlist_size_concurrent(struct LinkedList* self);
 
-int linkedlistiterator_hasnext(struct LinkedListIterator* self);
+bool linkedlistiterator_hasnext(struct LinkedListIterator* self);
 void* linkedlistiterator_next(struct LinkedListIterator* self);
 
 // local methods
@@ -337,13 +337,15 @@ int linkedlist_size_concurrent(struct LinkedList* self) {
     return result;
 }
 
-int linkedlistiterator_hasnext(struct LinkedListIterator* self) {
+bool linkedlistiterator_hasnext(struct LinkedListIterator* self) {
     struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)self;
 
     // check end item is current item or not
-    int result = linkedlistiterator_->end == linkedlistiterator_->item;
+    if (linkedlistiterator_->end == linkedlistiterator_->item) {
+        return true;
+    }
 
-    return result;
+    return false;
 }
 void* linkedlistiterator_next(struct LinkedListIterator* self) {
     struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)self;

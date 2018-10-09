@@ -1,7 +1,7 @@
-#include <dsa/high/ArrayList.h>
+#include <high/ArrayList.h>
 
-#include <ipc/high/RWLock.h>
-#include <memory/low/Heap.h>
+#include <high/RWLock.h>
+#include <low/Heap.h>
 
 struct ArrayList_ {
     // self public object

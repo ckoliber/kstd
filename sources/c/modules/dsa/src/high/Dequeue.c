@@ -1,8 +1,8 @@
-#include <dsa/high/Dequeue.h>
+#include <high/Dequeue.h>
 
-#include <ipc/high/RWLock.h>
-#include <ipc/low/Semaphore.h>
-#include <memory/low/Heap.h>
+#include <high/RWLock.h>
+#include <low/Heap.h>
+#include <low/Semaphore.h>
 
 struct Dequeue_ {
     // self public object
@@ -212,7 +212,9 @@ int dequeue_enqueue_blocking(struct Dequeue* self, int front, void* item, uint_6
     int result = dequeue_enqueue_concurrent(self, front, item, timeout);
 
     // signal on empty semaphore
-    dequeue_->empty_semaphore->vtable->post(dequeue_->empty_semaphore);
+    if (dequeue_->empty_semaphore != NULL) {
+        dequeue_->empty_semaphore->vtable->post(dequeue_->empty_semaphore);
+    }
 
     return result;
 }
@@ -220,7 +222,9 @@ void* dequeue_dequeue_blocking(struct Dequeue* self, int front, uint_64 timeout)
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on empty semaphore
-    dequeue_->empty_semaphore->vtable->wait(dequeue_->empty_semaphore, timeout);
+    if (dequeue_->empty_semaphore != NULL) {
+        dequeue_->empty_semaphore->vtable->wait(dequeue_->empty_semaphore, timeout);
+    }
 
     // concurrent dequeue
     void* result = dequeue_dequeue_concurrent(self, front, timeout);
