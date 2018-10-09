@@ -1,9 +1,9 @@
-#include <dsa/low/String.h>
+#include <low/String.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <ctype.h>
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,9 +22,12 @@ struct String_ {
 String_VTable* string_vtable;
 
 // link methods
+// convert operators
 int string_to_int(struct String* self);
 long string_to_long(struct String* self);
 double string_to_double(struct String* self);
+
+// change value operators
 void string_lower(struct String* self);
 void string_upper(struct String* self);
 void string_reverse(struct String* self);
@@ -32,6 +35,8 @@ void string_copy(struct String* self, char* data);
 void string_concat(struct String* self, char* data);
 void string_cut(struct String* self, int begin, int end);
 void string_replace(struct String* self, int begin, int end, char* replace);
+
+// information operators
 tsize string_length(struct String* self);
 int string_compare(struct String* self, char* data);
 char* string_value(struct String* self);
@@ -49,6 +54,7 @@ void string_swap(char* char1, char* char2) {
 }
 
 // vtable operators
+// convert operators
 int string_to_int(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
@@ -68,24 +74,26 @@ long string_to_long(struct String* self) {
 double string_to_double(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
-    // convert string to Double
+    // convert string to double
     double result = atof(string_->string);
 
     return result;
 }
+
+// change value operators
 void string_lower(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
-    // convert all Char's to lower
-    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
+    // convert all char's to lower
+    for (int cursor = 0; cursor < string_length(string_->string); cursor++) {
         string_->string[cursor] = tolower(string_->string[cursor]);
     }
 }
 void string_upper(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
-    // convert all Char's to upper
-    for (int cursor = 0; cursor < strlen(string_->string); cursor++) {
+    // convert all char's to upper
+    for (int cursor = 0; cursor < string_length(string_->string); cursor++) {
         string_->string[cursor] = toupper(string_->string[cursor]);
     }
 }
@@ -93,22 +101,22 @@ void string_reverse(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // reverse string
-    for (int cursor = 0; cursor <= strlen(string_->string) / 2; cursor++) {
-        string_swap((string_->string + cursor), (string_->string + (strlen(string_->string) - 1) - cursor));
+    for (int cursor = 0; cursor <= string_length(string_->string) / 2; cursor++) {
+        string_swap((string_->string + cursor), (string_->string + (string_length(string_->string) - 1) - cursor));
     }
 }
 void string_copy(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // copy data to string
-    string_->string = heap_realloc(string_->string, strlen(data) + 1);
+    string_->string = heap_realloc(string_->string, string_length(data) + 1);
     strcpy(string_->string, data);
 }
 void string_concat(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // concatenate data to string
-    string_->string = heap_realloc(string_->string, strlen(string_->string) + strlen(data) + 1);
+    string_->string = heap_realloc(string_->string, string_length(string_->string) + string_length(data) + 1);
     strcat(string_->string, data);
 }
 void string_cut(struct String* self, int begin, int end) {
@@ -149,6 +157,8 @@ void string_replace(struct String* self, int begin, int end, char* replace) {
     string_free(part_1);
     string_free(part_2);
 }
+
+// information operators
 tsize string_length(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
@@ -181,6 +191,7 @@ void string_init() {
     string_vtable->to_int = string_to_int;
     string_vtable->to_long = string_to_long;
     string_vtable->to_double = string_to_double;
+
     string_vtable->lower = string_lower;
     string_vtable->upper = string_upper;
     string_vtable->reverse = string_reverse;
@@ -188,6 +199,7 @@ void string_init() {
     string_vtable->concat = string_concat;
     string_vtable->cut = string_cut;
     string_vtable->replace = string_replace;
+
     string_vtable->length = string_length;
     string_vtable->compare = string_compare;
     string_vtable->value = string_value;
@@ -272,7 +284,7 @@ String* string_new_cut(char* value, int begin, int end) {
     return string;
 }
 String* string_new_replace(char* value, int begin, int end, char* replace) {
-    // init new string then cut
+    // init new string then replace
     String* string = string_new_printf("%s", value);
     string->vtable->replace(string, begin, end, replace);
 
@@ -281,11 +293,13 @@ String* string_new_replace(char* value, int begin, int end, char* replace) {
 
 // local string methods
 tsize string_get_length(char* value) {
+    // get char's length
     tsize result = strlen(value);
 
     return result;
 }
 int string_get_compare(char* value, char* data) {
+    // get char's compare
     int result = strcmp(value, data);
 
     return result;

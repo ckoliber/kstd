@@ -1,4 +1,4 @@
-#include <memory/low/Type.h>
+#include <low/Type.h>
 
 // vtable
 typedef struct String_VTable {
@@ -47,5 +47,5 @@ String* string_new_cut(char* value, int begin, int end);
 String* string_new_replace(char* value, int begin, int end, char* replace);
 
 // local string methods
-tsize string_get_length(char* value);
-int string_get_compare(char* value, char* data);
+tsize string_length(char* value);
+int string_compare(char* value, char* data);

@@ -1,4 +1,4 @@
-#include <memory/low/Type.h>
+#include <low/Type.h>
 
 // vtable
 typedef struct LinkedList_VTable {
@@ -12,7 +12,7 @@ typedef struct LinkedList_VTable {
 } LinkedList_VTable;
 
 typedef struct LinkedListIterator_VTable {
-    int (*hasnext)(struct LinkedListIterator* self);
+    bool (*hasnext)(struct LinkedListIterator* self);
     void* (*next)(struct LinkedListIterator* self);
 } LinkedListIterator_VTable;
 
