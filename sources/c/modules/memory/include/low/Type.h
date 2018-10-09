@@ -54,13 +54,13 @@ typedef unsigned __int64 uint_64;
 #define UINT_64_MAX _UI64_MAX
 #define UINT_64_MIN 0
 
-// (short, long)(signed, unsigned) void, bool, char, size, float, double
+// (short, long)(signed, unsigned) void, bool, char, tsize, float, double
 typedef SIZE_T tsize;
 typedef char bool;
 #define true 1
 #define false 0
 
-#else
+#elif defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <float.h>
 #include <stddef.h>
@@ -94,7 +94,7 @@ typedef uint64_t uint_64;
 #define UINT_64_MAX UINT64_MAX
 #define UINT_64_MIN 0
 
-// [const][short, long][signed, unsigned] void, bool, char, size, float, double
+// [const][short, long][signed, unsigned] void, bool, char, tsize, float, double
 typedef size_t tsize;
 typedef char bool;
 #define true 1
