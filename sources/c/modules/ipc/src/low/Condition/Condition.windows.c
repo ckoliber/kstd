@@ -15,7 +15,7 @@ struct Condition_ {
     String* name;
 
     // private data
-    void* memory;
+    HANDLE condition;
 };
 
 // vtable
