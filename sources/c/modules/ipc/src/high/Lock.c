@@ -1,8 +1,8 @@
-#include <ipc/high/Lock.h>
+#include <high/Lock.h>
 
-#include <dsa/low/String.h>
-#include <ipc/low/Mutex.h>
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
+#include <low/Mutex.h>
+#include <low/String.h>
 
 struct Lock_ {
     // self public object

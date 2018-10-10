@@ -1,12 +1,12 @@
-#include <ipc/low/Condition.h>
+#include <low/Condition.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
-#include <dsa/low/String.h>
 #include <fcntl.h>
-#include <ipc/low/Mutex.h>
-#include <local/low/Time.h>
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
+#include <low/Mutex.h>
+#include <low/String.h>
+#include <low/Time.h>
 #include <pthread.h>
 #include <sys/mman.h>
 
@@ -36,7 +36,7 @@ void condition_named_free(void* memory, char* name);
 
 // implement methods
 void* condition_anonymous_new() {
-    // alocate condition and mutex
+    // alocate mutex and cond
     void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t));
 
     // get mutex and cond address
@@ -75,7 +75,7 @@ void* condition_named_new(char* name) {
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
     if (exists_fd > 0) {
-        // not exists, create it
+        // not exists, it was created now
         close(exists_fd);
         exists = false;
     }
@@ -97,8 +97,6 @@ void* condition_named_new(char* name) {
 
     // create and init or open and increase connections
     if (!exists) {
-        *connections = 1;
-
         // init share mutex
         pthread_mutexattr_t mattr;
         pthread_mutexattr_init(&mattr);
@@ -112,6 +110,9 @@ void* condition_named_new(char* name) {
         pthread_condattr_setpshared(&cattr, 1);
         pthread_cond_init(cond, &cattr);
         pthread_condattr_destroy(&cattr);
+
+        // init share connections
+        *connections = 1;
     } else {
         *connections += 1;
     }
@@ -126,13 +127,23 @@ void condition_named_free(void* memory, char* name) {
 
     // destroy mutex and cond and share memory on close all connections
     if (connections <= 1) {
+        // destroy share mutex, cond
         pthread_mutex_destroy(mutex);
         pthread_cond_destroy(cond);
+
+        // unmap share memory
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
+
+        // unlink (it has not any connections)
         shm_unlink(name);
     } else {
+        // reduce connections
         *connections -= 1;
+
+        // unmap share memory
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
+
+        // dont unlink (it has another connections)
     }
 }
 
@@ -149,13 +160,15 @@ int condition_wait(struct Condition* self, uint_64 timeout) {
 
     // wait the pthread cond
     int result = -1;
-    if (timeout == UINT_64_MAX) {
+    if (timeout == -1) {
         // infinity
         if (pthread_cond_wait(cond, mutex) == 0) {
             result = 0;
         }
     } else {
         // timed
+
+        // get time_out
         struct timeval time_now;
         struct timespec time_out;
         gettimeofday(&time_now, NULL);
@@ -163,6 +176,8 @@ int condition_wait(struct Condition* self, uint_64 timeout) {
         time_out.tv_nsec = time_now.tv_usec * 1000;
         time_out.tv_sec += timeout / 1000;
         time_out.tv_nsec += (timeout % 1000) * 1000000;
+
+        // timed wait
         if (pthread_cond_timedwait(cond, mutex, &time_out) == 0) {
             result = 0;
         }

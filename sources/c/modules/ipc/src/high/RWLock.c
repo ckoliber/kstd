@@ -1,9 +1,9 @@
-#include <ipc/high/RWLock.h>
+#include <high/RWLock.h>
 
-#include <dsa/low/String.h>
-#include <ipc/low/Mutex.h>
-#include <local/low/Time.h>
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
+#include <low/Mutex.h>
+#include <low/String.h>
+#include <low/Time.h>
 
 struct RWLock_ {
     // self public object
@@ -129,7 +129,7 @@ void rwlock_free(RWLock* rwlock) {
     // free self
     heap_free(rwlock_);
 }
-RWLock* rwlock_new_object(char* name) {
+RWLock* rwlock_new_object(int mode, char* name) {
     struct RWLock_* rwlock_ = (struct RWLock_*)rwlock_new();
 
     // set constructor data
@@ -138,12 +138,12 @@ RWLock* rwlock_new_object(char* name) {
 
     // create internal critical mutex
     String* rwlock_critical_mutex_name = string_new_concat(name, "/rwlock_critical_mutex");
-    rwlock_->critical_mutex = mutex_new_object(0, rwlock_critical_mutex_name->vtable->value(rwlock_critical_mutex_name));
+    rwlock_->critical_mutex = mutex_new_object(mode, rwlock_critical_mutex_name->vtable->value(rwlock_critical_mutex_name));
     string_free(rwlock_critical_mutex_name);
 
     // create internal write mutex
     String* rwlock_write_mutex_name = string_new_concat(name, "/rwlock_write_mutex");
-    rwlock_->write_mutex = mutex_new_object(0, rwlock_write_mutex_name->vtable->value(rwlock_write_mutex_name));
+    rwlock_->write_mutex = mutex_new_object(mode, rwlock_write_mutex_name->vtable->value(rwlock_write_mutex_name));
     string_free(rwlock_write_mutex_name);
 
     return (RWLock*)rwlock_;

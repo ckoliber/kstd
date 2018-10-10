@@ -29,8 +29,8 @@ struct Message_ {
 Message_VTable* message_vtable;
 
 // link methods
-int message_enqueue(struct Message* self, void* item, uint64_t timeout);
-int message_dequeue(struct Message* self, void* item, uint64_t timeout);
+int message_enqueue(struct Message* self, void* item, uint_64 timeout);
+int message_dequeue(struct Message* self, void* item, uint_64 timeout);
 
 // local methods
 void* message_anonymous_new(int max, tsize item);
@@ -111,7 +111,7 @@ void message_named_free(void* memory, char* name, int max, tsize item) {
 }
 
 // vtable operators
-int message_enqueue(struct Message* self, void* item, uint64_t timeout) {
+int message_enqueue(struct Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get start and end and queue address
@@ -131,7 +131,7 @@ int message_enqueue(struct Message* self, void* item, uint64_t timeout) {
 
     return -1;
 }
-int message_dequeue(struct Message* self, void* item, uint64_t timeout) {
+int message_dequeue(struct Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get start and end and queue address

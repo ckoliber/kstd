@@ -1,4 +1,4 @@
-#include <memory/low/Type.h>
+#include <low/Type.h>
 
 // vtable
 typedef struct RWLock_VTable {
@@ -23,4 +23,4 @@ RWLock* rwlock_new();
 void rwlock_free(RWLock* rwlock);
 
 // new rwlock
-RWLock* rwlock_new_object(char* name);
+RWLock* rwlock_new_object(int mode, char* name);
