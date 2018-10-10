@@ -3,9 +3,9 @@
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
 #include <fcntl.h>
+#include <low/Date.h>
 #include <low/Heap.h>
 #include <low/String.h>
-#include <low/Time.h>
 #include <pthread.h>
 #include <sys/mman.h>
 
@@ -174,10 +174,10 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
         }
     } else {
         // timed
-        uint_64 time = time_epochmillis();
+        uint_64 time = date_get_epoch();
 
         // try lock until timeout
-        while ((time_epochmillis() - time) <= timeout) {
+        while ((date_get_epoch() - time) <= timeout) {
             // try
             if (pthread_mutex_trylock(mutex) == 0) {
                 return 0;

@@ -1,9 +1,9 @@
 #include <high/RWLock.h>
 
+#include <low/Date.h>
 #include <low/Heap.h>
 #include <low/Mutex.h>
 #include <low/String.h>
-#include <low/Time.h>
 
 struct RWLock_ {
     // self public object
@@ -31,7 +31,7 @@ int rwlock_read_lock(struct RWLock* self, uint_64 timeout) {
 
     // get time and result
     int result = -1;
-    uint_64 time = time_epochmillis();
+    uint_64 time = date_get_epoch();
 
     // critical begin
     if (rwlock_->critical_mutex->vtable->acquire(rwlock_->critical_mutex, timeout) == 0) {
@@ -41,7 +41,7 @@ int rwlock_read_lock(struct RWLock* self, uint_64 timeout) {
         // check readers count
         if (rwlock_->readers_count == 1) {
             // get new timeout and lock writer
-            timeout -= (time_epochmillis() - time);
+            timeout -= (date_get_epoch() - time);
             result = rwlock_->write_mutex->vtable->acquire(rwlock_->write_mutex, timeout);
         } else {
             result = 0;

@@ -1,4 +1,4 @@
-#include <processor/low/Thread.h>
+#include <low/Thread.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 

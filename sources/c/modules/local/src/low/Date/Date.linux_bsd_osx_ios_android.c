@@ -4,11 +4,16 @@
 
 #include <stdlib.h>
 #include <sys/time.h>
+#include <time.h>
 
-uint_64 time_epochmillis() {
+// static
+uint_64 date_get_epoch() {
+    // get epoch microtime
     struct timeval time;
     gettimeofday(&time, NULL);
-    return time.tv_sec * 1000 + time.tv_usec / 1000;
+
+    // get epoch millis time
+    return time.tv_sec * 1e6 + time.tv_usec;
 }
 
 #endif
