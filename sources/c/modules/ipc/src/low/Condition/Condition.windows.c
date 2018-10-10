@@ -31,6 +31,7 @@ int condition_wait(struct Condition* self, uint_64 timeout) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
     // wait the win32 semaphore
+    SignalObjectAndWait();
 
     return -1;
 }
