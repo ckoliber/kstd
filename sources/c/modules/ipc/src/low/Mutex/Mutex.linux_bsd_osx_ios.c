@@ -1,11 +1,11 @@
-#include <ipc/low/Mutex.h>
+#include <low/Mutex.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
-#include <dsa/low/String.h>
 #include <fcntl.h>
-#include <local/low/Time.h>
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
+#include <low/String.h>
+#include <low/Time.h>
 #include <pthread.h>
 #include <sys/mman.h>
 
@@ -78,7 +78,7 @@ void* mutex_named_new(int mode, char* name) {
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
     if (exists_fd > 0) {
-        // not exists, create it
+        // not exists, it was created now
         close(exists_fd);
         exists = false;
     }
@@ -99,8 +99,6 @@ void* mutex_named_new(int mode, char* name) {
 
     // create and init mutex or open and increase connections
     if (!exists) {
-        *connections = 1;
-
         // init share mutex
         pthread_mutexattr_t mattr;
         pthread_mutexattr_init(&mattr);
@@ -121,6 +119,9 @@ void* mutex_named_new(int mode, char* name) {
 
         pthread_mutex_init(mutex, &mattr);
         pthread_mutexattr_destroy(&mattr);
+
+        // init share connections
+        *connections = 1;
     } else {
         *connections += 1;
     }
@@ -134,12 +135,22 @@ void mutex_named_free(void* memory, char* name) {
 
     // destroy mutex and share memory on close all connections
     if (connections <= 1) {
+        // destroy share mutex
         pthread_mutex_destroy(mutex);
+
+        // unmap share memory
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(int));
+
+        // unlink (it has not any connections)
         shm_unlink(name);
     } else {
+        // reduce connections
         *connections -= 1;
+
+        // unmap share memory
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(int));
+
+        // dont unlink (it has another connections)
     }
 }
 
@@ -151,7 +162,7 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
     pthread_mutex_t* mutex = mutex_->memory;
 
     // aquire the pthread mutex
-    if (timeout == 0) {
+    if (timeout == UINT_64_MIN) {
         // try
         if (pthread_mutex_trylock(mutex) == 0) {
             return 0;

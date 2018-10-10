@@ -160,7 +160,7 @@ int condition_wait(struct Condition* self, uint_64 timeout) {
 
     // wait the pthread cond
     int result = -1;
-    if (timeout == -1) {
+    if (timeout == UINT_64_MAX) {
         // infinity
         if (pthread_cond_wait(cond, mutex) == 0) {
             result = 0;

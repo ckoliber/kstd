@@ -1,13 +1,13 @@
-#include <ipc/low/Semaphore.h>
+#include <low/Semaphore.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
-#include <dsa/low/String.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <ipc/low/Mutex.h>
-#include <local/low/Time.h>
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
+#include <low/Mutex.h>
+#include <low/String.h>
+#include <low/Time.h>
 #include <pthread.h>
 #include <sys/mman.h>
 
@@ -83,7 +83,7 @@ void* semaphore_named_new(char* name) {
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
     if (exists_fd > 0) {
-        // not exists, create it
+        // not exists, it was created now
         close(exists_fd);
         exists = false;
     }
@@ -106,8 +106,6 @@ void* semaphore_named_new(char* name) {
 
     // create and init semaphore or open and increase connections
     if (!exists) {
-        *connections = 1;
-
         // init share mutex
         pthread_mutexattr_t mattr;
         pthread_mutexattr_init(&mattr);
@@ -124,6 +122,9 @@ void* semaphore_named_new(char* name) {
 
         // init share svalue
         *svalue = 0;
+
+        // init share connections
+        *connections = 1;
     } else {
         *connections += 1;
     }
@@ -139,13 +140,23 @@ void semaphore_named_free(void* memory, char* name) {
 
     // destroy mutex and cond and share memory on close all connections
     if (*connections <= 1) {
+        // destroy share mutex, cond
         pthread_mutex_destroy(mutex);
         pthread_cond_destroy(cond);
+
+        // unmap share memory
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int) + sizeof(int));
+
+        // unlink (it has not any connections)
         shm_unlink(name);
     } else {
+        // reduce connections
         *connections -= 1;
+
+        // unmap share memory
         munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int) + sizeof(int));
+
+        // dont unlink (it has another connections)
     }
 }
 
@@ -162,13 +173,12 @@ int semaphore_init(struct Semaphore* self, int value) {
     pthread_mutex_lock(mutex);
 
     // init semaphore value
-    int result = 0;
     *svalue = value;
 
     // release the pthread mutex
     pthread_mutex_unlock(mutex);
 
-    return result;
+    return 0;
 }
 int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
@@ -192,6 +202,8 @@ int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
         result = 0;
     } else {
         // timed
+
+        // get time_out
         bool timedout = false;
         struct timeval time_now;
         struct timespec time_out;
@@ -200,12 +212,16 @@ int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
         time_out.tv_nsec = time_now.tv_usec * 1000;
         time_out.tv_sec += timeout / 1000;
         time_out.tv_nsec += (timeout % 1000) * 1000000;
+
+        // timed wait
         while (*svalue == 0) {
             if (pthread_cond_timedwait(cond, mutex, &time_out) == ETIMEDOUT) {
                 timedout = true;
                 break;
             }
         }
+
+        // check timeouted
         if (!timedout) {
             *svalue--;
             result = 0;
