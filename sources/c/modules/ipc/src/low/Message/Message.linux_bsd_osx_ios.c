@@ -1,13 +1,13 @@
-#include <ipc/low/Message.h>
+#include <low/Message.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
-#include <dsa/low/String.h>
 #include <fcntl.h>
-#include <ipc/low/Mutex.h>
-#include <ipc/low/Semaphore.h>
-#include <local/low/Time.h>
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
+#include <low/Mutex.h>
+#include <low/Semaphore.h>
+#include <low/String.h>
+#include <low/Time.h>
 #include <sys/mman.h>
 
 struct Message_ {
@@ -46,7 +46,7 @@ void* message_anonymous_new(int max, tsize item) {
     // get start and end and queue address
     int* start = result;
     int* end = result + sizeof(int);
-    int* queue = result + sizeof(int) + sizeof(int);
+    void* queue = result + sizeof(int) + sizeof(int);
 
     // init start and end
     *start = 0;
@@ -62,7 +62,7 @@ void* message_named_new(char* name, int max, tsize item) {
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
     if (exists_fd > 0) {
-        // not exists, create it
+        // not exists, it was created now
         close(exists_fd);
         exists = false;
     }
@@ -80,16 +80,17 @@ void* message_named_new(char* name, int max, tsize item) {
     // get start and end and queue and connections address
     int* start = result;
     int* end = result + sizeof(int);
-    int* queue = result + sizeof(int) + sizeof(int);
+    void* queue = result + sizeof(int) + sizeof(int);
     int* connections = result + sizeof(int) + sizeof(int) + (item * max);
 
     // create and init start and end or open and increase connections
     if (!exists) {
-        *connections = 1;
-
         // init share start and end
         *start = 0;
         *end = 0;
+
+        // init share connections
+        *connections = 1;
     } else {
         *connections += 1;
     }
@@ -102,11 +103,19 @@ void message_named_free(void* memory, char* name, int max, tsize item) {
 
     // destroy share memory on close all connections
     if (connections <= 1) {
+        // unmap share memory
         munmap(memory, sizeof(int) + sizeof(int) + (item * max) + sizeof(int));
+
+        // unlink (it has not any connections)
         shm_unlink(name);
     } else {
+        // reduce connections
         *connections -= 1;
+
+        // unmap share memory
         munmap(memory, sizeof(int) + sizeof(int) + (item * max) + sizeof(int));
+
+        // dont unlink (it has another connections)
     }
 }
 
@@ -228,16 +237,16 @@ Message* message_new_object(char* name, int max, tsize item) {
     // set private data
     if (name != NULL) {
         // create internal full semaphore
-        String* full_semaphore_name = string_new_concat(name, "/message/full_semaphore");
-        message_->full_semaphore = semaphore_new_object(full_semaphore_name->vtable->value(full_semaphore_name));
+        String* message_full_semaphore_name = string_new_concat(name, "/message_full_semaphore");
+        message_->full_semaphore = semaphore_new_object(message_full_semaphore_name->vtable->value(message_full_semaphore_name));
         message_->full_semaphore->vtable->init(message_->full_semaphore, max);
-        string_free(full_semaphore_name);
+        string_free(message_full_semaphore_name);
 
         // create internal empty semaphore
-        String* empty_semaphore_name = string_new_concat(name, "/message/empty_semaphore");
-        message_->empty_semaphore = semaphore_new_object(empty_semaphore_name->vtable->value(empty_semaphore_name));
+        String* message_empty_semaphore_name = string_new_concat(name, "/message_empty_semaphore");
+        message_->empty_semaphore = semaphore_new_object(message_empty_semaphore_name->vtable->value(message_empty_semaphore_name));
         message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
-        string_free(empty_semaphore_name);
+        string_free(message_empty_semaphore_name);
 
         // try acquire critical mutex
         if (critical != NULL) {
