@@ -162,12 +162,7 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
     pthread_mutex_t* mutex = mutex_->memory;
 
     // aquire the pthread mutex
-    if (timeout == UINT_64_MIN) {
-        // try
-        if (pthread_mutex_trylock(mutex) == 0) {
-            return 0;
-        }
-    } else if (timeout == UINT_64_MAX) {
+    if (timeout == UINT_64_MAX) {
         // infinity
         if (pthread_mutex_lock(mutex) == 0) {
             return 0;
@@ -177,12 +172,12 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
         uint_64 time = date_get_epoch();
 
         // try lock until timeout
-        while ((date_get_epoch() - time) <= timeout) {
+        do {
             // try
             if (pthread_mutex_trylock(mutex) == 0) {
                 return 0;
             }
-        }
+        } while ((date_get_epoch() - time) <= timeout);
     }
 
     return -1;
