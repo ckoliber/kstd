@@ -124,7 +124,9 @@ Semaphore* semaphore_new_object(char* name) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
 
     // set constructor data
-    semaphore_->name = string_new_copy(name);
+    if (name != NULL) {
+        semaphore_->name = string_new_printf("%s_semaphore", name);
+    }
 
     // set private data
     semaphore_->semaphore = CreateSemaphoreA(NULL, 0, UINT_32_MAX, name);

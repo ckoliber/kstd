@@ -81,23 +81,7 @@ void mutex_free(Mutex* mutex) {
 
     // free private data
     if (mutex_->mutex != INVALID_HANDLE_VALUE) {
-        if (mutex_->name != NULL) {
-            // try acquire critical mutex
-            if (critical != NULL) {
-                critical->vtable->acquire(critical, UINT_64_MAX);
-            }
-
-            // close internal
-            CloseHandle(mutex_->mutex);
-
-            // try release critical mutex
-            if (critical != NULL) {
-                critical->vtable->release(critical);
-            }
-        } else {
-            // destroy internal mutex
-            CloseHandle(mutex_->mutex);
-        }
+        CloseHandle(mutex_->mutex);
     }
 
     // free constructor data
@@ -117,15 +101,7 @@ Mutex* mutex_new_object(int mode, char* name) {
     }
 
     // set private data
-    switch (mode) {
-        case 0:
-            mutex_->mutex = CreateMutexA(NULL, FALSE, name);
-            break;
-        case 1:
-            break;
-        case 2:
-            break;
-    }
+    mutex_->mutex = CreateMutexA(NULL, FALSE, name);
 
     return (Mutex*)mutex_;
 }
