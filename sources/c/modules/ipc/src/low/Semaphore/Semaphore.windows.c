@@ -22,25 +22,12 @@ struct Semaphore_ {
 Semaphore_VTable* semaphore_vtable;
 
 // link methods
-int semaphore_init(struct Semaphore* self, int value);
 int semaphore_wait(struct Semaphore* self, uint_64 timeout);
 int semaphore_post(struct Semaphore* self);
 int semaphore_get(struct Semaphore* self);
 
 // implement methods
 // vtable operators
-int semaphore_init(struct Semaphore* self, int value) {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
-
-    // reopen semaphore using new value
-    CloseHandle(semaphore_->semaphore);
-    semaphore_->semaphore = CreateSemaphoreA(NULL, value, UINT_32_MAX, semaphore_->name->vtable->value(semaphore_->name));
-    if (semaphore_->semaphore != INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-
-    return -1;
-}
 int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
@@ -120,7 +107,7 @@ void semaphore_free(Semaphore* semaphore) {
     // free self
     heap_free(semaphore_);
 }
-Semaphore* semaphore_new_object(char* name) {
+Semaphore* semaphore_new_object(char* name, int value) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
 
     // set constructor data
@@ -129,7 +116,11 @@ Semaphore* semaphore_new_object(char* name) {
     }
 
     // set private data
-    semaphore_->semaphore = CreateSemaphoreA(NULL, 0, UINT_32_MAX, name);
+    semaphore_->semaphore = CreateSemaphoreA(
+        NULL,
+        value,
+        UINT_32_MAX,
+        semaphore_->name->vtable->value(semaphore_->name));
 
     return (Semaphore*)semaphore_;
 }

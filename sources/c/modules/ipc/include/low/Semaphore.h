@@ -2,7 +2,6 @@
 
 // vtable
 typedef struct Semaphore_VTable {
-    int (*init)(struct Semaphore* self, int value);
     int (*wait)(struct Semaphore* self, uint_64 timeout);
     int (*post)(struct Semaphore* self);
     int (*get)(struct Semaphore* self);
@@ -23,4 +22,4 @@ Semaphore* semaphore_new();
 void semaphore_free(Semaphore* semaphore);
 
 // new semaphore
-Semaphore* semaphore_new_object(char* name);
+Semaphore* semaphore_new_object(char* name, int value);

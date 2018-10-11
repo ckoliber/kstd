@@ -348,13 +348,11 @@ Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(void*, void*)) 
     }
     if (mode == 2) {
         // init empty semaphore
-        dequeue_->empty_semaphore = semaphore_new_object(NULL);
-        dequeue_->empty_semaphore->vtable->init(dequeue_->empty_semaphore, 0);
+        dequeue_->empty_semaphore = semaphore_new_object(NULL, 0);
 
         // init full semaphore
         if (max > 0) {
-            dequeue_->full_semaphore = semaphore_new_object(NULL);
-            dequeue_->full_semaphore->vtable->init(dequeue_->full_semaphore, max);
+            dequeue_->full_semaphore = semaphore_new_object(NULL, max);
         }
     }
 

@@ -238,14 +238,12 @@ Message* message_new_object(char* name, int max, tsize item) {
     if (name != NULL) {
         // create internal full semaphore
         String* message_full_name = string_new_printf("%s_message_full", name);
-        message_->full_semaphore = semaphore_new_object(message_full_name->vtable->value(message_full_name));
-        message_->full_semaphore->vtable->init(message_->full_semaphore, max);
+        message_->full_semaphore = semaphore_new_object(message_full_name->vtable->value(message_full_name), max);
         string_free(message_full_name);
 
         // create internal empty semaphore
         String* message_empty_name = string_new_concat("%s_message_empty", name);
-        message_->empty_semaphore = semaphore_new_object(message_empty_name->vtable->value(message_empty_name));
-        message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
+        message_->empty_semaphore = semaphore_new_object(message_empty_name->vtable->value(message_empty_name), 0);
         string_free(message_empty_name);
 
         // try acquire critical mutex
@@ -262,12 +260,10 @@ Message* message_new_object(char* name, int max, tsize item) {
         }
     } else {
         // create internal full semaphore
-        message_->full_semaphore = semaphore_new_object(NULL);
-        message_->full_semaphore->vtable->init(message_->full_semaphore, max);
+        message_->full_semaphore = semaphore_new_object(NULL, max);
 
         // create internal empty semaphore
-        message_->empty_semaphore = semaphore_new_object(NULL);
-        message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
+        message_->empty_semaphore = semaphore_new_object(NULL, 0);
 
         // create internal message queue
         message_->memory = message_anonymous_new(max, item);

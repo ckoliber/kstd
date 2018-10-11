@@ -26,19 +26,18 @@ struct Semaphore_ {
 Semaphore_VTable* semaphore_vtable;
 
 // link methods
-int semaphore_init(struct Semaphore* self, int value);
 int semaphore_wait(struct Semaphore* self, uint_64 timeout);
 int semaphore_post(struct Semaphore* self);
 int semaphore_get(struct Semaphore* self);
 
 // local methods
-void* semaphore_anonymous_new();
+void* semaphore_anonymous_new(int value);
 void semaphore_anonymous_free(void* memory);
-void* semaphore_named_new(char* name);
+void* semaphore_named_new(char* name, int value);
 void semaphore_named_free(void* memory, char* name);
 
 // implement methods
-void* semaphore_anonymous_new() {
+void* semaphore_anonymous_new(int value) {
     // alocate mutex and cond and svalue
     void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
 
@@ -62,7 +61,7 @@ void* semaphore_anonymous_new() {
     pthread_condattr_destroy(&cattr);
 
     // init svalue
-    *svalue = 0;
+    *svalue = value;
 
     return result;
 }
@@ -78,7 +77,7 @@ void semaphore_anonymous_free(void* memory) {
 
     heap_free(memory);
 }
-void* semaphore_named_new(char* name) {
+void* semaphore_named_new(char* name, int value) {
     // check share memory exists
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
@@ -121,7 +120,7 @@ void* semaphore_named_new(char* name) {
         pthread_condattr_destroy(&cattr);
 
         // init share svalue
-        *svalue = 0;
+        *svalue = value;
 
         // init share connections
         *connections = 1;
@@ -161,25 +160,6 @@ void semaphore_named_free(void* memory, char* name) {
 }
 
 // vtable operators
-int semaphore_init(struct Semaphore* self, int value) {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
-
-    // get mutex and cond and svalue address
-    pthread_mutex_t* mutex = semaphore_->memory;
-    pthread_cond_t* cond = semaphore_->memory + sizeof(pthread_mutex_t);
-    int* svalue = semaphore_->memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
-
-    // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
-
-    // init semaphore value
-    *svalue = value;
-
-    // release the pthread mutex
-    pthread_mutex_unlock(mutex);
-
-    return 0;
-}
 int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
@@ -331,7 +311,7 @@ void semaphore_free(Semaphore* semaphore) {
     // free self
     heap_free(semaphore_);
 }
-Semaphore* semaphore_new_object(char* name) {
+Semaphore* semaphore_new_object(char* name, int value) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
 
     // set constructor data
@@ -347,7 +327,7 @@ Semaphore* semaphore_new_object(char* name) {
         }
 
         // create and init or open internal share mutex and cond and svalue
-        semaphore_->memory = semaphore_named_new(semaphore_->name->vtable->value(semaphore_->name));
+        semaphore_->memory = semaphore_named_new(semaphore_->name->vtable->value(semaphore_->name), value);
 
         // try release critical mutex
         if (critical != NULL) {
@@ -355,7 +335,7 @@ Semaphore* semaphore_new_object(char* name) {
         }
     } else {
         // create internal mutex and cond and svalue
-        semaphore_->memory = semaphore_anonymous_new();
+        semaphore_->memory = semaphore_anonymous_new(value);
     }
 
     return (Semaphore*)semaphore_;

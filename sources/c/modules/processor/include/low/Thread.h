@@ -24,3 +24,6 @@ void thread_free(Thread* thread);
 
 // new thread
 Thread* thread_new_object(tsize stack);
+
+// local string methods
+int thread_id();

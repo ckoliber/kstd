@@ -15,7 +15,7 @@ typedef struct Mutex {
 void mutex_init();
 
 // new raw mutex
-Mutex* mutex_new();
+Mutex* mutex_new(int mode);
 
 // free raw mutex
 void mutex_free(Mutex* mutex);

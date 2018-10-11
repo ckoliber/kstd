@@ -203,7 +203,7 @@ void mutex_init() {
     mutex_vtable->acquire = mutex_acquire;
     mutex_vtable->release = mutex_release;
 }
-Mutex* mutex_new() {
+Mutex* mutex_new(int mode) {
     struct Mutex_* mutex_ = heap_alloc(sizeof(struct Mutex_));
 
     // set vtable
