@@ -65,7 +65,7 @@
 // #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_WINDOWS)
 
 // void app_init() {
-//     critical = mutex_new(1, "/critical");
+//     critical = mutex_new_object(1, "/critical");
 
 //     modules_init();
 // }

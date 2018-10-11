@@ -336,7 +336,7 @@ Semaphore* semaphore_new_object(char* name) {
 
     // set constructor data
     if (name != NULL) {
-        semaphore_->name = string_new_concat(name, "/semaphore");
+        semaphore_->name = string_new_printf("%s_semaphore", name);
     }
 
     // set private data

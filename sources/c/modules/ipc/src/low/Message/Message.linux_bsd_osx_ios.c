@@ -229,7 +229,7 @@ Message* message_new_object(char* name, int max, tsize item) {
 
     // set constructor data
     if (name != NULL) {
-        message_->name = string_new_concat(name, "/message");
+        message_->name = string_new_printf("%s_message", name);
     }
     message_->max = max;
     message_->item = item;
@@ -237,16 +237,16 @@ Message* message_new_object(char* name, int max, tsize item) {
     // set private data
     if (name != NULL) {
         // create internal full semaphore
-        String* message_full_semaphore_name = string_new_concat(name, "/message_full_semaphore");
-        message_->full_semaphore = semaphore_new_object(message_full_semaphore_name->vtable->value(message_full_semaphore_name));
+        String* message_full_name = string_new_printf("%s_message_full", name);
+        message_->full_semaphore = semaphore_new_object(message_full_name->vtable->value(message_full_name));
         message_->full_semaphore->vtable->init(message_->full_semaphore, max);
-        string_free(message_full_semaphore_name);
+        string_free(message_full_name);
 
         // create internal empty semaphore
-        String* message_empty_semaphore_name = string_new_concat(name, "/message_empty_semaphore");
-        message_->empty_semaphore = semaphore_new_object(message_empty_semaphore_name->vtable->value(message_empty_semaphore_name));
+        String* message_empty_name = string_new_concat("%s_message_empty", name);
+        message_->empty_semaphore = semaphore_new_object(message_empty_name->vtable->value(message_empty_name));
         message_->empty_semaphore->vtable->init(message_->empty_semaphore, 0);
-        string_free(message_empty_semaphore_name);
+        string_free(message_empty_name);
 
         // try acquire critical mutex
         if (critical != NULL) {

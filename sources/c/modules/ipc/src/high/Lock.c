@@ -77,9 +77,10 @@ Lock* lock_new_object(int mode, char* name) {
     // set constructor data
 
     // set private data
-    String* lock_mutex_name = string_new_concat(name, "/lock_mutex");
-    lock_->mutex = mutex_new_object(mode, lock_mutex_name->vtable->value(lock_mutex_name));
-    string_free(lock_mutex_name);
+    // create internal mutex
+    String* lock_name = string_new_printf("%s_lock", name);
+    lock_->mutex = mutex_new_object(mode, lock_name->vtable->value(lock_name));
+    string_free(lock_name);
 
     return (Lock*)lock_;
 }

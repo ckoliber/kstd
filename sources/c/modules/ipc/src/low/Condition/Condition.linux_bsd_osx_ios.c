@@ -277,7 +277,7 @@ Condition* condition_new_object(char* name) {
 
     // set constructor data
     if (name != NULL) {
-        condition_->name = string_new_concat(name, "/condition");
+        condition_->name = string_new_prinf("%s_condition", name);
     }
 
     // set private data

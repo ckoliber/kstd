@@ -11,6 +11,7 @@ struct Mutex_ {
     Mutex self;
 
     // constructor data
+    String* name;
 
     // private data
     HANDLE mutex;
@@ -68,6 +69,7 @@ Mutex* mutex_new() {
     mutex_->self.vtable = mutex_vtable;
 
     // set constructor data
+    mutex_->name = NULL;
 
     // set private data
     mutex_->mutex = INVALID_HANDLE_VALUE;
@@ -79,10 +81,29 @@ void mutex_free(Mutex* mutex) {
 
     // free private data
     if (mutex_->mutex != INVALID_HANDLE_VALUE) {
-        CloseHandle(mutex_->mutex);
+        if (mutex_->name != NULL) {
+            // try acquire critical mutex
+            if (critical != NULL) {
+                critical->vtable->acquire(critical, UINT_64_MAX);
+            }
+
+            // close internal
+            CloseHandle(mutex_->mutex);
+
+            // try release critical mutex
+            if (critical != NULL) {
+                critical->vtable->release(critical);
+            }
+        } else {
+            // destroy internal mutex
+            CloseHandle(mutex_->mutex);
+        }
     }
 
     // free constructor data
+    if (mutex_->name != NULL) {
+        string_free(mutex_->name);
+    }
 
     // free self
     heap_free(mutex_);
@@ -91,9 +112,20 @@ Mutex* mutex_new_object(int mode, char* name) {
     struct Mutex_* mutex_ = (struct Mutex_*)mutex_new();
 
     // set constructor data
+    if (name != NULL) {
+        mutex_->name = string_new_printf("%s_mutex", name);
+    }
 
     // set private data
-    mutex_->mutex = CreateMutexA(NULL, FALSE, name);
+    switch (mode) {
+        case 0:
+            mutex_->mutex = CreateMutexA(NULL, FALSE, name);
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+    }
 
     return (Mutex*)mutex_;
 }

@@ -137,14 +137,14 @@ RWLock* rwlock_new_object(int mode, char* name) {
     // set private data
 
     // create internal critical mutex
-    String* rwlock_critical_mutex_name = string_new_concat(name, "/rwlock_critical_mutex");
-    rwlock_->critical_mutex = mutex_new_object(mode, rwlock_critical_mutex_name->vtable->value(rwlock_critical_mutex_name));
-    string_free(rwlock_critical_mutex_name);
+    String* rwlock_critical_name = string_new_printf("%s_rwlock_critical", name);
+    rwlock_->critical_mutex = mutex_new_object(mode, rwlock_critical_name->vtable->value(rwlock_critical_name));
+    string_free(rwlock_critical_name);
 
     // create internal write mutex
-    String* rwlock_write_mutex_name = string_new_concat(name, "/rwlock_write_mutex");
-    rwlock_->write_mutex = mutex_new_object(mode, rwlock_write_mutex_name->vtable->value(rwlock_write_mutex_name));
-    string_free(rwlock_write_mutex_name);
+    String* rwlock_write_name = string_new_concat("%s_rwlock_write", name);
+    rwlock_->write_mutex = mutex_new_object(mode, rwlock_write_name->vtable->value(rwlock_write_name));
+    string_free(rwlock_write_name);
 
     return (RWLock*)rwlock_;
 }

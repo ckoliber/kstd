@@ -254,7 +254,7 @@ Mutex* mutex_new_object(int mode, char* name) {
 
     // set constructor data
     if (name != NULL) {
-        mutex_->name = string_new_concat(name, "/mutex");
+        mutex_->name = string_new_printf("%s_mutex", name);
     }
 
     // set private data
