@@ -5,6 +5,7 @@
 #include <low/Date.h>
 #include <low/Heap.h>
 #include <low/Mutex.h>
+#include <low/Semaphore.h>
 #include <low/String.h>
 
 struct Condition_ {
@@ -15,6 +16,10 @@ struct Condition_ {
     String* name;
 
     // private data
+    void* memory;
+    HANDLE memory_handle;
+    Mutex* critical_mutex;
+    Semaphore* sleep_semaphore;
 };
 
 // vtable
@@ -27,190 +32,139 @@ int condition_signal(struct Condition* self, int count);
 // local methods
 void* condition_anonymous_new();
 void condition_anonymous_free(void* memory);
-void* condition_named_new(char* name);
-void condition_named_free(void* memory, char* name);
+void* condition_named_new(char* name, HANDLE* memory_handle);
+void condition_named_free(void* memory, HANDLE memory_handle);
 
 // implement methods
 void* condition_anonymous_new() {
-    // alocate mutex and cond
-    void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t));
+    // alocate sleepers
+    void* result = heap_alloc(sizeof(int));
 
-    // get mutex and cond address
-    pthread_mutex_t* mutex = result;
-    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
+    // get sleepers address
+    int* sleepers = result;
 
-    // init mutex
-    pthread_mutexattr_t mattr;
-    pthread_mutexattr_init(&mattr);
-    pthread_mutexattr_setpshared(&mattr, 0);
-    pthread_mutex_init(mutex, &mattr);
-    pthread_mutexattr_destroy(&mattr);
-
-    // init cond
-    pthread_condattr_t cattr;
-    pthread_condattr_init(&cattr);
-    pthread_condattr_setpshared(&cattr, 0);
-    pthread_cond_init(cond, &cattr);
-    pthread_condattr_destroy(&cattr);
+    // init sleepers
+    *sleepers = 0;
 
     return result;
 }
 void condition_anonymous_free(void* memory) {
-    // get mutex and cond address
-    pthread_mutex_t* mutex = memory;
-    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
-
-    // destroy internal mutex
-    pthread_mutex_destroy(mutex);
-    pthread_cond_destroy(cond);
-
     heap_free(memory);
 }
-void* condition_named_new(char* name) {
+void* condition_named_new(char* name, HANDLE* memory_handle) {
     // check share memory exists
-    bool exists = true;
-    int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
-    if (exists_fd > 0) {
-        // not exists, it was created now
-        close(exists_fd);
-        exists = false;
+    bool exists = false;
+    HANDLE exists_handle = OpenFileMappingA(INVALID_HANDLE_VALUE, FALSE, name);
+    if (exists_handle != INVALID_HANDLE_VALUE) {
+        // exists, it was created before
+        CloseHandle(exists_handle);
+        exists = true;
     }
 
-    // alocate share mutex and cond and connection
-    int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
-    void* result = mmap(NULL, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
-    close(fd);
+    // allocate share sleepers
+    HANDLE handle = CreateFileMappingA(
+        INVALID_HANDLE_VALUE,
+        NULL,
+        PAGE_EXECUTE_READWRITE,
+        0,
+        0,
+        name);
+    void* result = MapViewOfFile(
+        handle,
+        FILE_MAP_ALL_ACCESS,
+        0,
+        0,
+        sizeof(int));
 
     // check error
-    if (result == NULL || result == MAP_FAILED) {
+    if (result == NULL) {
+        CloseHandle(handle);
         return NULL;
+    } else {
+        *memory_handle = handle;
     }
 
-    // get mutex and cond and connections address
-    pthread_mutex_t* mutex = result;
-    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
-    int* connections = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
+    // get sleepers
+    int* sleepers = result;
 
-    // create and init or open and increase connections
+    // create and init sleepers or open
     if (!exists) {
-        // init share mutex
-        pthread_mutexattr_t mattr;
-        pthread_mutexattr_init(&mattr);
-        pthread_mutexattr_setpshared(&mattr, 1);
-        pthread_mutex_init(mutex, &mattr);
-        pthread_mutexattr_destroy(&mattr);
-
-        // init share cond
-        pthread_condattr_t cattr;
-        pthread_condattr_init(&cattr);
-        pthread_condattr_setpshared(&cattr, 1);
-        pthread_cond_init(cond, &cattr);
-        pthread_condattr_destroy(&cattr);
-
-        // init share connections
-        *connections = 1;
-    } else {
-        *connections += 1;
+        // init share sleepers
+        *sleepers = 0;
     }
 
     return result;
 }
-void condition_named_free(void* memory, char* name) {
-    // get mutex and cond and connections address
-    pthread_mutex_t* mutex = memory;
-    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
-    int* connections = memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
+void condition_named_free(void* memory, HANDLE memory_handle) {
+    // unmap share memory
+    UnmapViewOfFile(memory);
 
-    // destroy mutex and cond and share memory on close all connections
-    if (connections <= 1) {
-        // destroy share mutex, cond
-        pthread_mutex_destroy(mutex);
-        pthread_cond_destroy(cond);
-
-        // unmap share memory
-        munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
-
-        // unlink (it has not any connections)
-        shm_unlink(name);
-    } else {
-        // reduce connections
-        *connections -= 1;
-
-        // unmap share memory
-        munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
-
-        // dont unlink (it has another connections)
-    }
+    // close share memory
+    CloseHandle(memory_handle);
 }
 
 // vtable operators
 int condition_wait(struct Condition* self, uint_64 timeout) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
-    // get mutex and cond address
-    pthread_mutex_t* mutex = condition_->memory;
-    pthread_cond_t* cond = condition_->memory + sizeof(pthread_mutex_t);
+    // get sleepers address
+    int* sleepers = condition_->memory;
 
-    // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
+    // aquire the critical mutex
+    condition_->critical_mutex->vtable->acquire(condition_->critical_mutex, UINT_64_MAX);
 
-    // wait the pthread cond
-    int result = -1;
-    if (timeout == UINT_64_MAX) {
-        // infinity
-        if (pthread_cond_wait(cond, mutex) == 0) {
-            result = 0;
-        }
-    } else {
-        // timed
+    // critical section
+    *sleepers++;
 
-        // get time_out
-        struct timeval time_now;
-        struct timespec time_out;
-        gettimeofday(&time_now, NULL);
-        time_out.tv_sec = time_now.tv_sec;
-        time_out.tv_nsec = time_now.tv_usec * 1000;
-        time_out.tv_sec += timeout / 1000;
-        time_out.tv_nsec += (timeout % 1000) * 1000000;
+    // release the critical mutex
+    condition_->critical_mutex->vtable->release(condition_->critical_mutex);
 
-        // timed wait
-        if (pthread_cond_timedwait(cond, mutex, &time_out) == 0) {
-            result = 0;
-        }
+    // goto sleep wait
+    if (condition_->sleep_semaphore->vtable->wait(condition_->sleep_semaphore, timeout) == 0) {
+        return 0;
     }
 
-    // release the pthread mutex
-    pthread_mutex_unlock(mutex);
-
-    return result;
+    return -1;
 }
 int condition_signal(struct Condition* self, int count) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
-    // get mutex and cond address
-    pthread_mutex_t* mutex = condition_->memory;
-    pthread_cond_t* cond = condition_->memory + sizeof(pthread_mutex_t);
+    // get sleepers address
+    int* sleepers = condition_->memory;
 
-    // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
+    // aquire the critical mutex
+    condition_->critical_mutex->vtable->acquire(condition_->critical_mutex, UINT_64_MAX);
 
-    // signal the pthread cond
+    // critical section
     int result = -1;
     if (count > 0) {
         // signal
         for (int cursor = 0; cursor < count; cursor++) {
-            pthread_cond_signal(cond);
+            if (*sleepers > 0) {
+                // signal to wake up
+                condition_->sleep_semaphore->vtable->post(condition_->sleep_semaphore);
+
+                // reduce sleepers
+                *sleepers--;
+            } else {
+                break;
+            }
         }
         result = 0;
     } else {
         // broadcast
-        if (pthread_cond_broadcast(cond) == 0) {
-            result = 0;
+        while (*sleepers > 0) {
+            // signal to wake up
+            condition_->sleep_semaphore->vtable->post(condition_->sleep_semaphore);
+
+            // reduce sleepers
+            *sleepers--;
         }
+        result = 0;
     }
 
-    // release the pthread mutex
-    pthread_mutex_unlock(mutex);
+    // release the critical mutex
+    condition_->critical_mutex->vtable->release(condition_->critical_mutex);
 
     return result;
 }
@@ -233,6 +187,9 @@ Condition* condition_new() {
 
     // set private data
     condition_->memory = NULL;
+    condition_->memory_handle = INVALID_HANDLE_VALUE;
+    condition_->critical_mutex = NULL;
+    condition_->sleep_semaphore = NULL;
 
     return (Condition*)condition_;
 }
@@ -247,17 +204,23 @@ void condition_free(Condition* condition) {
                 critical->vtable->acquire(critical, UINT_64_MAX);
             }
 
-            // destroy and close or close internal share mutex and cond
-            condition_named_free(condition_->memory, condition_->name->vtable->value(condition_->name));
+            // destroy and close or close internal share sleepers
+            condition_named_free(condition_->memory, condition_->memory_handle);
 
             // try release critical mutex
             if (critical != NULL) {
                 critical->vtable->release(critical);
             }
         } else {
-            // destroy internal mutex and cond
+            // destroy internal sleepers
             condition_anonymous_free(condition_->memory);
         }
+    }
+    if (condition_->critical_mutex != NULL) {
+        mutex_free(condition_->critical_mutex);
+    }
+    if (condition_->sleep_semaphore != NULL) {
+        semaphore_free(condition_->sleep_semaphore);
     }
 
     // free constructor data
@@ -278,20 +241,36 @@ Condition* condition_new_object(char* name) {
 
     // set private data
     if (name != NULL) {
+        // create internal critical mutex
+        String* condition_critical_name = string_new_printf("%s_condition_critical", name);
+        condition_->critical_mutex = mutex_new_object(0, condition_critical_name->vtable->value(condition_critical_name));
+        string_free(condition_critical_name);
+
+        // create internal sleep semaphore
+        String* condition_sleep_name = string_new_concat("%s_condition_sleep", name);
+        condition_->sleep_semaphore = semaphore_new_object(condition_sleep_name->vtable->value(condition_sleep_name), 0);
+        string_free(condition_sleep_name);
+
         // try acquire critical mutex
         if (critical != NULL) {
             critical->vtable->acquire(critical, UINT_64_MAX);
         }
 
-        // create and init or open internal share mutex
-        condition_->memory = condition_named_new(condition_->name->vtable->value(condition_->name));
+        // create and init or open internal share sleepers
+        condition_->memory = condition_named_new(condition_->name->vtable->value(condition_->name), &condition_->memory_handle);
 
         // try release critical mutex
         if (critical != NULL) {
             critical->vtable->release(critical);
         }
     } else {
-        // create internal mutex
+        // create internal critical mutex
+        condition_->critical_mutex = mutex_new_object(0, NULL);
+
+        // create internal sleep semaphore
+        condition_->sleep_semaphore = semaphore_new_object(NULL, 0);
+
+        // create internal sleepers
         condition_->memory = condition_anonymous_new();
     }
 

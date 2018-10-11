@@ -15,10 +15,10 @@ struct Mutex_ {
     String* name;
 
     // private data
-    HANDLE mutex;
-    HANDLE semaphore;
     void* memory;
     HANDLE memory_handle;
+    HANDLE mutex;
+    HANDLE semaphore;
 };
 
 // vtable
@@ -251,10 +251,10 @@ Mutex* mutex_new(int mode) {
     mutex_->name = NULL;
 
     // set private data
-    mutex_->mutex = INVALID_HANDLE_VALUE;
-    mutex_->semaphore = INVALID_HANDLE_VALUE;
     mutex_->memory = NULL;
     mutex_->memory_handle = INVALID_HANDLE_VALUE;
+    mutex_->mutex = INVALID_HANDLE_VALUE;
+    mutex_->semaphore = INVALID_HANDLE_VALUE;
 
     return (Mutex*)mutex_;
 }
@@ -262,12 +262,6 @@ void mutex_free(Mutex* mutex) {
     struct Mutex_* mutex_ = (struct Mutex_*)mutex;
 
     // free private data
-    if (mutex_->mutex != INVALID_HANDLE_VALUE) {
-        CloseHandle(mutex_->mutex);
-    }
-    if (mutex_->semaphore != INVALID_HANDLE_VALUE) {
-        CloseHandle(mutex_->semaphore);
-    }
     if (mutex_->memory != NULL) {
         if (mutex_->name != NULL) {
             // try acquire critical mutex
@@ -286,6 +280,12 @@ void mutex_free(Mutex* mutex) {
             // destroy internal thread id
             mutex_errorcheck_anonymous_free(mutex_->memory);
         }
+    }
+    if (mutex_->mutex != INVALID_HANDLE_VALUE) {
+        CloseHandle(mutex_->mutex);
+    }
+    if (mutex_->semaphore != INVALID_HANDLE_VALUE) {
+        CloseHandle(mutex_->semaphore);
     }
 
     // free constructor data
@@ -307,6 +307,7 @@ Mutex* mutex_new_object(int mode, char* name) {
     // set private data
     switch (mode) {
         case 0:
+            // init normal semaphore
             mutex_->semaphore = CreateSemaphoreA(
                 NULL,
                 1,
@@ -314,17 +315,13 @@ Mutex* mutex_new_object(int mode, char* name) {
                 mutex_->name->vtable->value(mutex_->name));
             break;
         case 1:
+            // init recursive mutex
             mutex_->mutex = CreateMutexA(
                 NULL,
                 FALSE,
                 mutex_->name->vtable->value(mutex_->name));
             break;
         case 2:
-            mutex_->mutex = CreateMutexA(
-                NULL,
-                FALSE,
-                mutex_->name->vtable->value(mutex_->name));
-
             // set thread id
             if (name != NULL) {
                 // try acquire critical mutex
@@ -343,6 +340,12 @@ Mutex* mutex_new_object(int mode, char* name) {
                 // create internal thread id
                 mutex_->memory = mutex_errorcheck_anonymous_new();
             }
+
+            // init recursive mutex
+            mutex_->mutex = CreateMutexA(
+                NULL,
+                FALSE,
+                mutex_->name->vtable->value(mutex_->name));
             break;
     }
 
