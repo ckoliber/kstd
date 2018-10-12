@@ -95,7 +95,7 @@ int thread_stop(struct Thread* self) {
         return -1;
     }
 
-    // close process handle
+    // close thread handle
     CloseHandle(thread);
 
     return 0;
