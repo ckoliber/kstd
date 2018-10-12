@@ -1,8 +1,8 @@
-#include <processor/low/Process.h>
+#include <low/Process.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -34,15 +34,16 @@ int process_start(struct Process* self, int (*function)(void*), void* arg) {
     struct Process_* process_ = (struct Process_*)self;
 
     // start internal child process
-    int result = -1;
     process_->id = fork();
     if (process_->id == 0) {
+        // at child process, sucessful fork
         exit(function(arg));
     } else if (process_->id > 0) {
-        result = 0;
+        // at parent process, sucessful fork
+        return 0;
     }
 
-    return result;
+    return -1;
 }
 int process_join(struct Process* self) {
     struct Process_* process_ = (struct Process_*)self;
@@ -65,9 +66,11 @@ int process_stop(struct Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // stop internal child process
-    int result = kill(process_->id, SIGKILL);
+    if (kill(process_->id, SIGKILL) == 0) {
+        return 0;
+    }
 
-    return result;
+    return -1;
 }
 
 // object allocation and deallocation operators
@@ -110,10 +113,10 @@ Process* process_new_object() {
     return (Process*)process_;
 }
 
-// get self id or parent id
+// local process methods
 int process_self() {
     // get self process id
-    int result = (int)getpid();
+    int result = (int)0;
 
     return result;
 }

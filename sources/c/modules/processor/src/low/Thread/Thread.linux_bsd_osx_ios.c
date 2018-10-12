@@ -2,7 +2,7 @@
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
-#include <memory/low/Heap.h>
+#include <low/Heap.h>
 #include <pthread.h>
 
 struct Thread_ {
@@ -20,8 +20,6 @@ struct Thread_ {
 Thread_VTable* thread_vtable;
 
 // link methods
-int thread_priority(struct Thread* self, int priority);
-int thread_affinity(struct Thread* self, int affinity);
 int thread_start(struct Thread* self, int (*function)(void*), void* arg);
 int thread_join(struct Thread* self);
 int thread_id(struct Thread* self);
@@ -39,7 +37,7 @@ int thread_start(struct Thread* self, int (*function)(void*), void* arg) {
     if (thread_->stack > 0) {
         pthread_attr_setstacksize(&tattr, thread_->stack);
     }
-    if (pthread_create(&(thread_->id), &tattr, function, arg) == 0) {
+    if (pthread_create(&thread_->id, &tattr, function, arg) == 0) {
         result = 0;
     }
     pthread_attr_destroy(&tattr);
@@ -58,7 +56,7 @@ int thread_join(struct Thread* self) {
 int thread_id(struct Thread* self) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
-    // get internal pthread id
+    // get internal thread id
     int result = (int)thread_->id;
 
     return result;
@@ -67,13 +65,15 @@ int thread_stop(struct Thread* self) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
     // stop internal pthread
-    int result = pthread_cancel(thread_->id);
+    if (pthread_cancel(thread_->id) == 0) {
+        return 0;
+    }
 
-    return result;
+    return -1;
 }
 
 // object allocation and deallocation operators
-void pool_init() {
+void thread_init() {
     // init vtable
     thread_vtable = heap_alloc(sizeof(Thread_VTable));
     thread_vtable->start = thread_start;
@@ -88,6 +88,7 @@ Thread* thread_new() {
     thread_->self.vtable = thread_vtable;
 
     // set constructor data
+    thread_->stack = 0;
 
     // set private data
     thread_->id = 0;
@@ -111,6 +112,14 @@ Thread* thread_new_object(tsize stack) {
     // set private data
 
     return (Thread*)thread_;
+}
+
+// local string methods
+int thread_self() {
+    // get self thread id
+    int result = (int)pthread_self();
+
+    return result;
 }
 
 #endif

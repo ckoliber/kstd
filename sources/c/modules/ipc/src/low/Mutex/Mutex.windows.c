@@ -181,8 +181,8 @@ int mutex_acquire_errorcheck(struct Mutex* self, uint_64 timeout) {
         // infinity
         if (WaitForSingleObject(mutex_->mutex, INFINITE) == WAIT_OBJECT_0) {
             // error check: saved thread id is not thread id, and then set it
-            if (thread_id() != *id) {
-                *id = thread_id();
+            if (thread_self() != *id) {
+                *id = thread_self();
                 return 0;
             } else {
                 ReleaseMutex(mutex_->mutex);
@@ -192,8 +192,8 @@ int mutex_acquire_errorcheck(struct Mutex* self, uint_64 timeout) {
         // timed - try
         if (WaitForSingleObject(mutex_->mutex, timeout) == WAIT_OBJECT_0) {
             // error check: saved thread id is not thread id, and then set it
-            if (thread_id() != *id) {
-                *id = thread_id();
+            if (thread_self() != *id) {
+                *id = thread_self();
                 return 0;
             } else {
                 ReleaseMutex(mutex_->mutex);
