@@ -250,7 +250,7 @@ void mutex_free(Mutex* mutex) {
     heap_free(mutex_);
 }
 Mutex* mutex_new_object(int mode, char* name) {
-    struct Mutex_* mutex_ = (struct Mutex_*)mutex_new();
+    struct Mutex_* mutex_ = (struct Mutex_*)mutex_new(mode);
 
     // set constructor data
     if (name != NULL) {

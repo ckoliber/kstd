@@ -260,7 +260,6 @@ int semaphore_get(struct Semaphore* self) {
 void semaphore_init() {
     // init vtable
     semaphore_vtable = heap_alloc(sizeof(Semaphore_VTable));
-    semaphore_vtable->init = semaphore_init;
     semaphore_vtable->wait = semaphore_wait;
     semaphore_vtable->post = semaphore_post;
     semaphore_vtable->get = semaphore_get;

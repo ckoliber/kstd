@@ -14,7 +14,7 @@ typedef struct Thread {
 } Thread;
 
 // init vtable
-void pool_init();
+void thread_init();
 
 // new raw thread
 Thread* thread_new();
@@ -26,4 +26,8 @@ void thread_free(Thread* thread);
 Thread* thread_new_object(tsize stack);
 
 // local thread methods
+<<<<<<< HEAD
 int thread_id();
+=======
+int thread_self();
+>>>>>>> a37be36ed975eeb630021237dedce3819a9faeac
