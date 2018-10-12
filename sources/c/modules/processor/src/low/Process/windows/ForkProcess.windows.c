@@ -1,5 +1,9 @@
 // Thanks by: https://github.com/kaniini/win32-fork
 
+#include <low/Process.h>
+
+#if defined(APP_WINDOWS)
+
 #define _WIN32_WINNT 0x0600
 #define WIN32_LEAN_AND_MEAN
 #include <errno.h>
@@ -92,3 +96,5 @@ pid_t ForkProcess(void) {
     /* NOTREACHED */
     return -1;
 }
+
+#endif

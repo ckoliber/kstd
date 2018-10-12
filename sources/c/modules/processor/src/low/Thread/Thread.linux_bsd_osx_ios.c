@@ -49,7 +49,9 @@ int thread_join(struct Thread* self) {
 
     // join internal pthread
     int result = -1;
-    pthread_join(thread_->id, &result);
+    if (pthread_join(thread_->id, &result) != 0) {
+        result = -1;
+    }
 
     return result;
 }

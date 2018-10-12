@@ -34,9 +34,9 @@ int thread_start(struct Thread* self, int (*function)(void*), void* arg) {
     int result = -1;
     pthread_attr_t tattr;
     pthread_attr_init(&tattr);
-    if (thread_->stack > 0) {
-        pthread_attr_setstacksize(&tattr, thread_->stack);
-    }
+    // if (thread_->stack > 0) {
+    //     pthread_attr_setstacksize(&tattr, thread_->stack);
+    // }
     if (pthread_create(&thread_->id, &tattr, function, arg) == 0) {
         result = 0;
     }
@@ -49,7 +49,9 @@ int thread_join(struct Thread* self) {
 
     // join internal pthread
     int result = -1;
-    pthread_join(thread_->id, &result);
+    if (pthread_join(thread_->id, &result) != 0) {
+        result = -1;
+    }
 
     return result;
 }

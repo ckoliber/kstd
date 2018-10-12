@@ -1,5 +1,9 @@
 // Thanks by: https://github.com/ambakshi/ppid-win32
 
+#include <low/Process.h>
+
+#if defined(APP_WINDOWS)
+
 // AMB: Print out the parent PID. You can pass in -p <pid> to ask for
 // the parent of a particular process
 #define _WIN32_WINNT 0x0503
@@ -91,3 +95,5 @@ DWORD GetParentProcessId() {
     }
     return -1;
 }
+
+#endif
