@@ -1,6 +1,8 @@
-project(local)
-
 set(LIBS "memory")
 set(LINK "dynamic")
 
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../module.cmake")
+if(MODE STREQUAL "BUILD")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/../../module.cmake")
+elseif(MODE STREQUAL "LINK")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/module.cmake")
+endif()

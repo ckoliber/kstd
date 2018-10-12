@@ -1,11 +1,9 @@
 # superproject -> install, pack, config
 # subproject -> build, test
 
-# one sub project -> add_executable (app)
-# other sub projects -> add_library (etc)
-
 cmake_minimum_required(VERSION 3.8)
 
+# set compiler
 if(LINUX)
     set( CMAKE_C_COMPILER "gcc" )
     set( CMAKE_CXX_COMPILER "g++" )
@@ -14,23 +12,36 @@ elseif(WIN32)
     set( CMAKE_CXX_COMPILER "C:/MinGW/bin/g++.exe" )
 endif()
 
+# set build type
 if(NOT BUILD STREQUAL "debug" AND NOT BUILD STREQUAL "release")
     message("Enter -DBUILD=<debug|release>")
     set(BUILD "debug")
 endif()
 
+# include package variables
 include("${CMAKE_CURRENT_SOURCE_DIR}/package.cmake")
 
 project(${KPS_PROJECT_NAME})
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/app")
+# find modules
+file(GLOB MODULES "${CMAKE_CURRENT_SOURCE_DIR}/modules/*")
 
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/algo")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/dsa")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/io")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/ipc")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/local")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/memory")
-add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/modules/processor")
+# add modules
+foreach(MODULE_PATH ${MODULES})
+    # get module name
+    get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
 
+    # message events
+    message("Module: ${MODULE_NAME}")
+    message("---------------------------------------------------------")
+
+    # add module
+    add_subdirectory(${MODULE_PATH})
+
+    message("---------------------------------------------------------")
+    message("                                                         ")
+    message("                                                         ")
+endforeach()
+
+# include builder configs
 include("${CMAKE_CURRENT_SOURCE_DIR}/config.cmake")

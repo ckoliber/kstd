@@ -1,5 +1,3 @@
-project(algo)
-
 set(LIBS "")
 set(LINK "dynamic")
 

@@ -1,5 +1,3 @@
-project(app)
-
 if(ANDROID)
     set(LIBS "-lpthread")
 elseif(WIN32)

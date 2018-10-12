@@ -1,5 +1,3 @@
-project(io)
-
 set(LIBS "")
 set(LINK "dynamic")
 
