@@ -1,4 +1,4 @@
-#include <memory/low/Type.h>
+#include <low/Type.h>
 
 // vtable
 typedef struct Thread_VTable {
@@ -25,5 +25,5 @@ void thread_free(Thread* thread);
 // new thread
 Thread* thread_new_object(tsize stack);
 
-// local string methods
+// local thread methods
 int thread_id();
