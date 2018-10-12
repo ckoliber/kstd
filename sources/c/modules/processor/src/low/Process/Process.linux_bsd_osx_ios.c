@@ -116,7 +116,7 @@ Process* process_new_object() {
 // local process methods
 int process_self() {
     // get self process id
-    int result = (int)0;
+    int result = (int)getpid();
 
     return result;
 }

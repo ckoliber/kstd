@@ -3,6 +3,8 @@
 #if defined(APP_WINDOWS)
 
 #include <low/Heap.h>
+#include "ForkProcess.windows.c"
+#include "GetParentProcessId.windows.c"
 
 struct Process_ {
     // self public object
@@ -11,7 +13,7 @@ struct Process_ {
     // constructor data
 
     // private data
-    int id;
+    pid_t id;
 };
 
 // vtable
@@ -29,10 +31,10 @@ int process_start(struct Process* self, int (*function)(void*), void* arg) {
     struct Process_* process_ = (struct Process_*)self;
 
     // start internal child process
-    process_->id = fork();
+    process_->id = ForkProcess();
     if (process_->id == 0) {
         // at child process, sucessful fork
-        exit(function(arg));
+        ExitProcess(function(arg));
     } else if (process_->id > 0) {
         // at parent process, sucessful fork
         return 0;
@@ -44,8 +46,26 @@ int process_join(struct Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // join internal child process
+    // open process by id
+    HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process_->id);
+    if (process == INVALID_HANDLE_VALUE) {
+        return -1;
+    }
+
+    // wait for process to exit
+    if (WaitForSingleObject(process, INFINITE) != WAIT_OBJECT_0) {
+        CloseHandle(process);
+        return -1;
+    }
+
+    // get process exit code
     int result = -1;
-    waitpid(process_->id, &result, 0);
+    if (GetExitCodeProcess(process, &result) == 0) {
+        result = -1;
+    }
+
+    // close process handle
+    CloseHandle(process);
 
     return result;
 }
@@ -61,11 +81,22 @@ int process_stop(struct Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // stop internal child process
-    if (kill(process_->id, SIGKILL) == 0) {
-        return 0;
+    // open process by id
+    HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process_->id);
+    if (process == INVALID_HANDLE_VALUE) {
+        return -1;
     }
 
-    return -1;
+    // terminate process
+    if (TerminateProcess(process, -1) == 0) {
+        CloseHandle(process);
+        return -1;
+    }
+
+    // close process handle
+    CloseHandle(process);
+
+    return 0;
 }
 
 // object allocation and deallocation operators
@@ -111,13 +142,13 @@ Process* process_new_object() {
 // local process methods
 int process_self() {
     // get self process id
-    int result = (int)0;
+    int result = (int)GetCurrentProcessId();
 
     return result;
 }
 int process_parent() {
     // get parent process id
-    int result = (int)getppid();
+    int result = (int)GetParentProcessId();
 
     return result;
 }

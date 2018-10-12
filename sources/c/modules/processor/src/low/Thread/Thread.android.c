@@ -114,7 +114,7 @@ Thread* thread_new_object(tsize stack) {
     return (Thread*)thread_;
 }
 
-// local string methods
+// local thread methods
 int thread_self() {
     // get self thread id
     int result = (int)pthread_self();
