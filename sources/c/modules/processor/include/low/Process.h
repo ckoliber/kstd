@@ -26,9 +26,5 @@ void process_free(Process* process);
 Process* process_new_object();
 
 // local process methods
-<<<<<<< HEAD
-int process_id();
-=======
 int process_self();
->>>>>>> a37be36ed975eeb630021237dedce3819a9faeac
 int process_parent();
