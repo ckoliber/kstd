@@ -1,9 +1,12 @@
 #include <high/LinkedList.h>
+#include <kstd.h>
 #include <low/Heap.h>
 
 #include <assert.h>
 
 int main() {
+    kstd_init();
+
     LinkedList* linkedlist_1 = linkedlist_new_object(0, NULL);
 
     for (int cursor = 0; cursor < 10000; cursor++) {

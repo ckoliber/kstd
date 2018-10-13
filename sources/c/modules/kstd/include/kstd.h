@@ -1,0 +1,1 @@
+void kstd_init();

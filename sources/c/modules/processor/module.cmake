@@ -1,4 +1,4 @@
-set(MODULES memory ipc dsa)
+set(MODULES memory ipc dsa kstd)
 if(ANDROID)
     set(LIBS "-lpthread")
 elseif(WIN32)

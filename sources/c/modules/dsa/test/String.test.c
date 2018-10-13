@@ -1,8 +1,11 @@
+#include <kstd.h>
 #include <low/String.h>
 
 #include <assert.h>
 
 int main() {
+    kstd_init();
+
     // string new test
     String* string_1 = string_new_printf("%d - %f", 1, 2.6);
     String* string_2 = string_new_lower("SaLaM");

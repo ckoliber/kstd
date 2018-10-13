@@ -1,9 +1,12 @@
 #include <high/Stack.h>
+#include <kstd.h>
 #include <low/Heap.h>
 
 #include <assert.h>
 
 int main() {
+    kstd_init();
+
     Stack* stack_1 = stack_new_object(0, -1, NULL);
 
     for (int cursor = 0; cursor < 10000; cursor++) {

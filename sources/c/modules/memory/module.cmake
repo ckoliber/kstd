@@ -1,3 +1,3 @@
-set(MODULES )
+set(MODULES kstd)
 set(LIBS "")
 set(LINK "static")

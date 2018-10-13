@@ -184,7 +184,7 @@ macro(MODULE_OPTIONS)
     message("                                                         ")
 
     # target compiler (-O3, ...)
-    set(MODULE_OPTIONS -Wall -O0 -g)
+    set(MODULE_OPTIONS -Wall -O0 -g -fPIC)
     target_compile_options(${MODULE_NAME} PRIVATE ${MODULE_OPTIONS})
 
     # message options
