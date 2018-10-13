@@ -9,8 +9,40 @@
 #   LIB:        lib/x.(so|a)
 #   TEST:       test/x.test.(c|cpp|cxx)
 
-# create module exec or lib
-macro(MODULE_CREATE)
+# release create module exec or lib
+macro(MODULE_RELEASECREATE)
+    set(MODULE_NAME ${KPS_PROJECT_NAME})
+
+    # detect type of release: <executable|library>
+    file(GLOB_RECURSE RELEASE_APP "${CMAKE_CURRENT_SOURCE_DIR}/modules/*/app.c" "${CMAKE_CURRENT_SOURCE_DIR}/modules/*/app.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/modules/*/app.cxx")
+    if(RELEASE_APP)
+        message("Release type: app")
+        set(MODULE_TYPE "app")
+    else()
+        message("Release type: lib")
+        set(MODULE_TYPE "lib")
+    endif()
+
+    # detect type of link: <dynamic|static>
+    set(LINK "static")
+    message("Link: static")
+
+    # create module exec or lib
+    if(MODULE_TYPE STREQUAL "app")
+        # create exec
+        add_executable(${MODULE_NAME} "")
+    elseif(MODULE_TYPE STREQUAL "lib")
+        # create lib based on link type
+        if(LINK STREQUAL "dynamic")
+            add_library(${MODULE_NAME} SHARED "")
+        elseif(LINK STREQUAL "static")
+            add_library(${MODULE_NAME} STATIC "")
+        endif()
+    endif()
+endmacro()
+
+# debug create module exec or lib
+macro(MODULE_DEBUGCREATE)
     # detect type of module: <executable|library>
     if(EXISTS "${MODULE_PATH}/src/app.c" OR EXISTS "${MODULE_PATH}/src/app.cpp" OR EXISTS "${MODULE_PATH}/src/app.cxx")
         message("Type: app")
@@ -30,20 +62,17 @@ macro(MODULE_CREATE)
         message("Link: static")
     endif()
 
+    # create module exec or lib
     if(MODULE_TYPE STREQUAL "app")
-
         # create exec
         add_executable(${MODULE_NAME} "")
-
     elseif(MODULE_TYPE STREQUAL "lib")
-
         # create lib based on link type
         if(LINK STREQUAL "dynamic")
             add_library(${MODULE_NAME} SHARED "")
         elseif(LINK STREQUAL "static")
             add_library(${MODULE_NAME} STATIC "")
         endif()
-
     endif()
 endmacro()
 
@@ -107,8 +136,8 @@ macro(MODULE_TESTS)
 
 endmacro()
 
-# add module libs
-macro(MODULE_LIBS)
+# add module debug libs
+macro(MODULE_DEBUGLIBS)
     message("                                                         ")
     
     # target libs (.so, .a)
@@ -127,7 +156,26 @@ macro(MODULE_LIBS)
 
     # message modules
     foreach(MODULE_MODULE ${MODULES})
-       message("Module: ${MODULE_MODULE}") 
+        message("Module: ${MODULE_MODULE}") 
+    endforeach()
+endmacro()
+
+# add module release libs
+macro(MODULE_RELEASELIBS)
+    message("                                                         ")
+        
+    # target libs (.so, .a)
+    file(GLOB_RECURSE MODULE_LIBS "${MODULE_PATH}/lib/*.so*" "${MODULE_PATH}/lib/*.a")
+    target_link_libraries(${MODULE_NAME} PUBLIC ${MODULE_LIBS} ${LIBS})
+
+    # message libs
+    foreach(MODULE_LIB ${MODULE_LIBS})
+        message("Library: ${MODULE_LIB}") 
+    endforeach()
+
+    # message links
+    foreach(MODULE_LINK ${LIBS})
+        message("Link: ${MODULE_LINK}") 
     endforeach()
 endmacro()
 
@@ -146,12 +194,27 @@ macro(MODULE_OPTIONS)
 endmacro()
 
 # start module build tasks
-if(TYPE STREQUAL "build")
-    MODULE_CREATE()
-    MODULE_SOURCES()
-    MODULE_HEADERS()
-    MODULE_TESTS()
-    MODULE_OPTIONS()
+if(TYPE STREQUAL "release")
+    MODULE_RELEASECREATE()
+elseif(TYPE STREQUAL "build")
+    # if project is debug (compile all modules), else pack all sources and headers
+    if(BUILD STREQUAL "debug")
+        MODULE_DEBUGCREATE()
+        MODULE_SOURCES()
+        MODULE_HEADERS()
+        MODULE_TESTS()
+        MODULE_OPTIONS()
+    else()
+        set(MODULE_NAME ${KPS_PROJECT_NAME})
+        MODULE_SOURCES()
+        MODULE_HEADERS()
+        MODULE_OPTIONS()
+    endif()
 elseif(TYPE STREQUAL "link")
-    MODULE_LIBS()
+    if(BUILD STREQUAL "debug")
+        MODULE_DEBUGLIBS()
+    else()
+        set(MODULE_NAME ${KPS_PROJECT_NAME})
+        MODULE_RELEASELIBS()
+    endif()
 endif()

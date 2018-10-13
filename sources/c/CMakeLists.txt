@@ -57,6 +57,11 @@ macro(SET_BUILDTYPE)
         message("Build type: debug")
     elseif(BUILD STREQUAL "release")
         message("Build type: release")
+
+        # project release create
+        set(TYPE "release")
+        include("${CMAKE_CURRENT_SOURCE_DIR}/module.cmake")
+
     endif()
 
     message("=================================================")
