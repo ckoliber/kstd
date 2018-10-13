@@ -24,4 +24,4 @@ void mutex_free(Mutex* mutex);
 Mutex* mutex_new_object(int mode, char* name);
 
 // critical section global mutex
-Mutex* critical = NULL;
+Mutex* critical;

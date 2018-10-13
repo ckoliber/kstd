@@ -1,4 +1,4 @@
-#include <low/ArrayList.h>
+#include <high/ArrayList.h>
 #include <low/Heap.h>
 
 #include <assert.h>
@@ -18,7 +18,7 @@ int main() {
     }
 
     while (arraylist_1->vtable->size(arraylist_1) > 0) {
-        heap_free(arraylist_1->vtable->remove(arraylist_1, 0);
+        heap_free(arraylist_1->vtable->remove(arraylist_1, 0));
     }
 
     arraylist_free(arraylist_1);

@@ -1,5 +1,5 @@
+#include <high/Queue.h>
 #include <low/Heap.h>
-#include <low/Queue.h>
 
 #include <assert.h>
 

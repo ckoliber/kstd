@@ -467,7 +467,7 @@ LinkedList* linkedlist_new_object(int mode, int (*comperator)(void*, void*)) {
     linkedlist_->head->item = NULL;
 
     if (mode == 1) {
-        linkedlist_->rwlock = rwlock_new_object(NULL);
+        linkedlist_->rwlock = rwlock_new_object(0, NULL);
     }
 
     return (LinkedList*)linkedlist_;

@@ -351,7 +351,7 @@ ArrayList* arraylist_new_object(int mode, float factor, int (*comperator)(void*,
     arraylist_->cursor = 0;
     arraylist_->array = heap_alloc(arraylist_->length * sizeof(void*));
     if (mode == 1) {
-        arraylist_->rwlock = rwlock_new_object(NULL);
+        arraylist_->rwlock = rwlock_new_object(0, NULL);
     }
 
     return (ArrayList*)arraylist_;

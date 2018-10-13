@@ -344,7 +344,7 @@ Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(void*, void*)) 
     dequeue_->head->item = NULL;
 
     if (mode == 1 || mode == 2) {
-        dequeue_->rwlock = rwlock_new_object(NULL);
+        dequeue_->rwlock = rwlock_new_object(0, NULL);
     }
     if (mode == 2) {
         // init empty semaphore

@@ -3,6 +3,7 @@
 #if defined(APP_WINDOWS)
 
 #include <low/Heap.h>
+#include <stdarg.h>
 
 struct String_ {
     // self public object
@@ -93,22 +94,22 @@ void string_reverse(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // reverse string
-    for (int cursor = 0; cursor <= string_length(string_->string) / 2; cursor++) {
-        string_swap((string_->string + cursor), (string_->string + (string_length(string_->string) - 1) - cursor));
+    for (int cursor = 0; cursor <= string_get_length(string_->string) / 2; cursor++) {
+        string_swap((string_->string + cursor), (string_->string + (string_get_length(string_->string) - 1) - cursor));
     }
 }
 void string_copy(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // copy data to string
-    string_->string = heap_realloc(string_->string, string_length(data) + 1);
+    string_->string = heap_realloc(string_->string, string_get_length(data) + 1);
     lstrcpy(string_->string, data);
 }
 void string_concat(struct String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // concatenate data to string
-    string_->string = heap_realloc(string_->string, string_length(string_->string) + string_length(data) + 1);
+    string_->string = heap_realloc(string_->string, string_get_length(string_->string) + string_get_length(data) + 1);
     lstrcat(string_->string, data);
 }
 void string_cut(struct String* self, int begin, int end) {
@@ -155,7 +156,7 @@ tsize string_length(struct String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // compute string length
-    tsize result = string_get_length(string_->string);
+    tsize result = string_length(string_->string);
 
     return result;
 }

@@ -1,4 +1,4 @@
-#include <low/Lock.h>
+#include <high/Lock.h>
 
 #include <assert.h>
 

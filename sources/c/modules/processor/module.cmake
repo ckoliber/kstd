@@ -1,3 +1,4 @@
+set(MODULES memory ipc dsa)
 if(ANDROID)
     set(LIBS "-lpthread")
 elseif(WIN32)
@@ -5,7 +6,4 @@ elseif(WIN32)
 else()
     set(LIBS "-pthread")
 endif()
-
-set(LINK "dynamic")
-
-include("${CMAKE_CURRENT_SOURCE_DIR}/../../module.cmake")
+set(LINK "static")

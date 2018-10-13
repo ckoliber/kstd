@@ -1,5 +1,5 @@
+#include <high/LinkedList.h>
 #include <low/Heap.h>
-#include <low/LinkedList.h>
 
 #include <assert.h>
 
@@ -18,7 +18,7 @@ int main() {
     }
 
     while (linkedlist_1->vtable->size(linkedlist_1) > 0) {
-        heap_free(linkedlist_1->vtable->remove(linkedlist_1, 0);
+        heap_free(linkedlist_1->vtable->remove(linkedlist_1, 0));
     }
 
     linkedlist_free(linkedlist_1);

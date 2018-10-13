@@ -1,47 +1,195 @@
-# superproject -> install, pack, config
-# subproject -> build, test
-
 cmake_minimum_required(VERSION 3.8)
-
-# set compiler
-if(LINUX)
-    set( CMAKE_C_COMPILER "gcc" )
-    set( CMAKE_CXX_COMPILER "g++" )
-elseif(WIN32)
-    set( CMAKE_C_COMPILER "C:/MinGW/bin/gcc.exe" )
-    set( CMAKE_CXX_COMPILER "C:/MinGW/bin/g++.exe" )
-endif()
-
-# set build type
-if(NOT BUILD STREQUAL "debug" AND NOT BUILD STREQUAL "release")
-    message("Enter -DBUILD=<debug|release>")
-    set(BUILD "debug")
-endif()
 
 # include package variables
 include("${CMAKE_CURRENT_SOURCE_DIR}/package.cmake")
-
 project(${KPS_PROJECT_NAME})
 
-# find modules
-file(GLOB MODULES "${CMAKE_CURRENT_SOURCE_DIR}/modules/*")
+# set compiler
+macro(SET_COMPILER)
+    message("=================================================")
+    message("Setting compiler")
+    message("-------------------------------------------------")
 
-# add modules
-foreach(MODULE_PATH ${MODULES})
-    # get module name
-    get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
+    # compiler config
+    if(LINUX)
+        set( CMAKE_C_COMPILER "gcc" )
+        set( CMAKE_CXX_COMPILER "g++" )
+        message("Linux C compiler: ${CMAKE_C_COMPILER}")
+        message("Linux CXX compiler: ${CMAKE_CXX_COMPILER}")
+    elseif(UNIX)
+        set( CMAKE_C_COMPILER "gcc" )
+        set( CMAKE_CXX_COMPILER "g++" )
+        message("Unix C compiler: ${CMAKE_C_COMPILER}")
+        message("Unix CXX compiler: ${CMAKE_CXX_COMPILER}")
+    elseif(APPLE)
+        set( CMAKE_C_COMPILER "gcc" )
+        set( CMAKE_CXX_COMPILER "g++" )
+        message("Apple C compiler: ${CMAKE_C_COMPILER}")
+        message("Apple CXX compiler: ${CMAKE_CXX_COMPILER}")
+    elseif(ANDROID)
+        set( CMAKE_C_COMPILER "gcc" )
+        set( CMAKE_CXX_COMPILER "g++" )
+        message("Android C compiler: ${CMAKE_C_COMPILER}")
+        message("Android CXX compiler: ${CMAKE_CXX_COMPILER}")
+    elseif(WIN32)
+        set( CMAKE_C_COMPILER "C:/MinGW/bin/gcc.exe" )
+        set( CMAKE_CXX_COMPILER "C:/MinGW/bin/g++.exe" )
+        message("Win32 C compiler: ${CMAKE_C_COMPILER}")
+        message("Win32 CXX compiler: ${CMAKE_CXX_COMPILER}")
+    endif()
 
-    # message events
-    message("Module: ${MODULE_NAME}")
-    message("---------------------------------------------------------")
+    message("=================================================")
+    message("                                                 ")
+endmacro()
 
-    # add module
-    add_subdirectory(${MODULE_PATH})
+# set build type
+macro(SET_BUILDTYPE)
+    message("=================================================")
+    message("Setting build type")
+    message("-------------------------------------------------")
 
-    message("---------------------------------------------------------")
-    message("                                                         ")
-    message("                                                         ")
-endforeach()
+    # build type config
+    if(NOT BUILD STREQUAL "debug" AND NOT BUILD STREQUAL "release")
+        message("Enter -DBUILD=<debug|release>")
+        set(BUILD "debug")
+        message("Build type: debug")
+    elseif(BUILD STREQUAL "debug")
+        message("Build type: debug")
+    elseif(BUILD STREQUAL "release")
+        message("Build type: release")
+    endif()
 
-# include builder configs
-include("${CMAKE_CURRENT_SOURCE_DIR}/config.cmake")
+    message("=================================================")
+    message("                                                 ")
+endmacro()
+
+# set install
+macro(SET_INSTALL)
+    message("=================================================")
+    message("Setting Install")
+    message("-------------------------------------------------")
+    
+    # Install config
+    # install(
+    #     TARGETS ${KPS_PROJECT_NAME}
+    #     RUNTIME DESTINATION bin
+    #     INCLUDES DESTINATION include
+    #     LIBRARY DESTINATION lib
+    #     ARCHIVE DESTINATION lib
+    # )
+
+    message("=================================================")
+    message("                                                 ")
+endmacro()
+
+# set ctest
+macro(SET_CTEST)
+    message("=================================================")
+    message("Setting CTest")
+    message("-------------------------------------------------")
+
+    # CTest config
+    enable_testing()
+    include(CTest)
+
+    message("=================================================")
+    message("                                                 ") 
+endmacro()
+
+# set cpack
+macro(SET_CPACK)
+    message("=================================================")
+    message("Setting CPack")
+    message("-------------------------------------------------")
+
+    # CPack config
+    include(InstallRequiredSystemLibraries)
+    set(CPACK_PACKAGE_NAME ${KPS_PROJECT_NAME})
+    set(CPACK_PACKAGE_DESCRIPTION ${KPS_PROJECT_DESCRIPTION})
+    set(CPACK_PACKAGE_VENDOR ${KPS_PROJECT_AUTHOR})
+    set(CPACK_PACKAGE_CONTACT ${KPS_PROJECT_REPOSITORY})
+    set(CPACK_PACKAGE_VERSION_MAJOR ${KPS_PROJECT_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${KPS_PROJECT_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${KPS_PROJECT_VERSION_PATCH})
+    # set(CPACK_PACKAGE_ICON "")
+    set(CPACK_PACKAGE_FILE_NAME "${KPS_PROJECT_NAME}-${KPS_PROJECT_VERSION_MAJOR}.${KPS_PROJECT_VERSION_MINOR}.${KPS_PROJECT_VERSION_PATCH}")
+    include(CPack)
+
+    message("=================================================")
+    message("                                                 ") 
+endmacro()
+
+# build modules
+macro(BUILD_MODULES)
+    message("=================================================")
+    message("Building modules")
+    message("-------------------------------------------------")
+
+    # find modules
+    file(GLOB MODULES "${CMAKE_CURRENT_SOURCE_DIR}/modules/*")
+
+    # build modules
+    foreach(MODULE_PATH ${MODULES})
+        # get module name
+        get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
+
+        # check module is valid
+        if(EXISTS "${MODULE_PATH}/module.cmake")
+            # message events
+            message("Module: ${MODULE_NAME}")
+            message("---------------------------------------------------------")
+
+            # build module
+            include("${MODULE_PATH}/module.cmake")
+            include("${CMAKE_CURRENT_SOURCE_DIR}/build.cmake")
+
+            message("---------------------------------------------------------")
+        endif()
+    endforeach()
+
+    message("=================================================")
+    message("                                                 ")
+endmacro()
+
+# link modules (circular dependency problem solving)
+macro(LINK_MODULES)
+    message("=================================================")
+    message("Linking modules")
+    message("-------------------------------------------------")
+
+    # find modules
+    file(GLOB MODULES "${CMAKE_CURRENT_SOURCE_DIR}/modules/*")
+
+    # link modules
+    foreach(MODULE_PATH ${MODULES})
+        # get module name
+        get_filename_component(MODULE_NAME ${MODULE_PATH} NAME)
+
+        # check module is valid
+        if(EXISTS "${MODULE_PATH}/module.cmake")
+            # message events
+            message("Module: ${MODULE_NAME}")
+            message("---------------------------------------------------------")
+
+            # link module
+            include("${MODULE_PATH}/module.cmake")
+            include("${CMAKE_CURRENT_SOURCE_DIR}/link.cmake")
+
+            message("---------------------------------------------------------")
+        endif()
+    endforeach()
+
+    message("=================================================")
+    message("                                                 ")
+endmacro()
+
+# start cmake tasks
+SET_COMPILER()
+SET_BUILDTYPE()
+
+BUILD_MODULES()
+LINK_MODULES()
+
+SET_INSTALL()
+SET_CTEST()
+SET_CPACK()
