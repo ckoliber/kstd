@@ -140,8 +140,9 @@ macro(BUILD_MODULES)
             message("---------------------------------------------------------")
 
             # build module
+            set(TYPE "build")
             include("${MODULE_PATH}/module.cmake")
-            include("${CMAKE_CURRENT_SOURCE_DIR}/build.cmake")
+            include("${CMAKE_CURRENT_SOURCE_DIR}/module.cmake")
 
             message("---------------------------------------------------------")
         endif()
@@ -172,8 +173,9 @@ macro(LINK_MODULES)
             message("---------------------------------------------------------")
 
             # link module
+            set(TYPE "link")
             include("${MODULE_PATH}/module.cmake")
-            include("${CMAKE_CURRENT_SOURCE_DIR}/link.cmake")
+            include("${CMAKE_CURRENT_SOURCE_DIR}/module.cmake")
 
             message("---------------------------------------------------------")
         endif()

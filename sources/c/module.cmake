@@ -107,6 +107,30 @@ macro(MODULE_TESTS)
 
 endmacro()
 
+# add module libs
+macro(MODULE_LIBS)
+    message("                                                         ")
+    
+    # target libs (.so, .a)
+    file(GLOB_RECURSE MODULE_LIBS "${MODULE_PATH}/lib/*.so*" "${MODULE_PATH}/lib/*.a")
+    target_link_libraries(${MODULE_NAME} PUBLIC ${MODULE_LIBS} ${LIBS} ${MODULES})
+
+    # message libs
+    foreach(MODULE_LIB ${MODULE_LIBS})
+       message("Library: ${MODULE_LIB}") 
+    endforeach()
+
+    # message links
+    foreach(MODULE_LINK ${LIBS})
+       message("Link: ${MODULE_LINK}") 
+    endforeach()
+
+    # message modules
+    foreach(MODULE_MODULE ${MODULES})
+       message("Module: ${MODULE_MODULE}") 
+    endforeach()
+endmacro()
+
 # add module compiler options
 macro(MODULE_OPTIONS)
     message("                                                         ")
@@ -122,8 +146,12 @@ macro(MODULE_OPTIONS)
 endmacro()
 
 # start module build tasks
-MODULE_CREATE()
-MODULE_SOURCES()
-MODULE_HEADERS()
-MODULE_TESTS()
-MODULE_OPTIONS()
+if(TYPE STREQUAL "build")
+    MODULE_CREATE()
+    MODULE_SOURCES()
+    MODULE_HEADERS()
+    MODULE_TESTS()
+    MODULE_OPTIONS()
+elseif(TYPE STREQUAL "link")
+    MODULE_LIBS()
+endif()
