@@ -18,7 +18,7 @@
 
 ## Goal
 
-* kstd is a project for standardizing C language in `DSA`, `Network`, `File`, `Security`, etc for __cross platform__ usage (`android`, `ios`, `winapi32`, `linux`)
+* kstd is a project for standardizing C language in `DSA`, `Network`, `File`, `Security`, etc for __cross platform__ usage (`android`, `ios`, `win32`, `linux`)
 
 ## License
 

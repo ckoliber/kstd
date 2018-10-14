@@ -1,6 +1,7 @@
 #include <high/Queue.h>
 
 #include <high/Dequeue.h>
+#include <low/Heap.h>
 
 struct Queue_ {
     // self public object

@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdio.h>
+
 struct String_ {
     // self public object
     String self;
@@ -235,11 +237,13 @@ String* string_new_printf(char* format, ...) {
     // set constructor data
 
     // set private data
-    va_list args;
+    va_list args, args2;
     va_start(args, format);
+    va_copy(args2, args);
     string_->string = heap_alloc(vsnprintf(NULL, 0, format, args) + 1);
-    vsprintf(string_->string, format, args);
+    vsprintf(string_->string, format, args2);
     va_end(args);
+    va_end(args2);
 
     return (String*)string_;
 }

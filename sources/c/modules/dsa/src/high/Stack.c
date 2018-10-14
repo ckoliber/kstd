@@ -1,6 +1,7 @@
 #include <high/Stack.h>
 
 #include <high/Dequeue.h>
+#include <low/Heap.h>
 
 struct Stack_ {
     // self public object

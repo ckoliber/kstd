@@ -15,7 +15,7 @@ int main() {
         stack_1->vtable->push(stack_1, item, 0);
     }
 
-    for (int cursor = 0; cursor < 10000; cursor++) {
+    for (int cursor = 9999; cursor >= 0; cursor--) {
         int* item = stack_1->vtable->pop(stack_1, 0);
         assert(*item == cursor);
         heap_free(item);

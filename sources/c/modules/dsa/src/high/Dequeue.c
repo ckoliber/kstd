@@ -308,6 +308,9 @@ void dequeue_free(Dequeue* dequeue) {
 
     // iterate dequeue and remove dequeueitems
     struct DequeueItem* remove_item = NULL;
+
+    // break circular linked dequeue
+    dequeue_->head->previews->next = NULL;
     do {
         remove_item = dequeue_->head;
         dequeue_->head = dequeue_->head->next;
