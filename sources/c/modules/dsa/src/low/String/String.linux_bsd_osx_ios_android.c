@@ -5,9 +5,9 @@
 #include <ctype.h>
 #include <low/Heap.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 struct String_ {
     // self public object
@@ -78,7 +78,7 @@ void string_lower(String* self) {
 
     // convert all char's to lower
     for (int cursor = 0; cursor < string_get_length(string_->string); cursor++) {
-        string_->string[cursor] = (char) tolower(string_->string[cursor]);
+        string_->string[cursor] = (char)tolower(string_->string[cursor]);
     }
 }
 void string_upper(String* self) {
@@ -86,7 +86,7 @@ void string_upper(String* self) {
 
     // convert all char's to upper
     for (int cursor = 0; cursor < string_get_length(string_->string); cursor++) {
-        string_->string[cursor] = (char) toupper(string_->string[cursor]);
+        string_->string[cursor] = (char)toupper(string_->string[cursor]);
     }
 }
 void string_reverse(String* self) {
@@ -115,7 +115,7 @@ void string_cut(String* self, int begin, int end) {
     struct String_* string_ = (struct String_*)self;
 
     // create new string
-    char* cut_string = heap_alloc((tsize) ((end - begin + 1) * sizeof(char)));
+    char* cut_string = heap_alloc((tsize)((end - begin + 1) * sizeof(char)));
 
     // cut data from string
     for (int cursor = begin; cursor < end; cursor++) {
@@ -139,7 +139,7 @@ void string_replace(String* self, int begin, int end, char* replace) {
     // split part 2
     String* part_2 = NULL;
     if (end < string_get_length(string_->string)) {
-        part_2 = string_new_cut(string_->string, end, (int) string_get_length(string_->string));
+        part_2 = string_new_cut(string_->string, end, (int)string_get_length(string_->string));
     } else {
         part_2 = string_new_copy("");
     }
@@ -232,7 +232,7 @@ String* string_new_printf(char* format, ...) {
     va_list args, args2;
     va_start(args, format);
     va_copy(args2, args);
-    string_->string = heap_alloc((tsize) ((vsnprintf(NULL, 0, format, args) + 1) * sizeof(char)));
+    string_->string = heap_alloc((tsize)((vsnprintf(NULL, 0, format, args) + 1) * sizeof(char)));
     vsprintf(string_->string, format, args2);
     va_end(args);
     va_end(args2);

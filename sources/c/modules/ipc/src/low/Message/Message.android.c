@@ -8,7 +8,7 @@
 #include <low/Semaphore.h>
 #include <low/String.h>
 
-struct Message_Memory{
+struct Message_Memory {
     int start;
     int end;
     int connections;
