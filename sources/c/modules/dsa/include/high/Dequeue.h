@@ -1,17 +1,22 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct Dequeue_VTable {
-    int (*enqueue)(struct Dequeue* self, int front, void* item, uint_64 timeout);
-    void* (*dequeue)(struct Dequeue* self, int front, uint_64 timeout);
-    void* (*get)(struct Dequeue* self, int front);
-    int (*size)(struct Dequeue* self);
-} Dequeue_VTable;
+// structs
+typedef struct Dequeue Dequeue;
+typedef struct Dequeue_VTable Dequeue_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct Dequeue {
+struct Dequeue {
     Dequeue_VTable* vtable;
-} Dequeue;
+};
+
+// vtable
+struct Dequeue_VTable {
+    int (*enqueue)(Dequeue* self, int front, void* item, uint_64 timeout);
+    void* (*dequeue)(Dequeue* self, int front, uint_64 timeout);
+    void* (*get)(Dequeue* self, int front);
+    int (*size)(Dequeue* self);
+};
 
 // init vtable
 void dequeue_init();

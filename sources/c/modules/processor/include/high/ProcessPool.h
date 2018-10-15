@@ -1,16 +1,21 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct ProcessPool_VTable {
-    int (*start)(struct ProcessPool* self);
-    int (*post)(struct ProcessPool* self, void (*function)(void*), void* arg);
-    int (*stop)(struct ProcessPool* self);
-} ProcessPool_VTable;
+// structs
+typedef struct ProcessPool ProcessPool;
+typedef struct ProcessPool_VTable ProcessPool_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct ProcessPool {
+struct ProcessPool {
     ProcessPool_VTable* vtable;
-} ProcessPool;
+};
+
+// vtable
+struct ProcessPool_VTable {
+    int (*start)(ProcessPool* self);
+    int (*post)(ProcessPool* self, void (*function)(void*), void* arg);
+    int (*stop)(ProcessPool* self);
+};
 
 // init vtable
 void processpool_init();

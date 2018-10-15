@@ -22,13 +22,13 @@ struct Semaphore_ {
 Semaphore_VTable* semaphore_vtable;
 
 // link methods
-int semaphore_wait(struct Semaphore* self, uint_64 timeout);
-int semaphore_post(struct Semaphore* self);
-int semaphore_get(struct Semaphore* self);
+int semaphore_wait(Semaphore* self, uint_64 timeout);
+int semaphore_post(Semaphore* self);
+int semaphore_get(Semaphore* self);
 
 // implement methods
 // vtable operators
-int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
+int semaphore_wait(Semaphore* self, uint_64 timeout) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
     // wait the win32 semaphore
@@ -46,7 +46,7 @@ int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
 
     return -1;
 }
-int semaphore_post(struct Semaphore* self) {
+int semaphore_post(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
     // post the win32 semaphore
@@ -56,7 +56,7 @@ int semaphore_post(struct Semaphore* self) {
 
     return -1;
 }
-int semaphore_get(struct Semaphore* self) {
+int semaphore_get(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
     // get the win32 semaphore value

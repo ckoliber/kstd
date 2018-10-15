@@ -1,15 +1,20 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct Message_VTable {
-    int (*enqueue)(struct Message* self, void* item, uint_64 timeout);
-    int (*dequeueu)(struct Message* self, void* item, uint_64 timeout);
-} Message_VTable;
+// structs
+typedef struct Message Message;
+typedef struct Message_VTable Message_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct Message {
+struct Message {
     Message_VTable* vtable;
-} Message;
+};
+
+// vtable
+struct Message_VTable {
+    int (*enqueue)(Message* self, void* item, uint_64 timeout);
+    int (*dequeueu)(Message* self, void* item, uint_64 timeout);
+};
 
 // init vtable
 void message_init();

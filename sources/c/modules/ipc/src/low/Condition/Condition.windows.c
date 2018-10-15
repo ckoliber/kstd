@@ -114,7 +114,7 @@ int condition_wait(struct Condition* self, uint_64 timeout) {
     condition_->critical_mutex->vtable->acquire(condition_->critical_mutex, UINT_64_MAX);
 
     // critical section
-    *sleepers++;
+    (*sleepers)++;
 
     // release the critical mutex
     condition_->critical_mutex->vtable->release(condition_->critical_mutex);
@@ -136,7 +136,7 @@ int condition_signal(struct Condition* self, int count) {
     condition_->critical_mutex->vtable->acquire(condition_->critical_mutex, UINT_64_MAX);
 
     // critical section
-    int result = -1;
+    int result;
     if (count > 0) {
         // signal
         for (int cursor = 0; cursor < count; cursor++) {
@@ -145,7 +145,7 @@ int condition_signal(struct Condition* self, int count) {
                 condition_->sleep_semaphore->vtable->post(condition_->sleep_semaphore);
 
                 // reduce sleepers
-                *sleepers--;
+                (*sleepers)--;
             } else {
                 break;
             }
@@ -158,7 +158,7 @@ int condition_signal(struct Condition* self, int count) {
             condition_->sleep_semaphore->vtable->post(condition_->sleep_semaphore);
 
             // reduce sleepers
-            *sleepers--;
+            (*sleepers)--;
         }
         result = 0;
     }
@@ -236,7 +236,7 @@ Condition* condition_new_object(char* name) {
 
     // set constructor data
     if (name != NULL) {
-        condition_->name = string_new_prinf("%s_condition", name);
+        condition_->name = string_new_printf("%s_condition", name);
     }
 
     // set private data

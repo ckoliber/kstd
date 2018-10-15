@@ -1,31 +1,35 @@
 #include <low/Type.h>
 
+// structs
+typedef struct String String;
+typedef struct String_VTable String_VTable;
+
+// implement structs
+// vtable + private data problem solve
+struct String {
+    String_VTable* vtable;
+};
+
 // vtable
-typedef struct String_VTable {
+struct String_VTable {
     // convert operators
-    int (*to_int)(struct String* self);
-    long (*to_long)(struct String* self);
-    double (*to_double)(struct String* self);
+    long (*to_long)(String* self, int base);
+    double (*to_double)(String* self);
 
     // change value operators
-    void (*lower)(struct String* self);
-    void (*upper)(struct String* self);
-    void (*reverse)(struct String* self);
-    void (*copy)(struct String* self, char* data);
-    void (*concat)(struct String* self, char* data);
-    void (*cut)(struct String* self, int begin, int end);
-    void (*replace)(struct String* self, int begin, int end, char* replace);
+    void (*lower)(String* self);
+    void (*upper)(String* self);
+    void (*reverse)(String* self);
+    void (*copy)(String* self, char* data);
+    void (*concat)(String* self, char* data);
+    void (*cut)(String* self, int begin, int end);
+    void (*replace)(String* self, int begin, int end, char* replace);
 
     // information operators
-    tsize (*length)(struct String* self);
-    int (*compare)(struct String* self, char* data);
-    char* (*value)(struct String* self);
-} String_VTable;
-
-// vtable + private data problem solve
-typedef struct String {
-    String_VTable* vtable;
-} String;
+    tsize (*length)(String* self);
+    int (*compare)(String* self, char* data);
+    char* (*value)(String* self);
+};
 
 // init vtable
 void string_init();

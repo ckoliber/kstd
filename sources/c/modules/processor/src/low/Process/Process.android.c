@@ -19,7 +19,7 @@ Process* process_new() {
     return NULL;
 }
 void process_free(Process* process) {
-    return;
+
 }
 Process* process_new_object() {
     return NULL;

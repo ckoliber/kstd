@@ -75,32 +75,33 @@
 12. __OK__ - implement File low (+file +poller)
 13. __OK__ - refactor code with vtable
 14. __OK__ - app_init -> call x_init all parts
-15. refactor code with (convert return result; at methods do not need Builder Pattern (return x;)) + _new => _new_object
+15. __OK__ - refactor code with (convert return result; at methods do not need Builder Pattern (return x;)) + _new => _new_object
 16. implement algo high kre -> (_new => _new_object, compile_is_multistate, parse, pack)
 17. windows String
-18. implement ipc low Win32
-19. implement ipc low Android
-20. implement processor high ThreadPool, ProcessPool
-21. implement processor low Thread, Process Posix
-22. implement processor low Thread, Process(MinGW fork) Win32
-23. implement processor low Thread, Process Android
-24. implement io low File Posix
-25. implement io low File Win32
-26. implement io low Poller Linux(epoll)
-27. implement io low Poller Mac, BSD, IOS(kqueue)
-28. implement io low Poller Win32(iocp)
-29. implement io low Poller Android(poll)
-30. launch (0.1.0) -> test
-31. implement ipc high Monitor, Barrier, Latch
-32. implement dsa high Set, Hash
-33. implement processor low Thread, Process (affinity, priority, policy) Posix
-34. implement processor low Thread, Process (affinity, priority, policy) Win32
-35. implement processor low Thread, Process (affinity, priority, policy) Android
-36. implement local low Time, Date Posix
-37. implement local low Time, Date Win32
-38. launch (0.2.0) -> test
-39. launch (0.3.0) -> test => Network
-40. launch (0.4.0) -> test => (Security)?
+18. __OK__ - implement ipc low Win32
+19. __OK__ - implement ipc low Android
+20. __OK__ - implement processor high ThreadPool, ProcessPool
+21. __OK__ - implement processor low Thread, Process Posix
+22. __OK__ - implement processor low Thread, Process(MinGW fork) Win32
+23. __OK__ - implement processor low Thread, Process Android
+24. refactor code (struct X* self => X self, .h file struct implement, check clang warnings with clion Win32, Mac)
+25. implement io low File Posix
+26. implement io low File Win32
+27. implement io low Poller Linux(epoll)
+28. implement io low Poller Mac, BSD, IOS(kqueue)
+29. implement io low Poller Win32(iocp)
+30. implement io low Poller Android(poll)
+31. launch (0.1.0) -> test
+32. implement ipc high Monitor, Barrier, Latch
+33. implement dsa high Set, Hash
+34. implement processor low Thread, Process (affinity, priority, policy) Posix
+35. implement processor low Thread, Process (affinity, priority, policy) Win32
+36. implement processor low Thread, Process (affinity, priority, policy) Android
+37. implement local low Time, Date Posix
+38. implement local low Time, Date Win32
+39. launch (0.2.0) -> test
+40. launch (0.3.0) -> test => Network
+41. launch (0.4.0) -> test => (Security)?
 
 ## Now
 

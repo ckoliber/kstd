@@ -8,6 +8,7 @@
 #include <low/String.h>
 #include <pthread.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 struct Mutex_ {
     // self public object
@@ -24,8 +25,8 @@ struct Mutex_ {
 Mutex_VTable* mutex_vtable;
 
 // link methods
-int mutex_acquire(struct Mutex* self, uint_64 timeout);
-int mutex_release(struct Mutex* self);
+int mutex_acquire(Mutex* self, uint_64 timeout);
+int mutex_release(Mutex* self);
 
 // local methods
 void* mutex_anonymous_new(int mode);
@@ -134,7 +135,7 @@ void mutex_named_free(void* memory, char* name) {
     int* connections = memory + sizeof(pthread_mutex_t);
 
     // destroy mutex and share memory on close all connections
-    if (connections <= 1) {
+    if (*connections <= 1) {
         // destroy share mutex
         pthread_mutex_destroy(mutex);
 
@@ -155,7 +156,7 @@ void mutex_named_free(void* memory, char* name) {
 }
 
 // vtable operators
-int mutex_acquire(struct Mutex* self, uint_64 timeout) {
+int mutex_acquire(Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // get mutex address
@@ -182,7 +183,7 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
 
     return -1;
 }
-int mutex_release(struct Mutex* self) {
+int mutex_release(Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // get mutex address

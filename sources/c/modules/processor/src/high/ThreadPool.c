@@ -21,15 +21,15 @@ struct ThreadPool_ {
 ThreadPool_VTable* threadpool_vtable;
 
 // link methods
-int threadpool_start(struct ThreadPool* self);
-int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg);
-int threadpool_stop(struct ThreadPool* self);
+int threadpool_start(ThreadPool* self);
+int threadpool_post(ThreadPool* self, void (*function)(void*), void* arg);
+int threadpool_stop(ThreadPool* self);
 
 // local methods
-int threadpool_looper(struct ThreadPool* self);
+int threadpool_looper(ThreadPool* self);
 
 // implement methods
-int threadpool_looper(struct ThreadPool* self) {
+int threadpool_looper(ThreadPool* self) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // allocate temp for items (function pointer + arg value)
@@ -51,21 +51,21 @@ int threadpool_looper(struct ThreadPool* self) {
 }
 
 // vtable operators
-int threadpool_start(struct ThreadPool* self) {
+int threadpool_start(ThreadPool* self) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // start thread pool
     int result = 0;
     for (int cursor = 0; cursor < threadpool_->size; cursor++) {
         // start thread
-        if (threadpool_->pool[cursor]->vtable->start(threadpool_->pool[cursor], threadpool_looper, self) != 0) {
+        if (threadpool_->pool[cursor]->vtable->start(threadpool_->pool[cursor], (int (*)(void *)) threadpool_looper, self) != 0) {
             result = -1;
         }
     }
 
     return result;
 }
-int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg) {
+int threadpool_post(ThreadPool* self, void (*function)(void*), void* arg) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // allocate temp for item package
@@ -83,7 +83,7 @@ int threadpool_post(struct ThreadPool* self, void (*function)(void*), void* arg)
 
     return result;
 }
-int threadpool_stop(struct ThreadPool* self) {
+int threadpool_stop(ThreadPool* self) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // stop thread pool
@@ -151,7 +151,7 @@ ThreadPool* threadpool_new_object(int size, tsize arg) {
     // set private data
     threadpool_->pool = heap_alloc(sizeof(ThreadPool*) * size);
     for (int cursor = 0; cursor < size; cursor++) {
-        threadpool_->pool[cursor] = thread_new(0);
+        threadpool_->pool[cursor] = thread_new_object(0);
     }
 
     // create message queue

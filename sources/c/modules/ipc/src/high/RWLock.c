@@ -19,14 +19,14 @@ struct RWLock_ {
 RWLock_VTable* rwlock_vtable;
 
 // link methods
-int rwlock_read_lock(struct RWLock* self, uint_64 timeout);
-int rwlock_read_unlock(struct RWLock* self);
-int rwlock_write_lock(struct RWLock* self, uint_64 timeout);
-int rwlock_write_unlock(struct RWLock* self);
+int rwlock_read_lock(RWLock* self, uint_64 timeout);
+int rwlock_read_unlock(RWLock* self);
+int rwlock_write_lock(RWLock* self, uint_64 timeout);
+int rwlock_write_unlock(RWLock* self);
 
 // implement methods
 // vtable operators
-int rwlock_read_lock(struct RWLock* self, uint_64 timeout) {
+int rwlock_read_lock(RWLock* self, uint_64 timeout) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // get time and result
@@ -53,19 +53,17 @@ int rwlock_read_lock(struct RWLock* self, uint_64 timeout) {
 
     return result;
 }
-int rwlock_read_unlock(struct RWLock* self) {
+int rwlock_read_unlock(RWLock* self) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // critical begin
     rwlock_->critical_mutex->vtable->acquire(rwlock_->critical_mutex, UINT_16_MAX);
 
     // decrease readers count and release write lock
-    int result = -1;
+    int result = 0;
     rwlock_->readers_count--;
     if (rwlock_->readers_count == 0) {
         result = rwlock_->write_mutex->vtable->release(rwlock_->write_mutex);
-    } else {
-        result = 0;
     }
 
     // critical end
@@ -73,7 +71,7 @@ int rwlock_read_unlock(struct RWLock* self) {
 
     return result;
 }
-int rwlock_write_lock(struct RWLock* self, uint_64 timeout) {
+int rwlock_write_lock(RWLock* self, uint_64 timeout) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // write lock
@@ -81,7 +79,7 @@ int rwlock_write_lock(struct RWLock* self, uint_64 timeout) {
 
     return result;
 }
-int rwlock_write_unlock(struct RWLock* self) {
+int rwlock_write_unlock(RWLock* self) {
     struct RWLock_* rwlock_ = (struct RWLock_*)self;
 
     // write unlock

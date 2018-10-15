@@ -18,12 +18,12 @@ struct Lock_ {
 Lock_VTable* lock_vtable;
 
 // link methods
-int lock_lock(struct Lock* self, uint_64 timeout);
-int lock_unlock(struct Lock* self);
+int lock_lock(Lock* self, uint_64 timeout);
+int lock_unlock(Lock* self);
 
 // implement methods
 // vtable operators
-int lock_lock(struct Lock* self, uint_64 timeout) {
+int lock_lock(Lock* self, uint_64 timeout) {
     struct Lock_* lock_ = (struct Lock_*)self;
 
     // acquire internal Mutex
@@ -31,7 +31,7 @@ int lock_lock(struct Lock* self, uint_64 timeout) {
 
     return result;
 }
-int lock_unlock(struct Lock* self) {
+int lock_unlock(Lock* self) {
     struct Lock_* lock_ = (struct Lock_*)self;
 
     // release internal Mutex

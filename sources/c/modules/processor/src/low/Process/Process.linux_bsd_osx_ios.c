@@ -23,14 +23,14 @@ struct Process_ {
 Process_VTable* process_vtable;
 
 // link methods
-int process_start(struct Process* self, int (*function)(void*), void* arg);
-int process_join(struct Process* self);
-int process_id(struct Process* self);
-int process_stop(struct Process* self);
+int process_start(Process* self, int (*function)(void*), void* arg);
+int process_join(Process* self);
+int process_id(Process* self);
+int process_stop(Process* self);
 
 // implement methods
 // vtable operators
-int process_start(struct Process* self, int (*function)(void*), void* arg) {
+int process_start(Process* self, int (*function)(void*), void* arg) {
     struct Process_* process_ = (struct Process_*)self;
 
     // start internal child process
@@ -45,7 +45,7 @@ int process_start(struct Process* self, int (*function)(void*), void* arg) {
 
     return -1;
 }
-int process_join(struct Process* self) {
+int process_join(Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // join internal child process
@@ -54,7 +54,7 @@ int process_join(struct Process* self) {
 
     return result;
 }
-int process_id(struct Process* self) {
+int process_id(Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // get internal child process id
@@ -62,7 +62,7 @@ int process_id(struct Process* self) {
 
     return result;
 }
-int process_stop(struct Process* self) {
+int process_stop(Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // stop internal child process

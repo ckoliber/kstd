@@ -2,4 +2,5 @@
 .vscode
 sources/*/node_modules/
 sources/*/build/
+sources/*/*build*/
 sources/*/cmake*/

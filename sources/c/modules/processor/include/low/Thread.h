@@ -1,17 +1,22 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct Thread_VTable {
-    int (*start)(struct Thread* self, int (*function)(void*), void* arg);
-    int (*join)(struct Thread* self);
-    int (*id)(struct Thread* self);
-    int (*stop)(struct Thread* self);
-} Thread_VTable;
+// structs
+typedef struct Thread Thread;
+typedef struct Thread_VTable Thread_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct Thread {
+struct Thread {
     Thread_VTable* vtable;
-} Thread;
+};
+
+// vtable
+struct Thread_VTable {
+    int (*start)(Thread* self, int (*function)(void*), void* arg);
+    int (*join)(Thread* self);
+    int (*id)(Thread* self);
+    int (*stop)(Thread* self);
+};
 
 // init vtable
 void thread_init();

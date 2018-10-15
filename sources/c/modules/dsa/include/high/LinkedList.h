@@ -1,29 +1,36 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct LinkedList_VTable {
-    int (*add)(struct LinkedList* self, void* item);
-    int (*addto)(struct LinkedList* self, int position, void* item);
-    void* (*put)(struct LinkedList* self, int position, void* item);
-    void* (*remove)(struct LinkedList* self, int position);
-    void* (*get)(struct LinkedList* self, int position);
-    int (*indexof)(struct LinkedList* self, void* item);
-    int (*size)(struct LinkedList* self);
-} LinkedList_VTable;
+// structs
+typedef struct LinkedList LinkedList;
+typedef struct LinkedListIterator LinkedListIterator;
+typedef struct LinkedList_VTable LinkedList_VTable;
+typedef struct LinkedListIterator_VTable LinkedListIterator_VTable;
 
-typedef struct LinkedListIterator_VTable {
-    bool (*hasnext)(struct LinkedListIterator* self);
-    void* (*next)(struct LinkedListIterator* self);
-} LinkedListIterator_VTable;
-
+// implement structs
 // vtable + private data problem solve
-typedef struct LinkedList {
+struct LinkedList {
     LinkedList_VTable* vtable;
-} LinkedList;
+};
 
-typedef struct LinkedListIterator {
+struct LinkedListIterator {
     LinkedListIterator_VTable* vtable;
-} LinkedListIterator;
+};
+
+// vtable
+struct LinkedList_VTable {
+    int (*add)(LinkedList* self, void* item);
+    int (*addto)(LinkedList* self, int position, void* item);
+    void* (*put)(LinkedList* self, int position, void* item);
+    void* (*remove)(LinkedList* self, int position);
+    void* (*get)(LinkedList* self, int position);
+    int (*indexof)(LinkedList* self, void* item);
+    int (*size)(LinkedList* self);
+};
+
+struct LinkedListIterator_VTable {
+    bool (*hasnext)(LinkedListIterator* self);
+    void* (*next)(LinkedListIterator* self);
+};
 
 // init vtable
 void linkedlist_init();

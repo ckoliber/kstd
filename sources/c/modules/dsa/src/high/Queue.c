@@ -17,14 +17,14 @@ struct Queue_ {
 Queue_VTable* queue_vtable;
 
 // link methods
-int queue_enqueue(struct Queue* self, void* item, uint_64 timeout);
-void* queue_dequeue(struct Queue* self, uint_64 timeout);
-void* queue_get(struct Queue* self);
-int queue_size(struct Queue* self);
+int queue_enqueue(Queue* self, void* item, uint_64 timeout);
+void* queue_dequeue(Queue* self, uint_64 timeout);
+void* queue_get(Queue* self);
+int queue_size(Queue* self);
 
 // implement methods
 // vtable operators
-int queue_enqueue(struct Queue* self, void* item, uint_64 timeout) {
+int queue_enqueue(Queue* self, void* item, uint_64 timeout) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // internal dequeue enqueue
@@ -32,7 +32,7 @@ int queue_enqueue(struct Queue* self, void* item, uint_64 timeout) {
 
     return result;
 }
-void* queue_dequeue(struct Queue* self, uint_64 timeout) {
+void* queue_dequeue(Queue* self, uint_64 timeout) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // internal dequeue dequeue
@@ -40,7 +40,7 @@ void* queue_dequeue(struct Queue* self, uint_64 timeout) {
 
     return result;
 }
-void* queue_get(struct Queue* self) {
+void* queue_get(Queue* self) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // internal dequeue get
@@ -48,7 +48,7 @@ void* queue_get(struct Queue* self) {
 
     return result;
 }
-int queue_size(struct Queue* self) {
+int queue_size(Queue* self) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // internal dequeue size

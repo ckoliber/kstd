@@ -17,14 +17,14 @@ struct Stack_ {
 Stack_VTable* stack_vtable;
 
 // link methods
-int stack_push(struct Stack* self, void* item, uint_64 timeout);
-void* stack_pop(struct Stack* self, uint_64 timeout);
-void* stack_get(struct Stack* self);
-int stack_size(struct Stack* self);
+int stack_push(Stack* self, void* item, uint_64 timeout);
+void* stack_pop(Stack* self, uint_64 timeout);
+void* stack_get(Stack* self);
+int stack_size(Stack* self);
 
 // implement methods
 // vtable operators
-int stack_push(struct Stack* self, void* item, uint_64 timeout) {
+int stack_push(Stack* self, void* item, uint_64 timeout) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // internal dequeue enqueue
@@ -32,7 +32,7 @@ int stack_push(struct Stack* self, void* item, uint_64 timeout) {
 
     return result;
 }
-void* stack_pop(struct Stack* self, uint_64 timeout) {
+void* stack_pop(Stack* self, uint_64 timeout) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // internal dequeue dequeue
@@ -40,7 +40,7 @@ void* stack_pop(struct Stack* self, uint_64 timeout) {
 
     return result;
 }
-void* stack_get(struct Stack* self) {
+void* stack_get(Stack* self) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // internal dequeue get
@@ -48,7 +48,7 @@ void* stack_get(struct Stack* self) {
 
     return result;
 }
-int stack_size(struct Stack* self) {
+int stack_size(Stack* self) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // internal dequeue size

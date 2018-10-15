@@ -1,16 +1,21 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct Semaphore_VTable {
-    int (*wait)(struct Semaphore* self, uint_64 timeout);
-    int (*post)(struct Semaphore* self);
-    int (*get)(struct Semaphore* self);
-} Semaphore_VTable;
+// structs
+typedef struct Semaphore Semaphore;
+typedef struct Semaphore_VTable Semaphore_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct Semaphore {
+struct Semaphore {
     Semaphore_VTable* vtable;
-} Semaphore;
+};
+
+// vtable
+struct Semaphore_VTable {
+    int (*wait)(Semaphore* self, uint_64 timeout);
+    int (*post)(Semaphore* self);
+    int (*get)(Semaphore* self);
+};
 
 // init vtable
 void semaphore_init();

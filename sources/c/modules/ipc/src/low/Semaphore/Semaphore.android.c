@@ -7,6 +7,8 @@
 #include <low/Mutex.h>
 #include <low/String.h>
 #include <pthread.h>
+#include <sys/time.h>
+#include <errno.h>
 
 struct Semaphore_ {
     // self public object
@@ -23,9 +25,9 @@ struct Semaphore_ {
 Semaphore_VTable* semaphore_vtable;
 
 // link methods
-int semaphore_wait(struct Semaphore* self, uint_64 timeout);
-int semaphore_post(struct Semaphore* self);
-int semaphore_get(struct Semaphore* self);
+int semaphore_wait(Semaphore* self, uint_64 timeout);
+int semaphore_post(Semaphore* self);
+int semaphore_get(Semaphore* self);
 
 // local methods
 void* semaphore_anonymous_new(int value);
@@ -83,7 +85,7 @@ void semaphore_named_free(void* memory, char* name) {
 }
 
 // vtable operators
-int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
+int semaphore_wait(Semaphore* self, uint_64 timeout) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
     // get mutex and cond and svalue address
@@ -101,7 +103,7 @@ int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
         while (*svalue == 0) {
             pthread_cond_wait(cond, mutex);
         }
-        *svalue--;
+        (*svalue)--;
         result = 0;
     } else {
         // timed
@@ -126,7 +128,7 @@ int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
 
         // check timeouted
         if (!timedout) {
-            *svalue--;
+            (*svalue)--;
             result = 0;
         }
     }
@@ -136,7 +138,7 @@ int semaphore_wait(struct Semaphore* self, uint_64 timeout) {
 
     return result;
 }
-int semaphore_post(struct Semaphore* self) {
+int semaphore_post(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
     // get mutex and cond and svalue address
@@ -149,7 +151,7 @@ int semaphore_post(struct Semaphore* self) {
 
     // signal the pthread cond
     int result = -1;
-    *svalue++;
+    (*svalue)++;
     if (pthread_cond_signal(cond) == 0) {
         result = 0;
     }
@@ -159,7 +161,7 @@ int semaphore_post(struct Semaphore* self) {
 
     return result;
 }
-int semaphore_get(struct Semaphore* self) {
+int semaphore_get(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
     // get mutex and cond and svalue address

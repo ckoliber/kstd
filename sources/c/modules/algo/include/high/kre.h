@@ -1,23 +1,28 @@
 #include <memory/low/Type.h>
 
-// vtable
-typedef struct KRE_VTable {
-    bool (*test)(struct KRE* self, char* text);
+// structs
+typedef struct KRE KRE;
+typedef struct KRE_VTable KRE_VTable;
 
-    struct ArrayList* (*match)(struct KRE* self, char* text);
-    struct String* (*replace)(struct KRE* self, char* text, char* replace);
-
-    struct ArrayList* (*split)(struct KRE* self, char* text);
-    struct String* (*merge)(struct KRE* self, struct ArrayList* data);
-
-    struct ArrayList* (*export)(struct KRE* self, char* text);
-    struct String* (*import)(struct KRE* self, struct ArrayList* data);
-} KRE_VTable;
-
+// implement structs
 // vtable + private data problem solve
-typedef struct KRE {
+struct KRE {
     KRE_VTable* vtable;
-} KRE;
+};
+
+// vtable
+struct KRE_VTable {
+    bool (*test)(KRE* self, char* text);
+
+    struct ArrayList* (*match)(KRE* self, char* text);
+    struct String* (*replace)(KRE* self, char* text, char* replace);
+
+    struct ArrayList* (*split)(KRE* self, char* text);
+    struct String* (*merge)(KRE* self, struct ArrayList* data);
+
+    struct ArrayList* (*export)(KRE* self, char* text);
+    struct String* (*import)(KRE* self, struct ArrayList* data);
+};
 
 // init vtable
 void kre_init();

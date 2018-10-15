@@ -1,20 +1,25 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct ArrayList_VTable {
-    int (*add)(struct ArrayList* self, void* item);
-    int (*addto)(struct ArrayList* self, int position, void* item);
-    void* (*put)(struct ArrayList* self, int position, void* item);
-    void* (*remove)(struct ArrayList* self, int position);
-    void* (*get)(struct ArrayList* self, int position);
-    int (*indexof)(struct ArrayList* self, void* item);
-    int (*size)(struct ArrayList* self);
-} ArrayList_VTable;
+// structs
+typedef struct ArrayList ArrayList;
+typedef struct ArrayList_VTable ArrayList_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct ArrayList {
+struct ArrayList {
     ArrayList_VTable* vtable;
-} ArrayList;
+};
+
+// vtable
+struct ArrayList_VTable {
+    int (*add)(ArrayList* self, void* item);
+    int (*addto)(ArrayList* self, int position, void* item);
+    void* (*put)(ArrayList* self, int position, void* item);
+    void* (*remove)(ArrayList* self, int position);
+    void* (*get)(ArrayList* self, int position);
+    int (*indexof)(ArrayList* self, void* item);
+    int (*size)(ArrayList* self);
+};
 
 // init vtable
 void arraylist_init();

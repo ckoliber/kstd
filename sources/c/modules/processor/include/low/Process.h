@@ -1,17 +1,22 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct Process_VTable {
-    int (*start)(struct Process* self, int (*function)(void*), void* arg);
-    int (*join)(struct Process* self);
-    int (*id)(struct Process* self);
-    int (*stop)(struct Process* self);
-} Process_VTable;
+// structs
+typedef struct Process Process;
+typedef struct Process_VTable Process_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct Process {
+struct Process {
     Process_VTable* vtable;
-} Process;
+};
+
+// vtable
+struct Process_VTable {
+    int (*start)(Process* self, int (*function)(void*), void* arg);
+    int (*join)(Process* self);
+    int (*id)(Process* self);
+    int (*stop)(Process* self);
+};
 
 // init vtable
 void process_init();

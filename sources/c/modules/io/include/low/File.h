@@ -22,31 +22,36 @@
 #define FILE_FLAG_NOBUFFER
 #define FILE_FLAG_NOBUFFER
 
+// structs
+typedef struct File File;
+typedef struct File_VTable File_VTable;
+
+// implement structs
+// vtable + private data problem solve
+struct File {
+    File_VTable* vtable;
+};
+
 // vtable
-typedef struct File_VTable {
+struct File_VTable {
     // io operators
-    tsize (*read)(struct File* self, void* data, tsize size);
-    tsize (*write)(struct File* self, void* data, tsize size);
-    int (*flush)(struct File* self);
-    int (*cancel)(struct File* self);
+    tsize (*read)(File* self, void* data, tsize size);
+    tsize (*write)(File* self, void* data, tsize size);
+    int (*flush)(File* self);
+    int (*cancel)(File* self);
 
     // fd operators
-    int (*reopen)(struct File* self, int access, int lock, int mode, int flags);
-    int (*fd)(struct File* self);
-    char* (*uri)(struct File* self);
+    int (*reopen)(File* self, int access, int lock, int mode, int flags);
+    int (*fd)(File* self);
+    char* (*uri)(File* self);
 
     // cursor operators -> get size, seek, get cursor
-    tsize (*seek)(struct File* self, tsize from, int position);
+    tsize (*seek)(File* self, tsize from, int position);
 
     // advisory lock operators
-    // int (*lock)(struct File* self, int lock);
-    // int (*unlock)(struct File* self, int lock);
-} File_VTable;
-
-// vtable + private data problem solve
-typedef struct File {
-    File_VTable* vtable;
-} File;
+    // int (*lock)(File* self, int lock);
+    // int (*unlock)(File* self, int lock);
+};
 
 // init vtable
 void file_init();

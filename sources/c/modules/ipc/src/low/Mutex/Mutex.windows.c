@@ -27,14 +27,14 @@ Mutex_VTable* mutex_vtable_recursive;
 Mutex_VTable* mutex_vtable_errorcheck;
 
 // link methods
-int mutex_acquire_normal(struct Mutex* self, uint_64 timeout);
-int mutex_release_normal(struct Mutex* self);
+int mutex_acquire_normal(Mutex* self, uint_64 timeout);
+int mutex_release_normal(Mutex* self);
 
-int mutex_acquire_recursive(struct Mutex* self, uint_64 timeout);
-int mutex_release_recursive(struct Mutex* self);
+int mutex_acquire_recursive(Mutex* self, uint_64 timeout);
+int mutex_release_recursive(Mutex* self);
 
-int mutex_acquire_errorcheck(struct Mutex* self, uint_64 timeout);
-int mutex_release_errorcheck(struct Mutex* self);
+int mutex_acquire_errorcheck(Mutex* self, uint_64 timeout);
+int mutex_release_errorcheck(Mutex* self);
 
 // local methods
 void* mutex_errorcheck_anonymous_new();
@@ -110,7 +110,7 @@ void mutex_errorcheck_named_free(void* memory, HANDLE memory_handle) {
 }
 
 // normal mode vtable operators
-int mutex_acquire_normal(struct Mutex* self, uint_64 timeout) {
+int mutex_acquire_normal(Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // aquire the win32 semaphore
@@ -128,7 +128,7 @@ int mutex_acquire_normal(struct Mutex* self, uint_64 timeout) {
 
     return -1;
 }
-int mutex_release_normal(struct Mutex* self) {
+int mutex_release_normal(Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // release the win32 semaphore
@@ -140,7 +140,7 @@ int mutex_release_normal(struct Mutex* self) {
 }
 
 // recursive mode vtable operators
-int mutex_acquire_recursive(struct Mutex* self, uint_64 timeout) {
+int mutex_acquire_recursive(Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // aquire the win32 mutex
@@ -158,7 +158,7 @@ int mutex_acquire_recursive(struct Mutex* self, uint_64 timeout) {
 
     return -1;
 }
-int mutex_release_recursive(struct Mutex* self) {
+int mutex_release_recursive(Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // release the win32 mutex
@@ -170,7 +170,7 @@ int mutex_release_recursive(struct Mutex* self) {
 }
 
 // errorcheck mode vtable operators
-int mutex_acquire_errorcheck(struct Mutex* self, uint_64 timeout) {
+int mutex_acquire_errorcheck(Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // get thread id address
@@ -203,7 +203,7 @@ int mutex_acquire_errorcheck(struct Mutex* self, uint_64 timeout) {
 
     return -1;
 }
-int mutex_release_errorcheck(struct Mutex* self) {
+int mutex_release_errorcheck(Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // release the win32 mutex

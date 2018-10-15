@@ -40,30 +40,30 @@ LinkedList_VTable* linkedlist_vtable_concurrent;
 LinkedListIterator_VTable* linkedlistiterator_vtable;
 
 // link methods
-int linkedlist_add_normal(struct LinkedList* self, void* item);
-int linkedlist_addto_normal(struct LinkedList* self, int position, void* item);
-void* linkedlist_put_normal(struct LinkedList* self, int position, void* item);
-void* linkedlist_remove_normal(struct LinkedList* self, int position);
-void* linkedlist_get_normal(struct LinkedList* self, int position);
-int linkedlist_indexof_normal(struct LinkedList* self, void* item);
-int linkedlist_size_normal(struct LinkedList* self);
+int linkedlist_add_normal(LinkedList* self, void* item);
+int linkedlist_addto_normal(LinkedList* self, int position, void* item);
+void* linkedlist_put_normal(LinkedList* self, int position, void* item);
+void* linkedlist_remove_normal(LinkedList* self, int position);
+void* linkedlist_get_normal(LinkedList* self, int position);
+int linkedlist_indexof_normal(LinkedList* self, void* item);
+int linkedlist_size_normal(LinkedList* self);
 
-int linkedlist_add_concurrent(struct LinkedList* self, void* item);
-int linkedlist_addto_concurrent(struct LinkedList* self, int position, void* item);
-void* linkedlist_put_concurrent(struct LinkedList* self, int position, void* item);
-void* linkedlist_remove_concurrent(struct LinkedList* self, int position);
-void* linkedlist_get_concurrent(struct LinkedList* self, int position);
-int linkedlist_indexof_concurrent(struct LinkedList* self, void* item);
-int linkedlist_size_concurrent(struct LinkedList* self);
+int linkedlist_add_concurrent(LinkedList* self, void* item);
+int linkedlist_addto_concurrent(LinkedList* self, int position, void* item);
+void* linkedlist_put_concurrent(LinkedList* self, int position, void* item);
+void* linkedlist_remove_concurrent(LinkedList* self, int position);
+void* linkedlist_get_concurrent(LinkedList* self, int position);
+int linkedlist_indexof_concurrent(LinkedList* self, void* item);
+int linkedlist_size_concurrent(LinkedList* self);
 
-bool linkedlistiterator_hasnext(struct LinkedListIterator* self);
-void* linkedlistiterator_next(struct LinkedListIterator* self);
+bool linkedlistiterator_hasnext(LinkedListIterator* self);
+void* linkedlistiterator_next(LinkedListIterator* self);
 
 // local methods
-struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position);
+struct LinkedItem* linkeditem_get(LinkedList* linkedlist, int position);
 
 // implement methods
-struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position) {
+struct LinkedItem* linkeditem_get(LinkedList* linkedlist, int position) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)linkedlist;
 
     // check position is valid
@@ -95,7 +95,7 @@ struct LinkedItem* linkeditem_get(struct LinkedList* linkedlist, int position) {
 }
 
 // normal mode vtable operators
-int linkedlist_add_normal(struct LinkedList* self, void* item) {
+int linkedlist_add_normal(LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // normal addto
@@ -103,7 +103,7 @@ int linkedlist_add_normal(struct LinkedList* self, void* item) {
 
     return result;
 }
-int linkedlist_addto_normal(struct LinkedList* self, int position, void* item) {
+int linkedlist_addto_normal(LinkedList* self, int position, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -128,7 +128,7 @@ int linkedlist_addto_normal(struct LinkedList* self, int position, void* item) {
 
     return result;
 }
-void* linkedlist_put_normal(struct LinkedList* self, int position, void* item) {
+void* linkedlist_put_normal(LinkedList* self, int position, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -145,7 +145,7 @@ void* linkedlist_put_normal(struct LinkedList* self, int position, void* item) {
 
     return result;
 }
-void* linkedlist_remove_normal(struct LinkedList* self, int position) {
+void* linkedlist_remove_normal(LinkedList* self, int position) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -167,7 +167,7 @@ void* linkedlist_remove_normal(struct LinkedList* self, int position) {
 
     return result;
 }
-void* linkedlist_get_normal(struct LinkedList* self, int position) {
+void* linkedlist_get_normal(LinkedList* self, int position) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -183,7 +183,7 @@ void* linkedlist_get_normal(struct LinkedList* self, int position) {
 
     return result;
 }
-int linkedlist_indexof_normal(struct LinkedList* self, void* item) {
+int linkedlist_indexof_normal(LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // search in items to find item
@@ -208,7 +208,7 @@ int linkedlist_indexof_normal(struct LinkedList* self, void* item) {
 
     return -1;
 }
-int linkedlist_size_normal(struct LinkedList* self) {
+int linkedlist_size_normal(LinkedList* self) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // get linkedlist size
@@ -218,7 +218,7 @@ int linkedlist_size_normal(struct LinkedList* self) {
 }
 
 // concurrent mode vtable operators
-int linkedlist_add_concurrent(struct LinkedList* self, void* item) {
+int linkedlist_add_concurrent(LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
@@ -232,7 +232,7 @@ int linkedlist_add_concurrent(struct LinkedList* self, void* item) {
 
     return result;
 }
-int linkedlist_addto_concurrent(struct LinkedList* self, int position, void* item) {
+int linkedlist_addto_concurrent(LinkedList* self, int position, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -251,7 +251,7 @@ int linkedlist_addto_concurrent(struct LinkedList* self, int position, void* ite
 
     return result;
 }
-void* linkedlist_put_concurrent(struct LinkedList* self, int position, void* item) {
+void* linkedlist_put_concurrent(LinkedList* self, int position, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -270,7 +270,7 @@ void* linkedlist_put_concurrent(struct LinkedList* self, int position, void* ite
 
     return result;
 }
-void* linkedlist_remove_concurrent(struct LinkedList* self, int position) {
+void* linkedlist_remove_concurrent(LinkedList* self, int position) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -289,7 +289,7 @@ void* linkedlist_remove_concurrent(struct LinkedList* self, int position) {
 
     return result;
 }
-void* linkedlist_get_concurrent(struct LinkedList* self, int position) {
+void* linkedlist_get_concurrent(LinkedList* self, int position) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // check position is valid
@@ -308,7 +308,7 @@ void* linkedlist_get_concurrent(struct LinkedList* self, int position) {
 
     return result;
 }
-int linkedlist_indexof_concurrent(struct LinkedList* self, void* item) {
+int linkedlist_indexof_concurrent(LinkedList* self, void* item) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
@@ -322,7 +322,7 @@ int linkedlist_indexof_concurrent(struct LinkedList* self, void* item) {
 
     return result;
 }
-int linkedlist_size_concurrent(struct LinkedList* self) {
+int linkedlist_size_concurrent(LinkedList* self) {
     struct LinkedList_* linkedlist_ = (struct LinkedList_*)self;
 
     // concurrent writelock
@@ -337,7 +337,7 @@ int linkedlist_size_concurrent(struct LinkedList* self) {
     return result;
 }
 
-bool linkedlistiterator_hasnext(struct LinkedListIterator* self) {
+bool linkedlistiterator_hasnext(LinkedListIterator* self) {
     struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)self;
 
     // check end item is current item or not
@@ -347,7 +347,7 @@ bool linkedlistiterator_hasnext(struct LinkedListIterator* self) {
 
     return false;
 }
-void* linkedlistiterator_next(struct LinkedListIterator* self) {
+void* linkedlistiterator_next(LinkedListIterator* self) {
     struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)self;
 
     // get current item value and move forward

@@ -7,6 +7,7 @@
 #include <low/Mutex.h>
 #include <low/String.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 struct Condition_ {
     // self public object
@@ -23,8 +24,8 @@ struct Condition_ {
 Condition_VTable* condition_vtable;
 
 // link methods
-int condition_wait(struct Condition* self, uint_64 timeout);
-int condition_signal(struct Condition* self, int count);
+int condition_wait(Condition* self, uint_64 timeout);
+int condition_signal(Condition* self, int count);
 
 // local methods
 void* condition_anonymous_new();
@@ -77,7 +78,7 @@ void condition_named_free(void* memory, char* name) {
 }
 
 // vtable operators
-int condition_wait(struct Condition* self, uint_64 timeout) {
+int condition_wait(Condition* self, uint_64 timeout) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
     // get mutex and cond address
@@ -117,7 +118,7 @@ int condition_wait(struct Condition* self, uint_64 timeout) {
 
     return result;
 }
-int condition_signal(struct Condition* self, int count) {
+int condition_signal(Condition* self, int count) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
     // get mutex and cond address
@@ -206,7 +207,7 @@ Condition* condition_new_object(char* name) {
 
     // set constructor data
     if (name != NULL) {
-        condition_->name = string_new_prinf("%s_condition", name);
+        condition_->name = string_new_printf("%s_condition", name);
     }
 
     // set private data

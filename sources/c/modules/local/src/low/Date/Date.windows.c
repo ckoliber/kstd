@@ -18,7 +18,7 @@ uint_64 date_get_epoch() {
     time = ((uint64_t)file_time.dwLowDateTime);
     time += ((uint64_t)file_time.dwHighDateTime) << 32;
 
-    return ((time - EPOCH) / 10000000L) * 1e6 + (system_time.wMilliseconds * 1000);
+    return (uint_64) ((time - EPOCH) / 10000000L) * 1e6 + (system_time.wMilliseconds * 1000);
 }
 
 #endif

@@ -23,25 +23,25 @@ ArrayList_VTable* arraylist_vtable_normal;
 ArrayList_VTable* arraylist_vtable_concurrent;
 
 // link methods
-int arraylist_add_normal(struct ArrayList* self, void* item);
-int arraylist_addto_normal(struct ArrayList* self, int position, void* item);
-void* arraylist_put_normal(struct ArrayList* self, int position, void* item);
-void* arraylist_remove_normal(struct ArrayList* self, int position);
-void* arraylist_get_normal(struct ArrayList* self, int position);
-int arraylist_indexof_normal(struct ArrayList* self, void* item);
-int arraylist_size_normal(struct ArrayList* self);
+int arraylist_add_normal(ArrayList* self, void* item);
+int arraylist_addto_normal(ArrayList* self, int position, void* item);
+void* arraylist_put_normal(ArrayList* self, int position, void* item);
+void* arraylist_remove_normal(ArrayList* self, int position);
+void* arraylist_get_normal(ArrayList* self, int position);
+int arraylist_indexof_normal(ArrayList* self, void* item);
+int arraylist_size_normal(ArrayList* self);
 
-int arraylist_add_concurrent(struct ArrayList* self, void* item);
-int arraylist_addto_concurrent(struct ArrayList* self, int position, void* item);
-void* arraylist_put_concurrent(struct ArrayList* self, int position, void* item);
-void* arraylist_remove_concurrent(struct ArrayList* self, int position);
-void* arraylist_get_concurrent(struct ArrayList* self, int position);
-int arraylist_indexof_concurrent(struct ArrayList* self, void* item);
-int arraylist_size_concurrent(struct ArrayList* self);
+int arraylist_add_concurrent(ArrayList* self, void* item);
+int arraylist_addto_concurrent(ArrayList* self, int position, void* item);
+void* arraylist_put_concurrent(ArrayList* self, int position, void* item);
+void* arraylist_remove_concurrent(ArrayList* self, int position);
+void* arraylist_get_concurrent(ArrayList* self, int position);
+int arraylist_indexof_concurrent(ArrayList* self, void* item);
+int arraylist_size_concurrent(ArrayList* self);
 
 // implement methods
 // normal mode vtable operators
-int arraylist_add_normal(struct ArrayList* self, void* item) {
+int arraylist_add_normal(ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // normal add
@@ -49,7 +49,7 @@ int arraylist_add_normal(struct ArrayList* self, void* item) {
 
     return result;
 }
-int arraylist_addto_normal(struct ArrayList* self, int position, void* item) {
+int arraylist_addto_normal(ArrayList* self, int position, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -75,7 +75,7 @@ int arraylist_addto_normal(struct ArrayList* self, int position, void* item) {
 
     return result;
 }
-void* arraylist_put_normal(struct ArrayList* self, int position, void* item) {
+void* arraylist_put_normal(ArrayList* self, int position, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -89,7 +89,7 @@ void* arraylist_put_normal(struct ArrayList* self, int position, void* item) {
 
     return result;
 }
-void* arraylist_remove_normal(struct ArrayList* self, int position) {
+void* arraylist_remove_normal(ArrayList* self, int position) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -117,7 +117,7 @@ void* arraylist_remove_normal(struct ArrayList* self, int position) {
 
     return result;
 }
-void* arraylist_get_normal(struct ArrayList* self, int position) {
+void* arraylist_get_normal(ArrayList* self, int position) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -130,7 +130,7 @@ void* arraylist_get_normal(struct ArrayList* self, int position) {
 
     return result;
 }
-int arraylist_indexof_normal(struct ArrayList* self, void* item) {
+int arraylist_indexof_normal(ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // search in items to find item
@@ -149,7 +149,7 @@ int arraylist_indexof_normal(struct ArrayList* self, void* item) {
 
     return -1;
 }
-int arraylist_size_normal(struct ArrayList* self) {
+int arraylist_size_normal(ArrayList* self) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // get current cursor position (size)
@@ -159,7 +159,7 @@ int arraylist_size_normal(struct ArrayList* self) {
 }
 
 // concurrent mode vtable operators
-int arraylist_add_concurrent(struct ArrayList* self, void* item) {
+int arraylist_add_concurrent(ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent writelock
@@ -173,7 +173,7 @@ int arraylist_add_concurrent(struct ArrayList* self, void* item) {
 
     return result;
 }
-int arraylist_addto_concurrent(struct ArrayList* self, int position, void* item) {
+int arraylist_addto_concurrent(ArrayList* self, int position, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -192,7 +192,7 @@ int arraylist_addto_concurrent(struct ArrayList* self, int position, void* item)
 
     return result;
 }
-void* arraylist_put_concurrent(struct ArrayList* self, int position, void* item) {
+void* arraylist_put_concurrent(ArrayList* self, int position, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -211,7 +211,7 @@ void* arraylist_put_concurrent(struct ArrayList* self, int position, void* item)
 
     return result;
 }
-void* arraylist_remove_concurrent(struct ArrayList* self, int position) {
+void* arraylist_remove_concurrent(ArrayList* self, int position) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -230,7 +230,7 @@ void* arraylist_remove_concurrent(struct ArrayList* self, int position) {
 
     return result;
 }
-void* arraylist_get_concurrent(struct ArrayList* self, int position) {
+void* arraylist_get_concurrent(ArrayList* self, int position) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // check position is valid
@@ -249,7 +249,7 @@ void* arraylist_get_concurrent(struct ArrayList* self, int position) {
 
     return result;
 }
-int arraylist_indexof_concurrent(struct ArrayList* self, void* item) {
+int arraylist_indexof_concurrent(ArrayList* self, void* item) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent readlock
@@ -263,7 +263,7 @@ int arraylist_indexof_concurrent(struct ArrayList* self, void* item) {
 
     return result;
 }
-int arraylist_size_concurrent(struct ArrayList* self) {
+int arraylist_size_concurrent(ArrayList* self) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)self;
 
     // concurrent readlock

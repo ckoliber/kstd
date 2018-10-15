@@ -1,16 +1,21 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct ThreadPool_VTable {
-    int (*start)(struct ThreadPool* self);
-    int (*post)(struct ThreadPool* self, void (*function)(void*), void* arg);
-    int (*stop)(struct ThreadPool* self);
-} ThreadPool_VTable;
+// structs
+typedef struct ThreadPool ThreadPool;
+typedef struct ThreadPool_VTable ThreadPool_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct ThreadPool {
+struct ThreadPool {
     ThreadPool_VTable* vtable;
-} ThreadPool;
+};
+
+// vtable
+struct ThreadPool_VTable {
+    int (*start)(ThreadPool* self);
+    int (*post)(ThreadPool* self, void (*function)(void*), void* arg);
+    int (*stop)(ThreadPool* self);
+};
 
 // init vtable
 void threadpool_init();

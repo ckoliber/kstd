@@ -22,8 +22,8 @@ struct Mutex_ {
 Mutex_VTable* mutex_vtable;
 
 // link methods
-int mutex_acquire(struct Mutex* self, uint_64 timeout);
-int mutex_release(struct Mutex* self);
+int mutex_acquire(Mutex* self, uint_64 timeout);
+int mutex_release(Mutex* self);
 
 // local methods
 void* mutex_anonymous_new(int mode);
@@ -80,7 +80,7 @@ void mutex_named_free(void* memory, char* name) {
 }
 
 // vtable operators
-int mutex_acquire(struct Mutex* self, uint_64 timeout) {
+int mutex_acquire(Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // get mutex address
@@ -107,7 +107,7 @@ int mutex_acquire(struct Mutex* self, uint_64 timeout) {
 
     return -1;
 }
-int mutex_release(struct Mutex* self) {
+int mutex_release(Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
     // get mutex address

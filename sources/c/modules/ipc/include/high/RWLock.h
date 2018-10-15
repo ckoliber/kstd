@@ -1,17 +1,22 @@
 #include <low/Type.h>
 
+// structs
+typedef struct RWLock RWLock;
+typedef struct RWLock_VTable RWLock_VTable;
+
+// implement structs
 // vtable
-typedef struct RWLock_VTable {
-    int (*read_lock)(struct RWLock* self, uint_64 timeout);
-    int (*read_unlock)(struct RWLock* self);
-    int (*write_lock)(struct RWLock* self, uint_64 timeout);
-    int (*write_unlock)(struct RWLock* self);
-} RWLock_VTable;
+struct RWLock_VTable {
+    int (*read_lock)(RWLock* self, uint_64 timeout);
+    int (*read_unlock)(RWLock* self);
+    int (*write_lock)(RWLock* self, uint_64 timeout);
+    int (*write_unlock)(RWLock* self);
+};
 
 // vtable + private data problem solve
-typedef struct RWLock {
+struct RWLock {
     RWLock_VTable* vtable;
-} RWLock;
+};
 
 // init vtable
 void rwlock_init();

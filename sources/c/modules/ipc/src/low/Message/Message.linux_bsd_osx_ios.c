@@ -9,6 +9,7 @@
 #include <low/Semaphore.h>
 #include <low/String.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 struct Message_ {
     // self public object
@@ -29,8 +30,8 @@ struct Message_ {
 Message_VTable* message_vtable;
 
 // link methods
-int message_enqueue(struct Message* self, void* item, uint_64 timeout);
-int message_dequeue(struct Message* self, void* item, uint_64 timeout);
+int message_enqueue(Message* self, void* item, uint_64 timeout);
+int message_dequeue(Message* self, void* item, uint_64 timeout);
 
 // local methods
 void* message_anonymous_new(int max, tsize item);
@@ -102,7 +103,7 @@ void message_named_free(void* memory, char* name, int max, tsize item) {
     int* connections = memory + sizeof(int) + sizeof(int) + (item * max);
 
     // destroy share memory on close all connections
-    if (connections <= 1) {
+    if (*connections <= 1) {
         // unmap share memory
         munmap(memory, sizeof(int) + sizeof(int) + (item * max) + sizeof(int));
 
@@ -120,7 +121,7 @@ void message_named_free(void* memory, char* name, int max, tsize item) {
 }
 
 // vtable operators
-int message_enqueue(struct Message* self, void* item, uint_64 timeout) {
+int message_enqueue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get start and end and queue address
@@ -140,7 +141,7 @@ int message_enqueue(struct Message* self, void* item, uint_64 timeout) {
 
     return -1;
 }
-int message_dequeue(struct Message* self, void* item, uint_64 timeout) {
+int message_dequeue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get start and end and queue address
@@ -225,7 +226,7 @@ void message_free(Message* message) {
     heap_free(message_);
 }
 Message* message_new_object(char* name, int max, tsize item) {
-    struct Message_* message_ = (struct Condition_*)message_new();
+    struct Message_* message_ = (struct Message_*)message_new();
 
     // set constructor data
     if (name != NULL) {

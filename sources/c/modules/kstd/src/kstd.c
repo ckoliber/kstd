@@ -33,6 +33,7 @@ void modules_init() {
     arraylist_init();
     dequeue_init();
     linkedlist_init();
+    linkedlistiterator_init();
     queue_init();
     stack_init();
     string_init();
@@ -59,17 +60,17 @@ void modules_init() {
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_WINDOWS)
 
 void kstd_init() {
-    // critical = mutex_new_object(1, "/critical");
-
     modules_init();
+
+    critical = mutex_new_object(1, "/critical");
 }
 
 #elif defined(APP_ANDROID)
 
 void kstd_init() {
-    // critical = mutex_new(1, NULL);
-
     modules_init();
+
+    critical = mutex_new(1, NULL);
 }
 
 #endif

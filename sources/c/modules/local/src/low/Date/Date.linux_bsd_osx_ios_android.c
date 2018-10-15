@@ -13,7 +13,7 @@ uint_64 date_get_epoch() {
     gettimeofday(&time, NULL);
 
     // get epoch millis time
-    return time.tv_sec * 1e6 + time.tv_usec;
+    return (uint_64) (time.tv_sec * 1e6 + time.tv_usec);
 }
 
 #endif

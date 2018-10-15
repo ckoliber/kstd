@@ -22,15 +22,15 @@ struct ProcessPool_ {
 ProcessPool_VTable* processpool_vtable;
 
 // link methods
-int processpool_start(struct ProcessPool* self);
-int processpool_post(struct ProcessPool* self, void (*function)(void*), void* arg);
-int processpool_stop(struct ProcessPool* self);
+int processpool_start(ProcessPool* self);
+int processpool_post(ProcessPool* self, void (*function)(void*), void* arg);
+int processpool_stop(ProcessPool* self);
 
 // local methods
-int processpool_looper(struct ProcessPool* self);
+int processpool_looper(ProcessPool* self);
 
 // implement methods
-int processpool_looper(struct ProcessPool* self) {
+int processpool_looper(ProcessPool* self) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)self;
 
     // open parent message queue
@@ -58,21 +58,21 @@ int processpool_looper(struct ProcessPool* self) {
 }
 
 // vtable operators
-int processpool_start(struct ProcessPool* self) {
+int processpool_start(ProcessPool* self) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)self;
 
     // start process pool
     int result = 0;
     for (int cursor = 0; cursor < processpool_->size; cursor++) {
         // start process
-        if (processpool_->pool[cursor]->vtable->start(processpool_->pool[cursor], processpool_looper, self) != 0) {
+        if (processpool_->pool[cursor]->vtable->start(processpool_->pool[cursor], (int (*)(void *)) processpool_looper, self) != 0) {
             result = -1;
         }
     }
 
     return result;
 }
-int processpool_post(struct ProcessPool* self, void (*function)(void*), void* arg) {
+int processpool_post(ProcessPool* self, void (*function)(void*), void* arg) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)self;
 
     // allocate temp for item package
@@ -90,7 +90,7 @@ int processpool_post(struct ProcessPool* self, void (*function)(void*), void* ar
 
     return result;
 }
-int processpool_stop(struct ProcessPool* self) {
+int processpool_stop(ProcessPool* self) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)self;
 
     // stop process pool
@@ -162,8 +162,8 @@ ProcessPool* processpool_new_object(int size, tsize arg) {
     }
 
     // create message queue
-    String* message_name = string_new_printf("pool_%d", process_id());
-    processpool_->message = message_new(message_name->vtable->value(message_name), 1024, arg);
+    String* message_name = string_new_printf("pool_%d", process_self());
+    processpool_->message = message_new_object(message_name->vtable->value(message_name), 1024, arg);
     string_free(message_name);
 
     return (ProcessPool*)processpool_;

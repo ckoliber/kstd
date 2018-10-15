@@ -5,10 +5,8 @@
 #include <ctype.h>
 #include <low/Heap.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <stdio.h>
 
 struct String_ {
@@ -26,23 +24,22 @@ String_VTable* string_vtable;
 
 // link methods
 // convert operators
-int string_to_int(struct String* self);
-long string_to_long(struct String* self);
-double string_to_double(struct String* self);
+long string_to_long(String* self, int base);
+double string_to_double(String* self);
 
 // change value operators
-void string_lower(struct String* self);
-void string_upper(struct String* self);
-void string_reverse(struct String* self);
-void string_copy(struct String* self, char* data);
-void string_concat(struct String* self, char* data);
-void string_cut(struct String* self, int begin, int end);
-void string_replace(struct String* self, int begin, int end, char* replace);
+void string_lower(String* self);
+void string_upper(String* self);
+void string_reverse(String* self);
+void string_copy(String* self, char* data);
+void string_concat(String* self, char* data);
+void string_cut(String* self, int begin, int end);
+void string_replace(String* self, int begin, int end, char* replace);
 
 // information operators
-tsize string_length(struct String* self);
-int string_compare(struct String* self, char* data);
-char* string_value(struct String* self);
+tsize string_length(String* self);
+int string_compare(String* self, char* data);
+char* string_value(String* self);
 
 // local methods
 void string_swap(char* char1, char* char2);
@@ -58,49 +55,41 @@ void string_swap(char* char1, char* char2) {
 
 // vtable operators
 // convert operators
-int string_to_int(struct String* self) {
-    struct String_* string_ = (struct String_*)self;
-
-    // convert string to int
-    int result = atoi(string_->string);
-
-    return result;
-}
-long string_to_long(struct String* self) {
+long string_to_long(String* self, int base) {
     struct String_* string_ = (struct String_*)self;
 
     // convert string to long
-    long result = atol(string_->string);
+    long result = strtol(string_->string, NULL, base);
 
     return result;
 }
-double string_to_double(struct String* self) {
+double string_to_double(String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // convert string to double
-    double result = atof(string_->string);
+    double result = strtod(string_->string, NULL);
 
     return result;
 }
 
 // change value operators
-void string_lower(struct String* self) {
+void string_lower(String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // convert all char's to lower
     for (int cursor = 0; cursor < string_get_length(string_->string); cursor++) {
-        string_->string[cursor] = tolower(string_->string[cursor]);
+        string_->string[cursor] = (char) tolower(string_->string[cursor]);
     }
 }
-void string_upper(struct String* self) {
+void string_upper(String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // convert all char's to upper
     for (int cursor = 0; cursor < string_get_length(string_->string); cursor++) {
-        string_->string[cursor] = toupper(string_->string[cursor]);
+        string_->string[cursor] = (char) toupper(string_->string[cursor]);
     }
 }
-void string_reverse(struct String* self) {
+void string_reverse(String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // reverse string
@@ -108,31 +97,31 @@ void string_reverse(struct String* self) {
         string_swap((string_->string + cursor), (string_->string + (string_get_length(string_->string) - 1) - cursor));
     }
 }
-void string_copy(struct String* self, char* data) {
+void string_copy(String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // copy data to string
     string_->string = heap_realloc(string_->string, string_get_length(data) + 1);
     strcpy(string_->string, data);
 }
-void string_concat(struct String* self, char* data) {
+void string_concat(String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // concatenate data to string
     string_->string = heap_realloc(string_->string, string_get_length(string_->string) + string_get_length(data) + 1);
     strcat(string_->string, data);
 }
-void string_cut(struct String* self, int begin, int end) {
+void string_cut(String* self, int begin, int end) {
     struct String_* string_ = (struct String_*)self;
 
     // cut data from string
-    string_->string = heap_realloc(string_->string, end - begin + 1);
+    string_->string = heap_realloc(string_->string, (tsize) (end - begin + 1));
     for (int cursor = begin; cursor <= end; cursor++) {
         string_->string[cursor - begin] = string_->string[cursor];
     }
     string_->string[end - begin + 1] = '\0';
 }
-void string_replace(struct String* self, int begin, int end, char* replace) {
+void string_replace(String* self, int begin, int end, char* replace) {
     struct String_* string_ = (struct String_*)self;
 
     // split part 1
@@ -146,7 +135,7 @@ void string_replace(struct String* self, int begin, int end, char* replace) {
     // split part 2
     String* part_2 = NULL;
     if (end < string_get_length(string_->string) - 1) {
-        part_2 = string_new_cut(string_->string, end + 1, string_get_length(string_->string));
+        part_2 = string_new_cut(string_->string, end + 1, (int) string_get_length(string_->string));
     } else {
         part_2 = string_new_copy("");
     }
@@ -162,7 +151,7 @@ void string_replace(struct String* self, int begin, int end, char* replace) {
 }
 
 // information operators
-tsize string_length(struct String* self) {
+tsize string_length(String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // compute string length
@@ -170,7 +159,7 @@ tsize string_length(struct String* self) {
 
     return result;
 }
-int string_compare(struct String* self, char* data) {
+int string_compare(String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // compare string
@@ -178,7 +167,7 @@ int string_compare(struct String* self, char* data) {
 
     return result;
 }
-char* string_value(struct String* self) {
+char* string_value(String* self) {
     struct String_* string_ = (struct String_*)self;
 
     // get string
@@ -191,7 +180,6 @@ char* string_value(struct String* self) {
 void string_init() {
     // init vtable
     string_vtable = heap_alloc(sizeof(String_VTable));
-    string_vtable->to_int = string_to_int;
     string_vtable->to_long = string_to_long;
     string_vtable->to_double = string_to_double;
 
@@ -240,7 +228,7 @@ String* string_new_printf(char* format, ...) {
     va_list args, args2;
     va_start(args, format);
     va_copy(args2, args);
-    string_->string = heap_alloc(vsnprintf(NULL, 0, format, args) + 1);
+    string_->string = heap_alloc((tsize) (vsnprintf(NULL, 0, format, args) + 1));
     vsprintf(string_->string, format, args2);
     va_end(args);
     va_end(args2);

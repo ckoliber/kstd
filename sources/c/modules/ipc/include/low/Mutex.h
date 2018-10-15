@@ -1,15 +1,20 @@
 #include <low/Type.h>
 
-// vtable
-typedef struct Mutex_VTable {
-    int (*acquire)(struct Mutex* self, uint_64 timeout);
-    int (*release)(struct Mutex* self);
-} Mutex_VTable;
+// structs
+typedef struct Mutex Mutex;
+typedef struct Mutex_VTable Mutex_VTable;
 
+// implement structs
 // vtable + private data problem solve
-typedef struct Mutex {
+struct Mutex {
     Mutex_VTable* vtable;
-} Mutex;
+};
+
+// vtable
+struct Mutex_VTable {
+    int (*acquire)(Mutex* self, uint_64 timeout);
+    int (*release)(Mutex* self);
+};
 
 // init vtable
 void mutex_init();

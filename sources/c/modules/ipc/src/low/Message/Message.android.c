@@ -27,8 +27,8 @@ struct Message_ {
 Message_VTable* message_vtable;
 
 // link methods
-int message_enqueue(struct Message* self, void* item, uint_64 timeout);
-int message_dequeue(struct Message* self, void* item, uint_64 timeout);
+int message_enqueue(Message* self, void* item, uint_64 timeout);
+int message_dequeue(Message* self, void* item, uint_64 timeout);
 
 // local methods
 void* message_anonymous_new(int max, tsize item);
@@ -43,7 +43,7 @@ void* message_anonymous_new(int max, tsize item) {
 
     // get start and end and queue address
     int* start = result;
-    int* end = result + sizeof(int);
+    int* end = (int*)result + sizeof(int);
     void* queue = result + sizeof(int) + sizeof(int);
 
     // init start and end
@@ -64,12 +64,12 @@ void message_named_free(void* memory, char* name, int max, tsize item) {
 }
 
 // vtable operators
-int message_enqueue(struct Message* self, void* item, uint_64 timeout) {
+int message_enqueue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get start and end and queue address
     int* start = message_->memory;
-    int* end = message_->memory + sizeof(int);
+    int* end = (int*)message_->memory + sizeof(int);
     void* queue = message_->memory + sizeof(int) + sizeof(int);
 
     // wait on full semaphore
@@ -84,7 +84,7 @@ int message_enqueue(struct Message* self, void* item, uint_64 timeout) {
 
     return -1;
 }
-int message_dequeue(struct Message* self, void* item, uint_64 timeout) {
+int message_dequeue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get start and end and queue address
@@ -169,7 +169,7 @@ void message_free(Message* message) {
     heap_free(message_);
 }
 Message* message_new_object(char* name, int max, tsize item) {
-    struct Message_* message_ = (struct Condition_*)message_new();
+    struct Message_* message_ = (struct Message_*)message_new();
 
     // set constructor data
     if (name != NULL) {

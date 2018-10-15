@@ -1,19 +1,24 @@
 #include <memory/low/Type.h>
 
-// vtable
-typedef struct Poller_VTable {
-    int (*add)(struct Poller* self, struct File* fd, int access);
-    int (*remove)(struct Poller* self, struct File* fd);
-    int (*wait)(struct Poller* self, struct File* fd, uint_64 timeout);
+// structs
+typedef struct Poller Poller;
+typedef struct Poller_VTable Poller_VTable;
 
-    // int (*size)(struct Poller* self, struct File* fd);
-    // int (*get)(struct Poller* self, struct File* fd);
-} Poller_VTable;
-
+// implement structs
 // vtable + private data problem solve
-typedef struct Poller {
+struct Poller {
     Poller_VTable* vtable;
-} Poller;
+};
+
+// vtable
+struct Poller_VTable {
+    int (*add)(Poller* self, File* fd, int access);
+    int (*remove)(Poller* self, File* fd);
+    int (*wait)(Poller* self, File* fd, uint_64 timeout);
+
+    // int (*size)(Poller* self, struct File* fd);
+    // int (*get)(Poller* self, struct File* fd);
+};
 
 // init vtable
 void poller_init();
