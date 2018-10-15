@@ -114,12 +114,16 @@ void string_concat(String* self, char* data) {
 void string_cut(String* self, int begin, int end) {
     struct String_* string_ = (struct String_*)self;
 
+    // create new string
+    char* cut_string = heap_alloc((tsize) ((end - begin + 1) * sizeof(char)));
+
     // cut data from string
-    string_->string = heap_realloc(string_->string, (tsize) (end - begin + 1));
-    for (int cursor = begin; cursor <= end; cursor++) {
-        string_->string[cursor - begin] = string_->string[cursor];
+    for (int cursor = begin; cursor < end; cursor++) {
+        cut_string[cursor - begin] = string_->string[cursor];
     }
-    string_->string[end - begin + 1] = '\0';
+    cut_string[end - begin + 1] = '\0';
+    heap_free(string_->string);
+    string_->string = cut_string;
 }
 void string_replace(String* self, int begin, int end, char* replace) {
     struct String_* string_ = (struct String_*)self;
@@ -127,15 +131,15 @@ void string_replace(String* self, int begin, int end, char* replace) {
     // split part 1
     String* part_1 = NULL;
     if (begin > 0) {
-        part_1 = string_new_cut(string_->string, 0, begin - 1);
+        part_1 = string_new_cut(string_->string, 0, begin);
     } else {
         part_1 = string_new_copy("");
     }
 
     // split part 2
     String* part_2 = NULL;
-    if (end < string_get_length(string_->string) - 1) {
-        part_2 = string_new_cut(string_->string, end + 1, (int) string_get_length(string_->string));
+    if (end < string_get_length(string_->string)) {
+        part_2 = string_new_cut(string_->string, end, (int) string_get_length(string_->string));
     } else {
         part_2 = string_new_copy("");
     }
@@ -228,7 +232,7 @@ String* string_new_printf(char* format, ...) {
     va_list args, args2;
     va_start(args, format);
     va_copy(args2, args);
-    string_->string = heap_alloc((tsize) (vsnprintf(NULL, 0, format, args) + 1));
+    string_->string = heap_alloc((tsize) ((vsnprintf(NULL, 0, format, args) + 1) * sizeof(char)));
     vsprintf(string_->string, format, args2);
     va_end(args);
     va_end(args2);
@@ -293,7 +297,7 @@ tsize string_get_length(char* value) {
 }
 int string_get_compare(char* value, char* data) {
     // get char's compare
-    int result = strcmp(value, data);
+    int result = strcmp(data, value);
 
     return result;
 }
