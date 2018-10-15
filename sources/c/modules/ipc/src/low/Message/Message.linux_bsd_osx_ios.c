@@ -11,6 +11,12 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+struct Message_Memory{
+    int start;
+    int end;
+    int connections;
+};
+
 struct Message_ {
     // self public object
     Message self;
@@ -21,7 +27,7 @@ struct Message_ {
     tsize item;
 
     // private data
-    void* memory;
+    struct Message_Memory* memory;
     Semaphore* full_semaphore;
     Semaphore* empty_semaphore;
 };
@@ -34,31 +40,26 @@ int message_enqueue(Message* self, void* item, uint_64 timeout);
 int message_dequeue(Message* self, void* item, uint_64 timeout);
 
 // local methods
-void* message_anonymous_new(int max, tsize item);
-void message_anonymous_free(void* memory);
-void* message_named_new(char* name, int max, tsize item);
-void message_named_free(void* memory, char* name, int max, tsize item);
+struct Message_Memory* message_anonymous_new(int max, tsize item);
+void message_anonymous_free(struct Message_Memory* memory);
+struct Message_Memory* message_named_new(char* name, int max, tsize item);
+void message_named_free(struct Message_Memory* memory, char* name, int max, tsize item);
 
 // implement methods
-void* message_anonymous_new(int max, tsize item) {
+struct Message_Memory* message_anonymous_new(int max, tsize item) {
     // alocate start and end and queue
-    void* result = heap_alloc(sizeof(int) + sizeof(int) + (item * max));
-
-    // get start and end and queue address
-    int* start = result;
-    int* end = result + sizeof(int);
-    void* queue = result + sizeof(int) + sizeof(int);
+    struct Message_Memory* result = heap_alloc(sizeof(struct Message_Memory) + (item * max));
 
     // init start and end
-    *start = 0;
-    *end = 0;
+    result->start = 0;
+    result->end = 0;
 
     return result;
 }
-void message_anonymous_free(void* memory) {
+void message_anonymous_free(struct Message_Memory* memory) {
     heap_free(memory);
 }
-void* message_named_new(char* name, int max, tsize item) {
+struct Message_Memory* message_named_new(char* name, int max, tsize item) {
     // check share memory exists
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
@@ -70,7 +71,8 @@ void* message_named_new(char* name, int max, tsize item) {
 
     // alocate share start and end and queue and connections
     int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
-    void* result = mmap(NULL, sizeof(int) + sizeof(int) + (item * max) + sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+    ftruncate(fd, sizeof(struct Message_Memory) + (item * max));
+    struct Message_Memory* result = mmap(NULL, sizeof(struct Message_Memory) + (item * max), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
     close(fd);
 
     // check error
@@ -78,43 +80,34 @@ void* message_named_new(char* name, int max, tsize item) {
         return NULL;
     }
 
-    // get start and end and queue and connections address
-    int* start = result;
-    int* end = result + sizeof(int);
-    void* queue = result + sizeof(int) + sizeof(int);
-    int* connections = result + sizeof(int) + sizeof(int) + (item * max);
-
     // create and init start and end or open and increase connections
     if (!exists) {
         // init share start and end
-        *start = 0;
-        *end = 0;
+        result->start = 0;
+        result->end = 0;
 
         // init share connections
-        *connections = 1;
+        result->connections = 0;
     } else {
-        *connections += 1;
+        result->connections++;
     }
 
     return result;
 }
-void message_named_free(void* memory, char* name, int max, tsize item) {
-    // get connections address
-    int* connections = memory + sizeof(int) + sizeof(int) + (item * max);
-
+void message_named_free(struct Message_Memory* memory, char* name, int max, tsize item) {
     // destroy share memory on close all connections
-    if (*connections <= 1) {
+    if (memory->connections <= 1) {
         // unmap share memory
-        munmap(memory, sizeof(int) + sizeof(int) + (item * max) + sizeof(int));
+        munmap(memory, sizeof(struct Message_Memory) + (item * max));
 
         // unlink (it has not any connections)
         shm_unlink(name);
     } else {
         // reduce connections
-        *connections -= 1;
+        memory->connections--;
 
         // unmap share memory
-        munmap(memory, sizeof(int) + sizeof(int) + (item * max) + sizeof(int));
+        munmap(memory, sizeof(struct Message_Memory) + (item * max));
 
         // dont unlink (it has another connections)
     }
@@ -124,16 +117,14 @@ void message_named_free(void* memory, char* name, int max, tsize item) {
 int message_enqueue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
-    // get start and end and queue address
-    int* start = message_->memory;
-    int* end = message_->memory + sizeof(int);
-    void* queue = message_->memory + sizeof(int) + sizeof(int);
+    // get queue address
+    void* queue = message_->memory + sizeof(struct Message_Memory);
 
     // wait on full semaphore
     if (message_->full_semaphore->vtable->wait(message_->full_semaphore, timeout) == 0) {
         // add item to queue
-        heap_copy(queue + *end, item, message_->item);
-        *end = (*end + 1) % message_->max;
+        heap_copy(queue + message_->memory->end, item, message_->item);
+        message_->memory->end = (message_->memory->end + 1) % message_->max;
 
         // signal on empty semaphore
         return message_->empty_semaphore->vtable->post(message_->empty_semaphore);
@@ -144,16 +135,14 @@ int message_enqueue(Message* self, void* item, uint_64 timeout) {
 int message_dequeue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
-    // get start and end and queue address
-    int* start = message_->memory;
-    int* end = message_->memory + sizeof(int);
-    void* queue = message_->memory + sizeof(int) + sizeof(int);
+    // get queue address
+    void* queue = message_->memory + sizeof(struct Message_Memory);
 
     // wait on empty semaphore
     if (message_->empty_semaphore->vtable->wait(message_->empty_semaphore, timeout) == 0) {
         // add item to queue
-        heap_copy(item, queue + *start, message_->item);
-        *start = (*start + 1) % message_->max;
+        heap_copy(item, queue + message_->memory->start, message_->item);
+        message_->memory->start = (message_->memory->start + 1) % message_->max;
 
         // signal on full semaphore
         return message_->full_semaphore->vtable->post(message_->full_semaphore);

@@ -8,6 +8,12 @@
 #include <low/Semaphore.h>
 #include <low/String.h>
 
+struct Message_Memory{
+    int start;
+    int end;
+    int connections;
+};
+
 struct Message_ {
     // self public object
     Message self;
@@ -18,7 +24,7 @@ struct Message_ {
     tsize item;
 
     // private data
-    void* memory;
+    struct Message_Memory* memory;
     Semaphore* full_semaphore;
     Semaphore* empty_semaphore;
 };
@@ -31,52 +37,46 @@ int message_enqueue(Message* self, void* item, uint_64 timeout);
 int message_dequeue(Message* self, void* item, uint_64 timeout);
 
 // local methods
-void* message_anonymous_new(int max, tsize item);
-void message_anonymous_free(void* memory);
-void* message_named_new(char* name, int max, tsize item);
-void message_named_free(void* memory, char* name, int max, tsize item);
+struct Message_Memory* message_anonymous_new(int max, tsize item);
+void message_anonymous_free(struct Message_Memory* memory);
+struct Message_Memory* message_named_new(char* name, int max, tsize item);
+void message_named_free(struct Message_Memory* memory, char* name, int max, tsize item);
 
 // implement methods
-void* message_anonymous_new(int max, tsize item) {
+struct Message_Memory* message_anonymous_new(int max, tsize item) {
     // alocate start and end and queue
-    void* result = heap_alloc(sizeof(int) + sizeof(int) + (item * max));
-
-    // get start and end and queue address
-    int* start = result;
-    int* end = (int*)result + sizeof(int);
-    void* queue = result + sizeof(int) + sizeof(int);
+    struct Message_Memory* result = heap_alloc(sizeof(struct Message_Memory) + (item * max));
 
     // init start and end
-    *start = 0;
-    *end = 0;
+    result->start = 0;
+    result->end = 0;
 
     return result;
 }
-void message_anonymous_free(void* memory) {
+void message_anonymous_free(struct Message_Memory* memory) {
     heap_free(memory);
 }
-void* message_named_new(char* name, int max, tsize item) {
+struct Message_Memory* message_named_new(char* name, int max, tsize item) {
     // android does not implement standard share memory
-    return NULL;
+    return message_anonymous_new(max, item);
 }
-void message_named_free(void* memory, char* name, int max, tsize item) {
+void message_named_free(struct Message_Memory* memory, char* name, int max, tsize item) {
     // android does not implement standard share memory
+    message_anonymous_free(memory);
 }
 
 // vtable operators
 int message_enqueue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
-    // get start and end and queue address
-    int* start = message_->memory;
-    int* end = (int*)message_->memory + sizeof(int);
-    void* queue = message_->memory + sizeof(int) + sizeof(int);
+    // get queue address
+    void* queue = message_->memory + sizeof(struct Message_Memory);
 
     // wait on full semaphore
     if (message_->full_semaphore->vtable->wait(message_->full_semaphore, timeout) == 0) {
         // add item to queue
-        heap_copy(queue + *end, item, message_->item);
-        *end = (*end + 1) % message_->max;
+        heap_copy(queue + message_->memory->end, item, message_->item);
+        message_->memory->end = (message_->memory->end + 1) % message_->max;
 
         // signal on empty semaphore
         return message_->empty_semaphore->vtable->post(message_->empty_semaphore);
@@ -87,16 +87,14 @@ int message_enqueue(Message* self, void* item, uint_64 timeout) {
 int message_dequeue(Message* self, void* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
-    // get start and end and queue address
-    int* start = message_->memory;
-    int* end = message_->memory + sizeof(int);
-    void* queue = message_->memory + sizeof(int) + sizeof(int);
+    // get queue address
+    void* queue = message_->memory + sizeof(struct Message_Memory);
 
     // wait on empty semaphore
     if (message_->empty_semaphore->vtable->wait(message_->empty_semaphore, timeout) == 0) {
         // add item to queue
-        heap_copy(item, queue + *start, message_->item);
-        *start = (*start + 1) % message_->max;
+        heap_copy(item, queue + message_->memory->start, message_->item);
+        message_->memory->start = (message_->memory->start + 1) % message_->max;
 
         // signal on full semaphore
         return message_->full_semaphore->vtable->post(message_->full_semaphore);

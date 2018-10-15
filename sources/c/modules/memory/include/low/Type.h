@@ -56,7 +56,7 @@ typedef unsigned __int64 uint_64;
 
 // (short, long)(signed, unsigned) void, bool, char, tsize, float, double
 typedef SIZE_T tsize;
-typedef char bool;
+typedef int bool;
 #define true 1
 #define false 0
 
@@ -96,7 +96,7 @@ typedef uint64_t uint_64;
 
 // [const][short, long][signed, unsigned] void, bool, char, tsize, float, double
 typedef size_t tsize;
-typedef char bool;
+typedef int bool;
 #define true 1
 #define false 0
 

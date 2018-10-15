@@ -7,6 +7,13 @@
 #include <low/String.h>
 #include <low/Thread.h>
 
+struct Mutex_Memory{
+    void* memory;
+    HANDLE memory_handle;
+    HANDLE mutex;
+    HANDLE semaphore;
+};
+
 struct Mutex_ {
     // self public object
     Mutex self;
@@ -15,10 +22,7 @@ struct Mutex_ {
     String* name;
 
     // private data
-    void* memory;
-    HANDLE memory_handle;
-    HANDLE mutex;
-    HANDLE semaphore;
+    struct Mutex_Memory* memory;
 };
 
 // vtable
@@ -37,15 +41,15 @@ int mutex_acquire_errorcheck(Mutex* self, uint_64 timeout);
 int mutex_release_errorcheck(Mutex* self);
 
 // local methods
-void* mutex_errorcheck_anonymous_new();
-void mutex_errorcheck_anonymous_free(void* memory);
-void* mutex_errorcheck_named_new(char* name, HANDLE* memory_handle);
-void mutex_errorcheck_named_free(void* memory, HANDLE memory_handle);
+struct Mutex_Memory* mutex_errorcheck_anonymous_new();
+void mutex_errorcheck_anonymous_free(struct Mutex_Memory* memory);
+struct Mutex_Memory* mutex_errorcheck_named_new(char* name);
+void mutex_errorcheck_named_free(struct Mutex_Memory* memory);
 
 // implement methods
-void* mutex_errorcheck_anonymous_new() {
+struct Mutex_Memory* mutex_errorcheck_anonymous_new() {
     // alocate thread id
-    void* result = heap_alloc(sizeof(int));
+    struct Mutex_Memory* result = heap_alloc(sizeof(struct Mutex_Memory));
 
     int* id = result;
 
@@ -54,10 +58,10 @@ void* mutex_errorcheck_anonymous_new() {
 
     return result;
 }
-void mutex_errorcheck_anonymous_free(void* memory) {
+void mutex_errorcheck_anonymous_free(struct Mutex_Memory* memory) {
     heap_free(memory);
 }
-void* mutex_errorcheck_named_new(char* name, HANDLE* memory_handle) {
+struct Mutex_Memory* mutex_errorcheck_named_new(char* name) {
     // check share memory exists
     bool exists = false;
     HANDLE exists_handle = OpenFileMappingA(INVALID_HANDLE_VALUE, FALSE, name);
@@ -101,7 +105,7 @@ void* mutex_errorcheck_named_new(char* name, HANDLE* memory_handle) {
 
     return result;
 }
-void mutex_errorcheck_named_free(void* memory, HANDLE memory_handle) {
+void mutex_errorcheck_named_free(struct Mutex_Memory* memory) {
     // unmap share memory
     UnmapViewOfFile(memory);
 

@@ -2,13 +2,20 @@
 
 #if defined(APP_ANDROID)
 
+#include <errno.h>
 #include <low/Date.h>
 #include <low/Heap.h>
 #include <low/Mutex.h>
 #include <low/String.h>
 #include <pthread.h>
 #include <sys/time.h>
-#include <errno.h>
+
+struct Semaphore_Memory{
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    int svalue;
+    int connections;
+};
 
 struct Semaphore_ {
     // self public object
@@ -18,7 +25,7 @@ struct Semaphore_ {
     String* name;
 
     // private data
-    void* memory;
+    struct Semaphore_Memory* memory;
 };
 
 // vtable
@@ -30,80 +37,66 @@ int semaphore_post(Semaphore* self);
 int semaphore_get(Semaphore* self);
 
 // local methods
-void* semaphore_anonymous_new(int value);
-void semaphore_anonymous_free(void* memory);
-void* semaphore_named_new(char* name, int value);
-void semaphore_named_free(void* memory, char* name);
+struct Semaphore_Memory* semaphore_anonymous_new(int value);
+void semaphore_anonymous_free(struct Semaphore_Memory* memory);
+struct Semaphore_Memory* semaphore_named_new(char* name, int value);
+void semaphore_named_free(struct Semaphore_Memory* memory, char* name);
 
 // implement methods
-void* semaphore_anonymous_new(int value) {
+struct Semaphore_Memory* semaphore_anonymous_new(int value) {
     // alocate mutex and cond and svalue
-    void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
-
-    // get mutex and cond and svalue address
-    pthread_mutex_t* mutex = result;
-    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
-    int* svalue = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
+    struct Semaphore_Memory* result = heap_alloc(sizeof(struct Semaphore_Memory));
 
     // init mutex
     pthread_mutexattr_t mattr;
     pthread_mutexattr_init(&mattr);
     pthread_mutexattr_setpshared(&mattr, 0);
-    pthread_mutex_init(mutex, &mattr);
+    pthread_mutex_init(&(result->mutex), &mattr);
     pthread_mutexattr_destroy(&mattr);
 
     // init cond
     pthread_condattr_t cattr;
     pthread_condattr_init(&cattr);
     pthread_condattr_setpshared(&cattr, 0);
-    pthread_cond_init(cond, &cattr);
+    pthread_cond_init(&(result->cond), &cattr);
     pthread_condattr_destroy(&cattr);
 
     // init svalue
-    *svalue = value;
+    result->svalue = value;
 
     return result;
 }
-void semaphore_anonymous_free(void* memory) {
-    // get mutex and cond and svalue address
-    pthread_mutex_t* mutex = memory;
-    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
-    int* svalue = memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
-
+void semaphore_anonymous_free(struct Semaphore_Memory* memory) {
     // destroy internal mutex and cond
-    pthread_mutex_destroy(mutex);
-    pthread_cond_destroy(cond);
+    pthread_mutex_destroy(&(memory->mutex));
+    pthread_cond_destroy(&(memory->cond));
 
     heap_free(memory);
 }
-void* semaphore_named_new(char* name, int value) {
+struct Semaphore_Memory* semaphore_named_new(char* name, int value) {
     // android does not implement standard share memory
-    return NULL;
+    return semaphore_anonymous_new(value);
 }
-void semaphore_named_free(void* memory, char* name) {
+void semaphore_named_free(struct Semaphore_Memory* memory, char* name) {
     // android does not implement standard share memory
+    semaphore_anonymous_free(memory);
 }
 
 // vtable operators
 int semaphore_wait(Semaphore* self, uint_64 timeout) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
-    // get mutex and cond and svalue address
-    pthread_mutex_t* mutex = semaphore_->memory;
-    pthread_cond_t* cond = semaphore_->memory + sizeof(pthread_mutex_t);
-    int* svalue = semaphore_->memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
-
     // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
+    pthread_mutex_lock(&(semaphore_->memory->mutex));
 
     // wait the pthread cond
     int result = -1;
     if (timeout == UINT_64_MAX) {
         // infinity
-        while (*svalue == 0) {
-            pthread_cond_wait(cond, mutex);
+        while (semaphore_->memory->svalue == 0) {
+            pthread_cond_wait(&(semaphore_->memory->cond), &(semaphore_->memory->mutex));
         }
-        (*svalue)--;
+        semaphore_->memory->svalue--;
         result = 0;
     } else {
         // timed
@@ -119,8 +112,8 @@ int semaphore_wait(Semaphore* self, uint_64 timeout) {
         time_out.tv_nsec += (timeout % 1000) * 1000000;
 
         // timed wait
-        while (*svalue == 0) {
-            if (pthread_cond_timedwait(cond, mutex, &time_out) == ETIMEDOUT) {
+        while (semaphore_->memory->svalue == 0) {
+            if (pthread_cond_timedwait(&(semaphore_->memory->cond), &(semaphore_->memory->mutex), &time_out) == ETIMEDOUT) {
                 timedout = true;
                 break;
             }
@@ -128,55 +121,45 @@ int semaphore_wait(Semaphore* self, uint_64 timeout) {
 
         // check timeouted
         if (!timedout) {
-            (*svalue)--;
+            semaphore_->memory->svalue--;
             result = 0;
         }
     }
 
     // release the pthread mutex
-    pthread_mutex_unlock(mutex);
+    pthread_mutex_unlock(&(semaphore_->memory->mutex));
 
     return result;
 }
 int semaphore_post(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
-    // get mutex and cond and svalue address
-    pthread_mutex_t* mutex = semaphore_->memory;
-    pthread_cond_t* cond = semaphore_->memory + sizeof(pthread_mutex_t);
-    int* svalue = semaphore_->memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
-
     // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
+    pthread_mutex_lock(&(semaphore_->memory->mutex));
 
     // signal the pthread cond
     int result = -1;
-    (*svalue)++;
-    if (pthread_cond_signal(cond) == 0) {
+    semaphore_->memory->svalue++;
+    if (pthread_cond_signal(&(semaphore_->memory->cond)) == 0) {
         result = 0;
     }
 
     // release the pthread mutex
-    pthread_mutex_unlock(mutex);
+    pthread_mutex_unlock(&(semaphore_->memory->mutex));
 
     return result;
 }
 int semaphore_get(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
-    // get mutex and cond and svalue address
-    pthread_mutex_t* mutex = semaphore_->memory;
-    pthread_cond_t* cond = semaphore_->memory + sizeof(pthread_mutex_t);
-    int* svalue = semaphore_->memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
-
     // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
+    pthread_mutex_lock(&(semaphore_->memory->mutex));
 
     // get semaphore value
-    int result = *svalue;
+    int result = semaphore_->memory->svalue;
 
     // release the pthread mutex
-    pthread_mutex_unlock(mutex);
+    pthread_mutex_unlock(&(semaphore_->memory->mutex));
 
     return result;
 }

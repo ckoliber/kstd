@@ -7,6 +7,11 @@
 #include <low/String.h>
 #include <pthread.h>
 
+struct Mutex_Memory{
+    pthread_mutex_t mutex;
+    int connections;
+};
+
 struct Mutex_ {
     // self public object
     Mutex self;
@@ -15,7 +20,7 @@ struct Mutex_ {
     String* name;
 
     // private data
-    void* memory;
+    struct Mutex_Memory* memory;
 };
 
 // vtable
@@ -26,18 +31,15 @@ int mutex_acquire(Mutex* self, uint_64 timeout);
 int mutex_release(Mutex* self);
 
 // local methods
-void* mutex_anonymous_new(int mode);
-void mutex_anonymous_free(void* memory);
-void* mutex_named_new(int mode, char* name);
-void mutex_named_free(void* memory, char* name);
+struct Mutex_Memory* mutex_anonymous_new(int mode);
+void mutex_anonymous_free(struct Mutex_Memory* memory);
+struct Mutex_Memory* mutex_named_new(int mode, char* name);
+void mutex_named_free(struct Mutex_Memory* memory, char* name);
 
 // implement methods
-void* mutex_anonymous_new(int mode) {
+struct Mutex_Memory* mutex_anonymous_new(int mode) {
     // alocate mutex
-    void* result = heap_alloc(sizeof(pthread_mutex_t));
-
-    // get mutex address
-    pthread_mutex_t* mutex = result;
+    struct Mutex_Memory* result = heap_alloc(sizeof(struct Mutex_Memory));
 
     // init mutex
     pthread_mutexattr_t mattr;
@@ -57,39 +59,34 @@ void* mutex_anonymous_new(int mode) {
             break;
     }
 
-    pthread_mutex_init(mutex, &mattr);
+    pthread_mutex_init(&(result->mutex), &mattr);
     pthread_mutexattr_destroy(&mattr);
 
     return result;
 }
-void mutex_anonymous_free(void* memory) {
-    // get mutex address
-    pthread_mutex_t* mutex = memory;
-
+void mutex_anonymous_free(struct Mutex_Memory* memory) {
     // destroy internal mutex
-    pthread_mutex_destroy(mutex);
+    pthread_mutex_destroy(&(memory->mutex));
 
     heap_free(memory);
 }
-void* mutex_named_new(int mode, char* name) {
+struct Mutex_Memory* mutex_named_new(int mode, char* name) {
     // android does not implement standard share memory
-    return NULL;
+    return mutex_anonymous_new(mode);
 }
-void mutex_named_free(void* memory, char* name) {
+void mutex_named_free(struct Mutex_Memory* memory, char* name) {
     // android does not implement standard share memory
+    mutex_anonymous_free(memory);
 }
 
 // vtable operators
 int mutex_acquire(Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
-    // get mutex address
-    pthread_mutex_t* mutex = mutex_->memory;
-
     // aquire the pthread mutex
     if (timeout == UINT_64_MAX) {
         // infinity
-        if (pthread_mutex_lock(mutex) == 0) {
+        if (pthread_mutex_lock(&(mutex_->memory->mutex)) == 0) {
             return 0;
         }
     } else {
@@ -99,7 +96,7 @@ int mutex_acquire(Mutex* self, uint_64 timeout) {
         // try lock until timeout
         do {
             // try
-            if (pthread_mutex_trylock(mutex) == 0) {
+            if (pthread_mutex_trylock(&(mutex_->memory->mutex)) == 0) {
                 return 0;
             }
         } while ((date_get_epoch() - time) <= timeout);
@@ -110,11 +107,8 @@ int mutex_acquire(Mutex* self, uint_64 timeout) {
 int mutex_release(Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
-    // get mutex address
-    pthread_mutex_t* mutex = mutex_->memory;
-
     // release the pthread mutex
-    if (pthread_mutex_unlock(mutex) == 0) {
+    if (pthread_mutex_unlock(&(mutex_->memory->mutex)) == 0) {
         return 0;
     }
 

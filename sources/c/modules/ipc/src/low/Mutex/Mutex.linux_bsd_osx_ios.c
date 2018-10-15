@@ -10,6 +10,11 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+struct Mutex_Memory{
+    pthread_mutex_t mutex;
+    int connections;
+};
+
 struct Mutex_ {
     // self public object
     Mutex self;
@@ -18,7 +23,7 @@ struct Mutex_ {
     String* name;
 
     // private data
-    void* memory;
+    struct Mutex_Memory* memory;
 };
 
 // vtable
@@ -29,18 +34,15 @@ int mutex_acquire(Mutex* self, uint_64 timeout);
 int mutex_release(Mutex* self);
 
 // local methods
-void* mutex_anonymous_new(int mode);
-void mutex_anonymous_free(void* memory);
-void* mutex_named_new(int mode, char* name);
-void mutex_named_free(void* memory, char* name);
+struct Mutex_Memory* mutex_anonymous_new(int mode);
+void mutex_anonymous_free(struct Mutex_Memory* memory);
+struct Mutex_Memory* mutex_named_new(int mode, char* name);
+void mutex_named_free(struct Mutex_Memory* memory, char* name);
 
 // implement methods
-void* mutex_anonymous_new(int mode) {
+struct Mutex_Memory* mutex_anonymous_new(int mode) {
     // alocate mutex
-    void* result = heap_alloc(sizeof(pthread_mutex_t));
-
-    // get mutex address
-    pthread_mutex_t* mutex = result;
+    struct Mutex_Memory* result = heap_alloc(sizeof(struct Mutex_Memory));
 
     // init mutex
     pthread_mutexattr_t mattr;
@@ -60,21 +62,18 @@ void* mutex_anonymous_new(int mode) {
             break;
     }
 
-    pthread_mutex_init(mutex, &mattr);
+    pthread_mutex_init(&(result->mutex), &mattr);
     pthread_mutexattr_destroy(&mattr);
 
     return result;
 }
-void mutex_anonymous_free(void* memory) {
-    // get mutex address
-    pthread_mutex_t* mutex = memory;
-
+void mutex_anonymous_free(struct Mutex_Memory* memory) {
     // destroy internal mutex
-    pthread_mutex_destroy(mutex);
+    pthread_mutex_destroy(&(memory->mutex));
 
     heap_free(memory);
 }
-void* mutex_named_new(int mode, char* name) {
+struct Mutex_Memory* mutex_named_new(int mode, char* name) {
     // check share memory exists
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
@@ -86,17 +85,14 @@ void* mutex_named_new(int mode, char* name) {
 
     // alocate share mutex and connections
     int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
-    void* result = mmap(NULL, sizeof(pthread_mutex_t) + sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+    ftruncate(fd, sizeof(struct Mutex_Memory));
+    struct Mutex_Memory* result = mmap(NULL, sizeof(struct Mutex_Memory), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
     close(fd);
 
     // check error
     if (result == NULL || result == MAP_FAILED) {
         return NULL;
     }
-
-    // get mutex and connections address
-    pthread_mutex_t* mutex = result;
-    int* connections = result + sizeof(pthread_mutex_t);
 
     // create and init mutex or open and increase connections
     if (!exists) {
@@ -118,38 +114,34 @@ void* mutex_named_new(int mode, char* name) {
                 break;
         }
 
-        pthread_mutex_init(mutex, &mattr);
+        pthread_mutex_init(&(result->mutex), &mattr);
         pthread_mutexattr_destroy(&mattr);
 
         // init share connections
-        *connections = 1;
+        result->connections = 1;
     } else {
-        *connections += 1;
+        result->connections++;
     }
 
     return result;
 }
-void mutex_named_free(void* memory, char* name) {
-    // get mutex and connections address
-    pthread_mutex_t* mutex = memory;
-    int* connections = memory + sizeof(pthread_mutex_t);
-
+void mutex_named_free(struct Mutex_Memory* memory, char* name) {
     // destroy mutex and share memory on close all connections
-    if (*connections <= 1) {
+    if (memory->connections <= 1) {
         // destroy share mutex
-        pthread_mutex_destroy(mutex);
+        pthread_mutex_destroy(&(memory->mutex));
 
         // unmap share memory
-        munmap(memory, sizeof(pthread_mutex_t) + sizeof(int));
+        munmap(memory, sizeof(struct Mutex_Memory));
 
         // unlink (it has not any connections)
         shm_unlink(name);
     } else {
         // reduce connections
-        *connections -= 1;
+        memory->connections--;
 
         // unmap share memory
-        munmap(memory, sizeof(pthread_mutex_t) + sizeof(int));
+        munmap(memory, sizeof(struct Mutex_Memory));
 
         // dont unlink (it has another connections)
     }
@@ -159,13 +151,10 @@ void mutex_named_free(void* memory, char* name) {
 int mutex_acquire(Mutex* self, uint_64 timeout) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
-    // get mutex address
-    pthread_mutex_t* mutex = mutex_->memory;
-
     // aquire the pthread mutex
     if (timeout == UINT_64_MAX) {
         // infinity
-        if (pthread_mutex_lock(mutex) == 0) {
+        if (pthread_mutex_lock(&(mutex_->memory->mutex)) == 0) {
             return 0;
         }
     } else {
@@ -175,7 +164,7 @@ int mutex_acquire(Mutex* self, uint_64 timeout) {
         // try lock until timeout
         do {
             // try
-            if (pthread_mutex_trylock(mutex) == 0) {
+            if (pthread_mutex_trylock(&(mutex_->memory->mutex)) == 0) {
                 return 0;
             }
         } while ((date_get_epoch() - time) <= timeout);
@@ -186,11 +175,8 @@ int mutex_acquire(Mutex* self, uint_64 timeout) {
 int mutex_release(Mutex* self) {
     struct Mutex_* mutex_ = (struct Mutex_*)self;
 
-    // get mutex address
-    pthread_mutex_t* mutex = mutex_->memory;
-
     // release the pthread mutex
-    if (pthread_mutex_unlock(mutex) == 0) {
+    if (pthread_mutex_unlock(&(mutex_->memory->mutex)) == 0) {
         return 0;
     }
 

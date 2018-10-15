@@ -62,7 +62,7 @@ void modules_init() {
 void kstd_init() {
     modules_init();
 
-    critical = mutex_new_object(1, "/critical");
+    critical = mutex_new_object(1, "critical");
 }
 
 #elif defined(APP_ANDROID)

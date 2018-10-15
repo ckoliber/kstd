@@ -12,6 +12,12 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+struct Condition_Memory{
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    int connections;
+};
+
 struct Condition_ {
     // self public object
     Condition self;
@@ -20,7 +26,7 @@ struct Condition_ {
     String* name;
 
     // private data
-    void* memory;
+    struct Condition_Memory* memory;
 };
 
 // vtable
@@ -31,48 +37,40 @@ int condition_wait(Condition* self, uint_64 timeout);
 int condition_signal(Condition* self, int count);
 
 // local methods
-void* condition_anonymous_new();
-void condition_anonymous_free(void* memory);
-void* condition_named_new(char* name);
-void condition_named_free(void* memory, char* name);
+struct Condition_Memory* condition_anonymous_new();
+void condition_anonymous_free(struct Condition_Memory* memory);
+struct Condition_Memory* condition_named_new(char* name);
+void condition_named_free(struct Condition_Memory* memory, char* name);
 
 // implement methods
-void* condition_anonymous_new() {
+struct Condition_Memory* condition_anonymous_new() {
     // alocate mutex and cond
-    void* result = heap_alloc(sizeof(pthread_mutex_t) + sizeof(pthread_cond_t));
-
-    // get mutex and cond address
-    pthread_mutex_t* mutex = result;
-    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
+    struct Condition_Memory* result = heap_alloc(sizeof(struct Condition_Memory));
 
     // init mutex
     pthread_mutexattr_t mattr;
     pthread_mutexattr_init(&mattr);
     pthread_mutexattr_setpshared(&mattr, 0);
-    pthread_mutex_init(mutex, &mattr);
+    pthread_mutex_init(&(result->mutex), &mattr);
     pthread_mutexattr_destroy(&mattr);
 
     // init cond
     pthread_condattr_t cattr;
     pthread_condattr_init(&cattr);
     pthread_condattr_setpshared(&cattr, 0);
-    pthread_cond_init(cond, &cattr);
+    pthread_cond_init(&(result->cond), &cattr);
     pthread_condattr_destroy(&cattr);
 
     return result;
 }
-void condition_anonymous_free(void* memory) {
-    // get mutex and cond address
-    pthread_mutex_t* mutex = memory;
-    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
-
+void condition_anonymous_free(struct Condition_Memory* memory) {
     // destroy internal mutex
-    pthread_mutex_destroy(mutex);
-    pthread_cond_destroy(cond);
+    pthread_mutex_destroy(&(memory->mutex));
+    pthread_cond_destroy(&(memory->cond));
 
     heap_free(memory);
 }
-void* condition_named_new(char* name) {
+struct Condition_Memory* condition_named_new(char* name) {
     // check share memory exists
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
@@ -84,7 +82,8 @@ void* condition_named_new(char* name) {
 
     // alocate share mutex and cond and connection
     int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
-    void* result = mmap(NULL, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+    ftruncate(fd, sizeof(struct Condition_Memory));
+    struct Condition_Memory* result = mmap(NULL, sizeof(struct Condition_Memory), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
     close(fd);
 
     // check error
@@ -92,58 +91,48 @@ void* condition_named_new(char* name) {
         return NULL;
     }
 
-    // get mutex and cond and connections address
-    pthread_mutex_t* mutex = result;
-    pthread_cond_t* cond = result + sizeof(pthread_mutex_t);
-    int* connections = result + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
-
     // create and init or open and increase connections
     if (!exists) {
         // init share mutex
         pthread_mutexattr_t mattr;
         pthread_mutexattr_init(&mattr);
         pthread_mutexattr_setpshared(&mattr, 1);
-        pthread_mutex_init(mutex, &mattr);
+        pthread_mutex_init(&(result->mutex), &mattr);
         pthread_mutexattr_destroy(&mattr);
 
         // init share cond
         pthread_condattr_t cattr;
         pthread_condattr_init(&cattr);
         pthread_condattr_setpshared(&cattr, 1);
-        pthread_cond_init(cond, &cattr);
+        pthread_cond_init(&(result->cond), &cattr);
         pthread_condattr_destroy(&cattr);
 
         // init share connections
-        *connections = 1;
+        result->connections = 1;
     } else {
-        *connections += 1;
+        result->connections++;
     }
 
     return result;
 }
-void condition_named_free(void* memory, char* name) {
-    // get mutex and cond and connections address
-    pthread_mutex_t* mutex = memory;
-    pthread_cond_t* cond = memory + sizeof(pthread_mutex_t);
-    int* connections = memory + sizeof(pthread_mutex_t) + sizeof(pthread_cond_t);
-
+void condition_named_free(struct Condition_Memory* memory, char* name) {
     // destroy mutex and cond and share memory on close all connections
-    if (*connections <= 1) {
+    if (memory->connections <= 1) {
         // destroy share mutex, cond
-        pthread_mutex_destroy(mutex);
-        pthread_cond_destroy(cond);
+        pthread_mutex_destroy(&(memory->mutex));
+        pthread_cond_destroy(&(memory->cond));
 
         // unmap share memory
-        munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
+        munmap(memory, sizeof(struct Condition_Memory));
 
         // unlink (it has not any connections)
         shm_unlink(name);
     } else {
         // reduce connections
-        *connections -= 1;
+        memory->connections--;
 
         // unmap share memory
-        munmap(memory, sizeof(pthread_mutex_t) + sizeof(pthread_cond_t) + sizeof(int));
+        munmap(memory, sizeof(struct Condition_Memory));
 
         // dont unlink (it has another connections)
     }
@@ -153,18 +142,14 @@ void condition_named_free(void* memory, char* name) {
 int condition_wait(Condition* self, uint_64 timeout) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
-    // get mutex and cond address
-    pthread_mutex_t* mutex = condition_->memory;
-    pthread_cond_t* cond = condition_->memory + sizeof(pthread_mutex_t);
-
     // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
+    pthread_mutex_lock(&(condition_->memory->mutex));
 
     // wait the pthread cond
     int result = -1;
     if (timeout == UINT_64_MAX) {
         // infinity
-        if (pthread_cond_wait(cond, mutex) == 0) {
+        if (pthread_cond_wait(&(condition_->memory->cond), &(condition_->memory->mutex)) == 0) {
             result = 0;
         }
     } else {
@@ -180,43 +165,39 @@ int condition_wait(Condition* self, uint_64 timeout) {
         time_out.tv_nsec += (timeout % 1000) * 1000000;
 
         // timed wait
-        if (pthread_cond_timedwait(cond, mutex, &time_out) == 0) {
+        if (pthread_cond_timedwait(&(condition_->memory->cond), &(condition_->memory->mutex), &time_out) == 0) {
             result = 0;
         }
     }
 
     // release the pthread mutex
-    pthread_mutex_unlock(mutex);
+    pthread_mutex_unlock(&(condition_->memory->mutex));
 
     return result;
 }
 int condition_signal(Condition* self, int count) {
     struct Condition_* condition_ = (struct Condition_*)self;
 
-    // get mutex and cond address
-    pthread_mutex_t* mutex = condition_->memory;
-    pthread_cond_t* cond = condition_->memory + sizeof(pthread_mutex_t);
-
     // aquire the pthread mutex
-    pthread_mutex_lock(mutex);
+    pthread_mutex_lock(&(condition_->memory->mutex));
 
     // signal the pthread cond
     int result = -1;
     if (count > 0) {
         // signal
         for (int cursor = 0; cursor < count; cursor++) {
-            pthread_cond_signal(cond);
+            pthread_cond_signal(&(condition_->memory->cond));
         }
         result = 0;
     } else {
         // broadcast
-        if (pthread_cond_broadcast(cond) == 0) {
+        if (pthread_cond_broadcast(&(condition_->memory->cond)) == 0) {
             result = 0;
         }
     }
 
     // release the pthread mutex
-    pthread_mutex_unlock(mutex);
+    pthread_mutex_unlock(&(condition_->memory->mutex));
 
     return result;
 }
