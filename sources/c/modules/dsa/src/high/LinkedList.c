@@ -444,7 +444,7 @@ void linkedlist_free(LinkedList* linkedlist) {
     heap_free(linkedlist_);
 }
 void linkedlistiterator_free(LinkedListIterator* linkedlistiterator) {
-    struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedList_*)linkedlistiterator;
+    struct LinkedListIterator_* linkedlistiterator_ = (struct LinkedListIterator_*)linkedlistiterator;
 
     // free private data
 

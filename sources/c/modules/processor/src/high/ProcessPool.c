@@ -34,7 +34,7 @@ int processpool_looper(ProcessPool* self) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)self;
 
     // open parent message queue
-    String* message_name = string_new_printf("pool_%d", process_parent());
+    String* message_name = string_new_printf("pool_%d", process_get_parent());
     Message* message = message_new_object(message_name->vtable->value(message_name), 1024, processpool_->arg);
     string_free(message_name);
 
@@ -42,7 +42,7 @@ int processpool_looper(ProcessPool* self) {
     void* item = heap_alloc(sizeof(void (*)(void*)) + processpool_->arg);
 
     // start looper
-    while (message->vtable->dequeueu(message, item, UINT_64_MAX) == 0) {
+    while (message->vtable->dequeue(message, item, UINT_64_MAX) == 0) {
         // get function and arg address
         void (*function)(void*) = item;
         void* arg = item + sizeof(void (*)(void*));
@@ -162,7 +162,7 @@ ProcessPool* processpool_new_object(int size, tsize arg) {
     }
 
     // create message queue
-    String* message_name = string_new_printf("pool_%d", process_self());
+    String* message_name = string_new_printf("pool_%d", process_get_self());
     processpool_->message = message_new_object(message_name->vtable->value(message_name), 1024, arg);
     string_free(message_name);
 

@@ -140,13 +140,13 @@ Process* process_new_object() {
 }
 
 // local process methods
-int process_self() {
+int process_get_self() {
     // get self process id
     int result = (int)GetCurrentProcessId();
 
     return result;
 }
-int process_parent() {
+int process_get_parent() {
     // get parent process id
     int result = (int)GetParentProcessId();
 

@@ -144,7 +144,7 @@ Thread* thread_new_object(tsize stack) {
 }
 
 // local thread methods
-int thread_self() {
+int thread_get_self() {
     // get self thread id
     int result = (int)GetCurrentThreadId();
 

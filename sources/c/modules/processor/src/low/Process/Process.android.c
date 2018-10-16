@@ -26,10 +26,10 @@ Process* process_new_object() {
 }
 
 // local process methods
-int process_self() {
+int process_get_self() {
     return -1;
 }
-int process_parent() {
+int process_get_parent() {
     return -1;
 }
 

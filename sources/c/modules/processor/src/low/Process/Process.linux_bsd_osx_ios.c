@@ -51,6 +51,9 @@ int process_join(Process* self) {
     // join internal child process
     int result = -1;
     waitpid(process_->id, &result, 0);
+    if(result >= 0){
+        result /= 256;
+    }
 
     return result;
 }
@@ -114,13 +117,13 @@ Process* process_new_object() {
 }
 
 // local process methods
-int process_self() {
+int process_get_self() {
     // get self process id
     int result = (int)getpid();
 
     return result;
 }
-int process_parent() {
+int process_get_parent() {
     // get parent process id
     int result = (int)getppid();
 

@@ -156,7 +156,7 @@ void message_init() {
     // init vtable
     message_vtable = heap_alloc(sizeof(Message_VTable));
     message_vtable->enqueue = message_enqueue;
-    message_vtable->dequeueu = message_dequeue;
+    message_vtable->dequeue = message_dequeue;
 }
 Message* message_new() {
     struct Message_* message_ = heap_alloc(sizeof(struct Message_));

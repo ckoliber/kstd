@@ -1,4 +1,5 @@
 #include <high/ThreadPool.h>
+#include <kstd.h>
 
 #include <assert.h>
 
@@ -8,6 +9,8 @@ void function(void* a) {
 }
 
 int main() {
+    kstd_init();
+
     ThreadPool* pool = threadpool_new_object(2, sizeof(int));
 
     pool->vtable->start(pool);

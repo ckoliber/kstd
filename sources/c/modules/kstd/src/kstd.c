@@ -54,7 +54,7 @@ void modules_init() {
     processpool_init();
     threadpool_init();
     process_init();
-    threadpool_init();
+    thread_init();
 }
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_WINDOWS)

@@ -7,7 +7,7 @@
 #include <low/String.h>
 #include <low/Thread.h>
 
-struct Mutex_Memory{
+struct Mutex_Memory {
     void* memory;
     HANDLE memory_handle;
     HANDLE mutex;
