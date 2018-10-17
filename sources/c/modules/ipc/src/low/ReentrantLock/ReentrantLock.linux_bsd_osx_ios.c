@@ -3,7 +3,6 @@
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
 #include <low/Share.h>
-#include <low/ReentrantLock.h>
 #include <low/Heap.h>
 #include <low/String.h>
 #include <pthread.h>

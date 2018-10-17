@@ -22,12 +22,14 @@
 #include <low/Thread.h>
 
 // ipc module
-#include <high/ReentrantLock.h>
-#include <high/ReadWriteLock.h>
-#include <low/Monitor.h>
+#include <low/ErrorCheckLock.h>
 #include <low/Message.h>
+#include <low/Monitor.h>
 #include <low/MutexLock.h>
+#include <low/ReadWriteLock.h>
+#include <low/ReentrantLock.h>
 #include <low/Semaphore.h>
+#include <low/Share.h>
 
 // local methods
 void modules_init();
@@ -54,16 +56,18 @@ void modules_init() {
     thread_init();
 
     // init ipc module
-    lock_init();
-    rwlock_init();
-    condition_init();
+    errorchecklock_init();
     message_init();
-    mutex_init();
+    monitor_init();
+    mutexlock_init();
+    readwritelock_init();
+    reentrantlock_init();
     semaphore_init();
+    share_init();
 }
 
 void kstd_init() {
     modules_init();
 
-    critical = mutex_new_object(1, "critical");
+    critical = reentrantlock_new_object("critical");
 }

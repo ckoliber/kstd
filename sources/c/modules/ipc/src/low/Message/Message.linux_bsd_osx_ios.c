@@ -48,7 +48,7 @@ int message_enqueue(Message* self, void* item, uint_64 timeout){
     // wait on full semaphore
     if (message_->full->vtable->wait(message_->full, timeout) == 0) {
         // add item to queue
-        heap_copy(queue + memory->end, item, message_->item);
+        heap_copy(queue + (memory->end * message_->item), item, message_->item);
         memory->end = (memory->end + 1) % message_->max;
 
         // signal on empty semaphore
@@ -67,7 +67,7 @@ int message_dequeue(Message* self, void* item, uint_64 timeout){
     // wait on empty semaphore
     if (message_->empty->vtable->wait(message_->empty, timeout) == 0) {
         // remove item from queue
-        heap_copy(item, queue + memory->begin, message_->item);
+        heap_copy(item, queue + (memory->begin * message_->item), message_->item);
         memory->begin = (memory->begin + 1) % message_->max;
 
         // signal on full semaphore

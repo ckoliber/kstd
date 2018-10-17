@@ -1,6 +1,6 @@
 #include <high/Dequeue.h>
 
-#include <high/ReadWriteLock.h>
+#include <low/ReadWriteLock.h>
 #include <low/Heap.h>
 #include <low/Semaphore.h>
 
@@ -15,7 +15,7 @@ struct Dequeue_ {
     // private data
     int size;
     struct DequeueItem* head;
-    ReadWriteLock* rwlock;
+    ReadWriteLock* readwritelock;
     Semaphore* full_semaphore;
     Semaphore* empty_semaphore;
 };
@@ -144,13 +144,13 @@ int dequeue_enqueue_concurrent(Dequeue* self, int front, void* item, uint_64 tim
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
-    dequeue_->rwlock->vtable->write_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->readwritelock->vtable->write_lock(dequeue_->readwritelock, UINT_64_MAX);
 
     // normal enqueue
     int result = dequeue_enqueue_normal(self, front, item, timeout);
 
     // concurrent writeunlock
-    dequeue_->rwlock->vtable->write_unlock(dequeue_->rwlock);
+    dequeue_->readwritelock->vtable->write_unlock(dequeue_->readwritelock);
 
     return result;
 }
@@ -158,13 +158,13 @@ void* dequeue_dequeue_concurrent(Dequeue* self, int front, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
-    dequeue_->rwlock->vtable->write_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->readwritelock->vtable->write_lock(dequeue_->readwritelock, UINT_64_MAX);
 
     // normal dequeue
     void* result = dequeue_dequeue_normal(self, front, timeout);
 
     // concurrent writeunlock
-    dequeue_->rwlock->vtable->write_unlock(dequeue_->rwlock);
+    dequeue_->readwritelock->vtable->write_unlock(dequeue_->readwritelock);
 
     return result;
 }
@@ -172,13 +172,13 @@ void* dequeue_get_concurrent(Dequeue* self, int front) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent readlock
-    dequeue_->rwlock->vtable->read_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->readwritelock->vtable->read_lock(dequeue_->readwritelock, UINT_64_MAX);
 
     // normal get
     void* result = dequeue_get_normal(self, front);
 
     // concurrent readunlock
-    dequeue_->rwlock->vtable->read_unlock(dequeue_->rwlock);
+    dequeue_->readwritelock->vtable->read_unlock(dequeue_->readwritelock);
 
     return result;
 }
@@ -186,13 +186,13 @@ int dequeue_size_concurrent(Dequeue* self) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent readlock
-    dequeue_->rwlock->vtable->read_lock(dequeue_->rwlock, UINT_64_MAX);
+    dequeue_->readwritelock->vtable->read_lock(dequeue_->readwritelock, UINT_64_MAX);
 
     // normal size
     int result = dequeue_size_normal(self);
 
     // concurrent readunlock
-    dequeue_->rwlock->vtable->read_unlock(dequeue_->rwlock);
+    dequeue_->readwritelock->vtable->read_unlock(dequeue_->readwritelock);
 
     return result;
 }
@@ -293,7 +293,7 @@ Dequeue* dequeue_new(int mode) {
     // set private data
     dequeue_->size = 0;
     dequeue_->head = NULL;
-    dequeue_->rwlock = NULL;
+    dequeue_->readwritelock = NULL;
     dequeue_->full_semaphore = NULL;
     dequeue_->empty_semaphore = NULL;
 
@@ -315,8 +315,8 @@ void dequeue_free(Dequeue* dequeue) {
         heap_free(remove_item);
     } while (dequeue_->head != NULL);
 
-    if (dequeue_->rwlock != NULL) {
-        rwlock_free(dequeue_->rwlock);
+    if (dequeue_->readwritelock != NULL) {
+        readwritelock_free(dequeue_->readwritelock);
     }
     if (dequeue_->full_semaphore != NULL) {
         semaphore_free(dequeue_->full_semaphore);
@@ -345,7 +345,7 @@ Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(void*, void*)) 
     dequeue_->head->item = NULL;
 
     if (mode == 1 || mode == 2) {
-        dequeue_->rwlock = rwlock_new_object(0, NULL);
+        dequeue_->readwritelock = readwritelock_new_object(NULL);
     }
     if (mode == 2) {
         // init empty semaphore
