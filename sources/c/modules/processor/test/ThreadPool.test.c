@@ -28,7 +28,7 @@ void test_threadpool_post(){
 
     threadpool->vtable->start(threadpool);
 
-    for (int a = 0; a < 100000; a++) {
+    for (int a = 0; a < 2000; a++) {
         int arg = 4;
         threadpool->vtable->post(threadpool, test_function, &arg);
     }

@@ -15,7 +15,13 @@ void test_processpool_post();
 void test_processpool_stop();
 
 void test_processpool_start(){
+    printf("a\n");
+    fflush(stdout);
+
     ProcessPool* processpool = processpool_new_object(2, sizeof(int));
+
+    printf("a\n");
+    fflush(stdout);
 
     assert(processpool->vtable->start(processpool) == 0);
 
@@ -28,8 +34,12 @@ void test_processpool_post(){
 
     processpool->vtable->start(processpool);
 
-    for (int a = 0; a < 100000; a++) {
+    for (int a = 0; a < 10000; a++) {
         int arg = 4;
+
+        printf("%d\n", a);
+        fflush(stdout);
+
         processpool->vtable->post(processpool, test_function, &arg);
     }
 

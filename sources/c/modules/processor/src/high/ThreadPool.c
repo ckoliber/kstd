@@ -18,10 +18,6 @@ struct ThreadPool_ {
     Message* message;
 };
 
-struct ThreadPool_Message{
-    void (*function)(void* arg);
-};
-
 // vtable
 ThreadPool_VTable* threadpool_vtable;
 
@@ -38,18 +34,19 @@ int threadpool_looper(ThreadPool* self) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // allocate temp for items (function pointer + arg value)
-    struct ThreadPool_Message* message = heap_alloc(sizeof(struct ThreadPool_Message) + threadpool_->arg);
+    void* message = heap_alloc(sizeof(void (*)(void*)) + threadpool_->arg);
 
     // start looper
     while (threadpool_->message->vtable->dequeue(threadpool_->message, message, UINT_64_MAX) == 0) {
-        // get arg address
-        void* arg = message + sizeof(struct ThreadPool_Message);
+        // get function and arg address
+        void (*function)(void*) = message;
+        void* arg = message + sizeof(void (*)(void*));
 
-        printf("GET = %p\n", message->function);
-        fflush(stdout);
+        printf("Receive F = %p\n", function);
+        printf("Receive X = %p\n", arg);
 
         // run function with arg
-        message->function(arg);
+        function(arg);
     }
 
     heap_free(message);
@@ -75,15 +72,12 @@ int threadpool_start(ThreadPool* self) {
 int threadpool_post(ThreadPool* self, void (*function)(void*), void* arg) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
-    printf("POST = %p\n", function);
-    fflush(stdout);
-
     // allocate temp for item package
-    struct ThreadPool_Message* message = heap_alloc(sizeof(struct ThreadPool_Message) + threadpool_->arg);
+    void* message = heap_alloc(sizeof(void (*)(void*)) + threadpool_->arg);
 
     // fill temp package item
-    message->function = function;
-    heap_copy(message + sizeof(struct ThreadPool_Message), arg, threadpool_->arg);
+    heap_copy(message, function, sizeof(void (*)(void*)));
+    heap_copy(message + sizeof(void (*)(void*)), arg, threadpool_->arg);
 
     // post message to queue
     int result = threadpool_->message->vtable->enqueue(threadpool_->message, message, UINT_64_MAX);
@@ -165,7 +159,7 @@ ThreadPool* threadpool_new_object(int size, tsize arg) {
     }
 
     // create message queue
-    threadpool_->message = message_new_object(NULL, 1024, sizeof(struct ThreadPool_Message) + arg);
+    threadpool_->message = message_new_object(NULL, 1024, sizeof(void (*)(void*)) + threadpool_->arg);
 
     return (ThreadPool*)threadpool_;
 }

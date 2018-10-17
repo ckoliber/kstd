@@ -3,6 +3,7 @@
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
 #include <low/Share.h>
+#include <low/MutexLock.h>
 #include <low/Semaphore.h>
 #include <low/ReentrantLock.h>
 #include <low/Heap.h>
@@ -20,6 +21,8 @@ struct Message_ {
     Share* share;
     Semaphore* full;
     Semaphore* empty;
+    MutexLock* critical;
+
 };
 
 struct Message_Memory{
@@ -34,7 +37,7 @@ Message_VTable* message_vtable;
 
 int message_enqueue(Message* self, void* item, uint_64 timeout);
 int message_dequeue(Message* self, void* item, uint_64 timeout);
-int message_size(Message* self);
+int message_size(Message* self, uint_64 timeout);
 
 // implement methods
 // vtable operators
@@ -47,9 +50,15 @@ int message_enqueue(Message* self, void* item, uint_64 timeout){
 
     // wait on full semaphore
     if (message_->full->vtable->wait(message_->full, timeout) == 0) {
+        // begin critical
+        message_->critical->vtable->lock(message_->critical, timeout);
+
         // add item to queue
         heap_copy(queue + (memory->end * message_->item), item, message_->item);
         memory->end = (memory->end + 1) % message_->max;
+
+        // end critical
+        message_->critical->vtable->unlock(message_->critical);
 
         // signal on empty semaphore
         return message_->empty->vtable->post(message_->empty);
@@ -66,9 +75,15 @@ int message_dequeue(Message* self, void* item, uint_64 timeout){
 
     // wait on empty semaphore
     if (message_->empty->vtable->wait(message_->empty, timeout) == 0) {
+        // begin critical
+        message_->critical->vtable->lock(message_->critical, timeout);
+
         // remove item from queue
         heap_copy(item, queue + (memory->begin * message_->item), message_->item);
         memory->begin = (memory->begin + 1) % message_->max;
+
+        // end critical
+        message_->critical->vtable->unlock(message_->critical);
 
         // signal on full semaphore
         return message_->full->vtable->post(message_->full);
@@ -76,14 +91,20 @@ int message_dequeue(Message* self, void* item, uint_64 timeout){
 
     return -1;
 }
-int message_size(Message* self){
+int message_size(Message* self, uint_64 timeout){
     struct Message_* message_ = (struct Message_*)self;
 
     // get memory and queue address
     struct Message_Memory* memory = message_->share->vtable->address(message_->share);
 
+    // begin critical
+    message_->critical->vtable->lock(message_->critical, timeout);
+
     // get message size
     int result = memory->end - memory->begin;
+
+    // end critical
+    message_->critical->vtable->unlock(message_->critical);
 
     return result;
 }
@@ -108,6 +129,9 @@ Message* message_new() {
 
     // set private data
     message_->share = NULL;
+    message_->full = NULL;
+    message_->empty = NULL;
+    message_->critical = NULL;
 
     return (Message*)message_;
 }
@@ -143,6 +167,11 @@ Message* message_new_object(char* name, int max, tsize item) {
         message_->empty = semaphore_new_object(message_empty_name->vtable->value(message_empty_name), 0);
         string_free(message_empty_name);
 
+        // open share critical mutexlock
+        String* message_critical_name = string_new_concat("%s_message_critical", name);
+        message_->critical = mutexlock_new_object(message_critical_name->vtable->value(message_critical_name));
+        string_free(message_critical_name);
+
         // try lock critical
         if (critical != NULL) {
             critical->vtable->lock(critical, UINT_64_MAX);
@@ -175,6 +204,9 @@ Message* message_new_object(char* name, int max, tsize item) {
 
         // open empty semaphore
         message_->empty = semaphore_new_object(NULL, 0);
+
+        // open critical mutexlock
+        message_->critical = mutexlock_new_object(NULL);
 
         // open errorcheck lock
         message_->share = share_new_object(NULL, sizeof(struct Message_Memory) + (message_->max * message_->max), 0);

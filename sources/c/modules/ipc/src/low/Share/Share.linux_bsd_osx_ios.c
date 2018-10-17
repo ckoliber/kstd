@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 struct Share_ {
     // self public object
@@ -137,6 +138,9 @@ int share_flush(Share* self, tsize size){
 
 // object allocation and deallocation operators
 void share_init() {
+    // unlink critical
+    system("rm /dev/shm/*_share");
+
     // init vtable
     share_vtable = heap_alloc(sizeof(Share_VTable));
     share_vtable->address = share_address;
