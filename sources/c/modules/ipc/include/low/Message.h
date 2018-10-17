@@ -14,8 +14,7 @@ struct Message {
 struct Message_VTable {
     int (*enqueue)(Message* self, void* item, uint_64 timeout);
     int (*dequeue)(Message* self, void* item, uint_64 timeout);
-    int (*get)(Message* self, void* item);
-    int (*size)(Message* self, void* item);
+    int (*size)(Message* self);
 };
 
 // init vtable

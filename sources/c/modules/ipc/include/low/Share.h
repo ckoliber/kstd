@@ -13,8 +13,8 @@ struct Share {
 // vtable
 struct Share_VTable {
     void* (*address)(Share* self);
-    int (*flush)(Share* self, tsize size);
     int (*connections)(Share* self);
+    int (*flush)(Share* self, tsize size);
 };
 
 // init vtable

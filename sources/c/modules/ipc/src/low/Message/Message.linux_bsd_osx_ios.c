@@ -2,153 +2,90 @@
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
-#include <fcntl.h>
-#include <low/Date.h>
-#include <low/Heap.h>
-#include <low/MutexLock.h>
+#include <low/Share.h>
 #include <low/Semaphore.h>
+#include <low/ReentrantLock.h>
+#include <low/Heap.h>
 #include <low/String.h>
-#include <sys/mman.h>
-#include <unistd.h>
-
-struct Message_Memory{
-    int start;
-    int end;
-    int connections;
-};
 
 struct Message_ {
     // self public object
     Message self;
 
     // constructor data
-    String* name;
     int max;
     tsize item;
 
     // private data
-    struct Message_Memory* memory;
-    Semaphore* full_semaphore;
-    Semaphore* empty_semaphore;
+    Share* share;
+    Semaphore* full;
+    Semaphore* empty;
+};
+
+struct Message_Memory{
+    int begin;
+    int end;
 };
 
 // vtable
 Message_VTable* message_vtable;
 
 // link methods
+
 int message_enqueue(Message* self, void* item, uint_64 timeout);
 int message_dequeue(Message* self, void* item, uint_64 timeout);
-
-// local methods
-struct Message_Memory* message_anonymous_new(int max, tsize item);
-void message_anonymous_free(struct Message_Memory* memory);
-struct Message_Memory* message_named_new(char* name, int max, tsize item);
-void message_named_free(struct Message_Memory* memory, char* name, int max, tsize item);
+int message_size(Message* self);
 
 // implement methods
-struct Message_Memory* message_anonymous_new(int max, tsize item) {
-    // alocate start and end and queue
-    struct Message_Memory* result = heap_alloc(sizeof(struct Message_Memory) + (item * max));
-
-    // init start and end
-    result->start = 0;
-    result->end = 0;
-
-    return result;
-}
-void message_anonymous_free(struct Message_Memory* memory) {
-    heap_free(memory);
-}
-struct Message_Memory* message_named_new(char* name, int max, tsize item) {
-    // check share memory exists
-    bool exists = true;
-    int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
-    if (exists_fd > 0) {
-        // not exists, it was created now
-        close(exists_fd);
-        exists = false;
-    }
-
-    // alocate share start and end and queue and connections
-    int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
-    ftruncate(fd, sizeof(struct Message_Memory) + (item * max));
-    struct Message_Memory* result = mmap(NULL, sizeof(struct Message_Memory) + (item * max), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
-    close(fd);
-
-    // check error
-    if (result == NULL || result == MAP_FAILED) {
-        return NULL;
-    }
-
-    // create and init start and end or open and increase connections
-    if (!exists) {
-        // init share start and end
-        result->start = 0;
-        result->end = 0;
-
-        // init share connections
-        result->connections = 0;
-    } else {
-        result->connections++;
-    }
-
-    return result;
-}
-void message_named_free(struct Message_Memory* memory, char* name, int max, tsize item) {
-    // destroy share memory on close all connections
-    if (memory->connections <= 1) {
-        // unmap share memory
-        munmap(memory, sizeof(struct Message_Memory) + (item * max));
-
-        // unlink (it has not any connections)
-        shm_unlink(name);
-    } else {
-        // reduce connections
-        memory->connections--;
-
-        // unmap share memory
-        munmap(memory, sizeof(struct Message_Memory) + (item * max));
-
-        // dont unlink (it has another connections)
-    }
-}
-
 // vtable operators
-int message_enqueue(Message* self, void* item, uint_64 timeout) {
+int message_enqueue(Message* self, void* item, uint_64 timeout){
     struct Message_* message_ = (struct Message_*)self;
 
-    // get queue address
-    void* queue = message_->memory + sizeof(struct Message_Memory);
+    // get memory and queue address
+    struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+    void* queue = memory + sizeof(struct Message_Memory);
 
     // wait on full semaphore
-    if (message_->full_semaphore->vtable->wait(message_->full_semaphore, timeout) == 0) {
+    if (message_->full->vtable->wait(message_->full, timeout) == 0) {
         // add item to queue
-        heap_copy(queue + message_->memory->end, item, message_->item);
-        message_->memory->end = (message_->memory->end + 1) % message_->max;
+        heap_copy(queue + memory->end, item, message_->item);
+        memory->end = (memory->end + 1) % message_->max;
 
         // signal on empty semaphore
-        return message_->empty_semaphore->vtable->post(message_->empty_semaphore);
+        return message_->empty->vtable->post(message_->empty);
     }
 
     return -1;
 }
-int message_dequeue(Message* self, void* item, uint_64 timeout) {
+int message_dequeue(Message* self, void* item, uint_64 timeout){
     struct Message_* message_ = (struct Message_*)self;
 
-    // get queue address
-    void* queue = message_->memory + sizeof(struct Message_Memory);
+    // get memory and queue address
+    struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+    void* queue = memory + sizeof(struct Message_Memory);
 
     // wait on empty semaphore
-    if (message_->empty_semaphore->vtable->wait(message_->empty_semaphore, timeout) == 0) {
-        // add item to queue
-        heap_copy(item, queue + message_->memory->start, message_->item);
-        message_->memory->start = (message_->memory->start + 1) % message_->max;
+    if (message_->empty->vtable->wait(message_->empty, timeout) == 0) {
+        // remove item from queue
+        heap_copy(item, queue + memory->begin, message_->item);
+        memory->begin = (memory->begin + 1) % message_->max;
 
         // signal on full semaphore
-        return message_->full_semaphore->vtable->post(message_->full_semaphore);
+        return message_->full->vtable->post(message_->full);
     }
 
     return -1;
+}
+int message_size(Message* self){
+    struct Message_* message_ = (struct Message_*)self;
+
+    // get memory and queue address
+    struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+
+    // get message size
+    int result = memory->end - memory->begin;
+
+    return result;
 }
 
 // object allocation and deallocation operators
@@ -157,6 +94,7 @@ void message_init() {
     message_vtable = heap_alloc(sizeof(Message_VTable));
     message_vtable->enqueue = message_enqueue;
     message_vtable->dequeue = message_dequeue;
+    message_vtable->size = message_size;
 }
 Message* message_new() {
     struct Message_* message_ = heap_alloc(sizeof(struct Message_));
@@ -165,14 +103,11 @@ Message* message_new() {
     message_->self.vtable = message_vtable;
 
     // set constructor data
-    message_->name = NULL;
     message_->max = 0;
     message_->item = 0;
 
     // set private data
-    message_->memory = NULL;
-    message_->full_semaphore = NULL;
-    message_->empty_semaphore = NULL;
+    message_->share = NULL;
 
     return (Message*)message_;
 }
@@ -180,36 +115,11 @@ void message_free(Message* message) {
     struct Message_* message_ = (struct Message_*)message;
 
     // free private data
-    if (message_->memory != NULL) {
-        if (message_->name != NULL) {
-            // try acquire critical mutex
-            if (critical != NULL) {
-                critical->vtable->acquire(critical, UINT_64_MAX);
-            }
-
-            // destroy and close or close internal share message queue
-            message_named_free(message_->memory, message_->name->vtable->value(message_->name), message_->max, message_->item);
-
-            // try release critical mutex
-            if (critical != NULL) {
-                critical->vtable->release(critical);
-            }
-        } else {
-            // destroy internal message queue
-            message_anonymous_free(message_->memory);
-        }
-    }
-    if (message_->full_semaphore != NULL) {
-        semaphore_free(message_->full_semaphore);
-    }
-    if (message_->empty_semaphore != NULL) {
-        semaphore_free(message_->empty_semaphore);
+    if (message_->share != NULL) {
+        share_free(message_->share);
     }
 
     // free constructor data
-    if (message_->name != NULL) {
-        string_free(message_->name);
-    }
 
     // free self
     heap_free(message_);
@@ -218,45 +128,68 @@ Message* message_new_object(char* name, int max, tsize item) {
     struct Message_* message_ = (struct Message_*)message_new();
 
     // set constructor data
-    if (name != NULL) {
-        message_->name = string_new_printf("%s_message", name);
-    }
     message_->max = max;
     message_->item = item;
 
     // set private data
     if (name != NULL) {
-        // create internal full semaphore
+        // open share full semaphore
         String* message_full_name = string_new_printf("%s_message_full", name);
-        message_->full_semaphore = semaphore_new_object(message_full_name->vtable->value(message_full_name), max);
+        message_->full = semaphore_new_object(message_full_name->vtable->value(message_full_name), max);
         string_free(message_full_name);
 
-        // create internal empty semaphore
+        // open share empty semaphore
         String* message_empty_name = string_new_concat("%s_message_empty", name);
-        message_->empty_semaphore = semaphore_new_object(message_empty_name->vtable->value(message_empty_name), 0);
+        message_->empty = semaphore_new_object(message_empty_name->vtable->value(message_empty_name), 0);
         string_free(message_empty_name);
 
-        // try acquire critical mutex
+        // try lock critical
         if (critical != NULL) {
-            critical->vtable->acquire(critical, UINT_64_MAX);
+            critical->vtable->lock(critical, UINT_64_MAX);
         }
 
-        // create and init or open internal share message queue
-        message_->memory = message_named_new(message_->name->vtable->value(message_->name), max, item);
+        // open share errorcheck lock
+        String* message_name = string_new_printf("%s_message", name);
+        message_->share = share_new_object(message_name->vtable->value(message_name), sizeof(struct Message_Memory) + (message_->max * message_->max), 0);
+        string_free(message_name);
 
-        // try release critical mutex
+        // if share connections is 1, init share
+        if(message_->share->vtable->connections(message_->share) <= 1){
+            // get memory address
+            struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+
+            // init begin
+            memory->begin = 0;
+
+            // init end
+            memory->end = 0;
+        }
+
+        // try unlock critical
         if (critical != NULL) {
-            critical->vtable->release(critical);
+            critical->vtable->unlock(critical);
         }
     } else {
-        // create internal full semaphore
-        message_->full_semaphore = semaphore_new_object(NULL, max);
+        // open full semaphore
+        message_->full = semaphore_new_object(NULL, max);
 
-        // create internal empty semaphore
-        message_->empty_semaphore = semaphore_new_object(NULL, 0);
+        // open empty semaphore
+        message_->empty = semaphore_new_object(NULL, 0);
 
-        // create internal message queue
-        message_->memory = message_anonymous_new(max, item);
+        // open errorcheck lock
+        message_->share = share_new_object(NULL, sizeof(struct Message_Memory) + (message_->max * message_->max), 0);
+
+        // if share connections is 1, init share
+        if(message_->share->vtable->connections(message_->share) <= 1){
+            // get memory address
+            struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+
+            // init begin
+            memory->begin = 0;
+
+            // init end
+            memory->end = 0;
+        }
     }
 
     return (Message*)message_;
