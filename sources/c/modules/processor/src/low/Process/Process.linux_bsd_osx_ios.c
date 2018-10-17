@@ -25,7 +25,7 @@ Process_VTable* process_vtable;
 // link methods
 int process_start(Process* self, int (*function)(void*), void* arg);
 int process_join(Process* self);
-int process_id(Process* self);
+uint_64 process_id(Process* self);
 int process_stop(Process* self);
 
 // implement methods
@@ -57,11 +57,11 @@ int process_join(Process* self) {
 
     return result;
 }
-int process_id(Process* self) {
+uint_64 process_id(Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // get internal child process id
-    int result = (int)process_->id;
+    uint_64 result = (uint_64)process_->id;
 
     return result;
 }

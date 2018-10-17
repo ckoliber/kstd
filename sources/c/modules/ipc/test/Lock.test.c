@@ -1,4 +1,4 @@
-#include <high/Lock.h>
+#include <high/ReentrantLock.h>
 #include <low/Thread.h>
 #include <kstd.h>
 
@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 int function(void* arg){
-    Lock* lock = arg;
+    ReentrantLock* lock = arg;
 
     assert(lock->vtable->lock(lock, 3000) == -1);
 
@@ -18,7 +18,7 @@ int function(void* arg){
 int main() {
     kstd_init();
 
-    Lock* lock = lock_new_object(0, NULL);
+    ReentrantLock* lock = lock_new_object(0, NULL);
 
     assert(lock->vtable->lock(lock, 0) == 0);
 

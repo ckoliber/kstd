@@ -1,6 +1,6 @@
 #include <high/ArrayList.h>
 
-#include <high/RWLock.h>
+#include <high/ReadWriteLock.h>
 #include <low/Heap.h>
 
 struct ArrayList_ {
@@ -15,7 +15,7 @@ struct ArrayList_ {
     int length;
     int cursor;
     void** array;
-    RWLock* rwlock;
+    ReadWriteLock* rwlock;
 };
 
 // vtable

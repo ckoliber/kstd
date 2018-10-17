@@ -14,7 +14,7 @@ struct Process {
 struct Process_VTable {
     int (*start)(Process* self, int (*function)(void*), void* arg);
     int (*join)(Process* self);
-    int (*id)(Process* self);
+    uint_64 (*id)(Process* self);
     int (*stop)(Process* self);
 };
 

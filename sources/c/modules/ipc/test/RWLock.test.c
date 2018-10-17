@@ -1,11 +1,11 @@
-#include <high/RWLock.h>
+#include <high/ReadWriteLock.h>
 #include <low/Thread.h>
 #include <kstd.h>
 
 #include <assert.h>
 
 int function(void* arg){
-    RWLock* rwlock = arg;
+    ReadWriteLock* rwlock = arg;
 
     assert(rwlock->vtable->(lock, 3000) == -1);
 

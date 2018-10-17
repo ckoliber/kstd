@@ -1,4 +1,4 @@
-#include <low/Mutex.h>
+#include <low/MutexLock.h>
 #include <low/Thread.h>
 #include <kstd.h>
 
@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 int function(void* arg){
-    Mutex* mutex = arg;
+    MutexLock* mutex = arg;
 
     assert(mutex->vtable->acquire(mutex, 3000) == -1);
 
@@ -18,7 +18,7 @@ int function(void* arg){
 int main() {
     kstd_init();
 
-    Mutex* mutex = mutex_new_object(0, NULL);
+    MutexLock* mutex = mutex_new_object(0, NULL);
 
     assert(mutex->vtable->acquire(mutex, 0) == 0);
 

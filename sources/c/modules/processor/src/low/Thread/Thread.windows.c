@@ -12,7 +12,7 @@ struct Thread_ {
     tsize stack;
 
     // private data
-    int id;
+    uint_64 id;
 };
 
 // vtable
@@ -75,7 +75,7 @@ int thread_id(Thread* self) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
     // get internal thread id
-    int result = thread_->id;
+    uint_64 result = thread_->id;
 
     return result;
 }

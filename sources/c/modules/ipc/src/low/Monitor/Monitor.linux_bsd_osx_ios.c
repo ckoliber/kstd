@@ -1,4 +1,4 @@
-#include <low/Semaphore.h>
+#include <low/Monitor.h>
 
 #if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
 
@@ -9,9 +9,9 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-struct Semaphore_ {
+struct Monitor_ {
     // self public object
-    Semaphore self;
+    Monitor self;
 
     // constructor data
 
@@ -19,45 +19,36 @@ struct Semaphore_ {
     Share* share;
 };
 
-struct Semaphore_Memory{
+struct Monitor_Memory{
     pthread_mutex_t mutex;
     pthread_cond_t cond;
-    int value;
 };
 
 // vtable
-Semaphore_VTable* semaphore_vtable;
+Monitor_VTable* monitor_vtable;
 
 // link methods
-int semaphore_wait(Semaphore* self, uint_64 timeout);
-int semaphore_post(Semaphore* self);
-int semaphore_get(Semaphore* self);
+int monitor_wait(Monitor* self, uint_64 timeout);
+int monitor_notify(Monitor* self);
+int monitor_notify_all(Monitor* self);
 
 // implement methods
 // vtable operators
-int semaphore_wait(Semaphore* self, uint_64 timeout) {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
+int monitor_wait(Monitor* self, uint_64 timeout) {
+    struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get memory address
-    struct Semaphore_Memory* memory = semaphore_->share->vtable->address(semaphore_->share);
+    struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
-    // wait the value
-    int result = 0;
+    // wait the pthread cond
+    int result = -1;
     if(pthread_mutex_lock(&(memory->mutex)) == 0){
         if(timeout == UINT_64_MAX){
             // infinity
 
             // wait
-            while(memory->value == 0){
-                if(pthread_cond_wait(&(memory->cond), &(memory->mutex)) != 0){
-                    result = -1;
-                    break;
-                }
-            }
-
-            // check wait was success, decrease semaphore value
-            if(result == 0){
-                memory->value--;
+            if (pthread_cond_wait(&(memory->cond), &(memory->mutex)) == 0) {
+                result = 0;
             }
         }else{
             // timed
@@ -71,17 +62,9 @@ int semaphore_wait(Semaphore* self, uint_64 timeout) {
             time_out.tv_sec += timeout / 1000;
             time_out.tv_nsec += (timeout % 1000) * 1000000;
 
-            // timed wait
-            while(memory->value == 0){
-                if(pthread_cond_timedwait(&(memory->cond), &(memory->mutex), &time_out) != 0){
-                    result = -1;
-                    break;
-                }
-            }
-
-            // check wait was success, decrease semaphore value
-            if(result == 0){
-                memory->value--;
+            // timed wait the cond
+            if (pthread_cond_timedwait(&(memory->cond), &(memory->mutex), &time_out) == 0) {
+                result = 0;
             }
         }
 
@@ -91,18 +74,15 @@ int semaphore_wait(Semaphore* self, uint_64 timeout) {
 
     return result;
 }
-int semaphore_post(Semaphore* self) {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
+int monitor_notify(Monitor* self) {
+    struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get memory address
-    struct Semaphore_Memory* memory = semaphore_->share->vtable->address(semaphore_->share);
+    struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
-    // post the value
+    // notify the pthread cond
     int result = -1;
     if(pthread_mutex_lock(&(memory->mutex)) == 0) {
-        // increase semaphore value
-        memory->value++;
-
         // notify
         if (pthread_cond_signal(&(memory->cond)) == 0) {
             result = 0;
@@ -114,17 +94,19 @@ int semaphore_post(Semaphore* self) {
 
     return result;
 }
-int semaphore_get(Semaphore* self) {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
+int monitor_notify_all(Monitor* self) {
+    struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get memory address
-    struct Semaphore_Memory* memory = semaphore_->share->vtable->address(semaphore_->share);
+    struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
-    // get the value
+    // notify all the pthread cond
     int result = -1;
     if(pthread_mutex_lock(&(memory->mutex)) == 0) {
-        // get semaphore value
-        result = memory->value;
+        // notify all
+        if (pthread_cond_broadcast(&(memory->cond)) == 0) {
+            result = 0;
+        }
 
         // unlock mutex
         pthread_mutex_unlock(&(memory->mutex));
@@ -134,50 +116,50 @@ int semaphore_get(Semaphore* self) {
 }
 
 // object allocation and deallocation operators
-void semaphore_init() {
+void monitor_init() {
     // init vtable
-    semaphore_vtable = heap_alloc(sizeof(Semaphore_VTable));
-    semaphore_vtable->wait = semaphore_wait;
-    semaphore_vtable->post = semaphore_post;
-    semaphore_vtable->get= semaphore_get;
+    monitor_vtable = heap_alloc(sizeof(Monitor_VTable));
+    monitor_vtable->wait = monitor_wait;
+    monitor_vtable->notify = monitor_notify;
+    monitor_vtable->notify_all = monitor_notify_all;
 }
-Semaphore* semaphore_new() {
-    struct Semaphore_* semaphore_ = heap_alloc(sizeof(struct Semaphore_));
+Monitor* monitor_new() {
+    struct Monitor_* monitor_ = heap_alloc(sizeof(struct Monitor_));
 
     // set vtable
-    semaphore_->self.vtable = semaphore_vtable;
+    monitor_->self.vtable = monitor_vtable;
 
     // set constructor data
 
     // set private data
-    semaphore_->share = NULL;
+    monitor_->share = NULL;
 
-    return (Semaphore*)semaphore_;
+    return (Monitor*)monitor_;
 }
-void semaphore_free(Semaphore* semaphore) {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore;
+void monitor_free(Monitor* monitor) {
+    struct Monitor_* monitor_ = (struct Monitor_*)monitor;
 
     // free private data
-    if (semaphore_->share != NULL) {
+    if (monitor_->share != NULL) {
         // if share connections is 1, destroy
-        if(semaphore_->share->vtable->connections(semaphore_->share) <= 1){
-            struct Semaphore_Memory* memory = semaphore_->share->vtable->address(semaphore_->share);
+        if(monitor_->share->vtable->connections(monitor_->share) <= 1){
+            struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
             // destroy
             pthread_mutex_destroy(&(memory->mutex));
             pthread_cond_destroy(&(memory->cond));
         }
 
-        share_free(semaphore_->share);
+        share_free(monitor_->share);
     }
 
     // free constructor data
 
     // free self
-    heap_free(semaphore_);
+    heap_free(monitor_);
 }
-Semaphore* semaphore_new_object(char* name, int value) {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
+Monitor* monitor_new_object(char* name) {
+    struct Monitor_* monitor_ = (struct Monitor_*)monitor_new();
 
     // set constructor data
 
@@ -189,14 +171,14 @@ Semaphore* semaphore_new_object(char* name, int value) {
         }
 
         // open share errorcheck lock
-        String* semaphore_name = string_new_printf("%s_semaphore", name);
-        semaphore_->share = share_new_object(semaphore_name->vtable->value(semaphore_name), sizeof(struct Semaphore_Memory), 0);
-        string_free(semaphore_name);
+        String* monitor_name = string_new_printf("%s_monitor", name);
+        monitor_->share = share_new_object(monitor_name->vtable->value(monitor_name), sizeof(struct Monitor_Memory), 0);
+        string_free(monitor_name);
 
         // if share connections is 1, init share
-        if(semaphore_->share->vtable->connections(semaphore_->share) <= 1){
+        if(monitor_->share->vtable->connections(monitor_->share) <= 1){
             // get memory address
-            struct Semaphore_Memory* memory = semaphore_->share->vtable->address(semaphore_->share);
+            struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
             // init mutex
             pthread_mutexattr_t mattr;
@@ -212,9 +194,6 @@ Semaphore* semaphore_new_object(char* name, int value) {
             pthread_condattr_setpshared(&cattr, 1);
             pthread_cond_init(&(memory->cond), &cattr);
             pthread_condattr_destroy(&cattr);
-
-            // init value
-            memory->value = value;
         }
 
         // try unlock critical
@@ -223,12 +202,12 @@ Semaphore* semaphore_new_object(char* name, int value) {
         }
     } else {
         // open errorcheck lock
-        semaphore_->share = share_new_object(NULL, sizeof(struct Semaphore_Memory), 0);
+        monitor_->share = share_new_object(NULL, sizeof(struct Monitor_Memory), 0);
 
         // if share connections is 1, init share
-        if(semaphore_->share->vtable->connections(semaphore_->share) <= 1){
+        if(monitor_->share->vtable->connections(monitor_->share) <= 1){
             // get memory address
-            struct Semaphore_Memory* memory = semaphore_->share->vtable->address(semaphore_->share);
+            struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
             // init mutex
             pthread_mutexattr_t mattr;
@@ -244,13 +223,10 @@ Semaphore* semaphore_new_object(char* name, int value) {
             pthread_condattr_setpshared(&cattr, 0);
             pthread_cond_init(&(memory->cond), &cattr);
             pthread_condattr_destroy(&cattr);
-
-            // init value
-            memory->value = value;
         }
     }
 
-    return (Semaphore*)semaphore_;
+    return (Monitor*)monitor_;
 }
 
 #endif

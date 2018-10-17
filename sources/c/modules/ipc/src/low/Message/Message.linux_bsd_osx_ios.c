@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <low/Date.h>
 #include <low/Heap.h>
-#include <low/Mutex.h>
+#include <low/MutexLock.h>
 #include <low/Semaphore.h>
 #include <low/String.h>
 #include <sys/mman.h>

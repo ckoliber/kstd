@@ -14,7 +14,7 @@ struct Thread {
 struct Thread_VTable {
     int (*start)(Thread* self, int (*function)(void*), void* arg);
     int (*join)(Thread* self);
-    int (*id)(Thread* self);
+    uint_64 (*id)(Thread* self);
     int (*stop)(Thread* self);
 };
 

@@ -1,4 +1,4 @@
-#include <low/Condition.h>
+#include <low/Monitor.h>
 #include <low/Thread.h>
 #include <kstd.h>
 
@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 int function(void* arg){
-    Condition* condition = arg;
+    Monitor* condition = arg;
 
     assert(condition->vtable->wait(condition, 3000) == -1);
 
@@ -18,7 +18,7 @@ int function(void* arg){
 int main() {
     kstd_init();
 
-    Condition* condition = condition_new_object(NULL);
+    Monitor* condition = condition_new_object(NULL);
 
     Thread* t = thread_new_object(0);
     t->vtable->start(t, function, condition);

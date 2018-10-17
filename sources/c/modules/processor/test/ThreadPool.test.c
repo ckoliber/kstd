@@ -1,26 +1,56 @@
 #include <high/ThreadPool.h>
+
 #include <kstd.h>
+#include <low/Heap.h>
 
 #include <assert.h>
+#include <stdio.h>
 
-void function(void* a) {
-    int* num = a;
-    assert(*num == 5);
+void test_function(void* arg) {
+    assert((int) arg == 4);
+}
+
+void test_threadpool_start();
+void test_threadpool_post();
+void test_threadpool_stop();
+
+void test_threadpool_start(){
+    ThreadPool* threadpool = threadpool_new_object(2, sizeof(int));
+
+    assert(threadpool->vtable->start(threadpool) == 0);
+
+    threadpool->vtable->stop(threadpool);
+
+    threadpool_free(threadpool);
+}
+void test_threadpool_post(){
+    ThreadPool* threadpool = threadpool_new_object(2, sizeof(int));
+
+    threadpool->vtable->start(threadpool);
+
+    for (int a = 0; a < 100000; a++) {
+        int arg = 4;
+        threadpool->vtable->post(threadpool, test_function, &arg);
+    }
+
+    threadpool->vtable->stop(threadpool);
+
+    threadpool_free(threadpool);
+}
+void test_threadpool_stop(){
+    ThreadPool* threadpool = threadpool_new_object(2, sizeof(int));
+
+    threadpool->vtable->start(threadpool);
+
+    assert(threadpool->vtable->stop(threadpool) == 0);
+
+    threadpool_free(threadpool);
 }
 
 int main() {
     kstd_init();
 
-    ThreadPool* pool = threadpool_new_object(2, sizeof(int));
-
-    pool->vtable->start(pool);
-
-    for (int a = 0; a < 100000; a++) {
-        int x = 5;
-        pool->vtable->post(pool, function, &x);
-    }
-
-    pool->vtable->stop(pool);
-
-    threadpool_free(pool);
+    test_threadpool_start();
+    test_threadpool_post();
+    test_threadpool_stop();
 }

@@ -16,19 +16,40 @@ struct Thread_ {
     pthread_t id;
 };
 
+struct Thread_Arg{
+    int (*function)(void* arg);
+    void* arg;
+};
+
 // vtable
 Thread_VTable* thread_vtable;
 
 // link methods
 int thread_start(Thread* self, int (*function)(void*), void* arg);
 int thread_join(Thread* self);
-int thread_id(Thread* self);
+uint_64 thread_id(Thread* self);
 int thread_stop(Thread* self);
 
+// local methods
+int thread_function(struct Thread_Arg* thread_arg);
+
 // implement methods
+int thread_function(struct Thread_Arg* thread_arg){
+    int result = thread_arg->function(thread_arg->arg);
+
+    heap_free(thread_arg);
+
+    return result;
+}
+
 // vtable operators
 int thread_start(Thread* self, int (*function)(void*), void* arg) {
     struct Thread_* thread_ = (struct Thread_*)self;
+
+    // create thread arg
+    struct Thread_Arg* thread_arg = heap_alloc(sizeof(struct Thread_Arg));
+    thread_arg->function = function;
+    thread_arg->arg = arg;
 
     // start internal pthread
     int result = -1;
@@ -37,7 +58,7 @@ int thread_start(Thread* self, int (*function)(void*), void* arg) {
     if (thread_->stack > 0) {
         pthread_attr_setstacksize(&tattr, thread_->stack);
     }
-    if (pthread_create(&thread_->id, &tattr, (void *(*)(void *)) function, arg) == 0) {
+    if (pthread_create(&thread_->id, &tattr, (void *(*)(void *)) thread_function, thread_arg) == 0) {
         result = 0;
     }
     pthread_attr_destroy(&tattr);
@@ -55,11 +76,11 @@ int thread_join(Thread* self) {
 
     return result;
 }
-int thread_id(Thread* self) {
+uint_64 thread_id(Thread* self) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
     // get internal thread id
-    int result = (int)thread_->id;
+    uint_64 result = (uint_64)thread_->id;
 
     return result;
 }

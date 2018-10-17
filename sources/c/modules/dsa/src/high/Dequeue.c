@@ -1,6 +1,6 @@
 #include <high/Dequeue.h>
 
-#include <high/RWLock.h>
+#include <high/ReadWriteLock.h>
 #include <low/Heap.h>
 #include <low/Semaphore.h>
 
@@ -15,7 +15,7 @@ struct Dequeue_ {
     // private data
     int size;
     struct DequeueItem* head;
-    RWLock* rwlock;
+    ReadWriteLock* rwlock;
     Semaphore* full_semaphore;
     Semaphore* empty_semaphore;
 };
@@ -125,9 +125,9 @@ void* dequeue_get_normal(Dequeue* self, int front) {
 
     // get dequeue item
     if (front) {
-        return dequeue_->head->next;
+        return dequeue_->head->next->item;
     } else {
-        return dequeue_->head->previews;
+        return dequeue_->head->previews->item;
     }
 }
 int dequeue_size_normal(Dequeue* self) {

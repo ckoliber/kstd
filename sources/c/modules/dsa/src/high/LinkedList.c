@@ -1,6 +1,6 @@
 #include <high/LinkedList.h>
 
-#include <high/RWLock.h>
+#include <high/ReadWriteLock.h>
 #include <low/Heap.h>
 
 struct LinkedList_ {
@@ -13,7 +13,7 @@ struct LinkedList_ {
     // private data
     int size;
     struct LinkedItem* head;
-    RWLock* rwlock;
+    ReadWriteLock* rwlock;
 };
 
 struct LinkedItem {
@@ -188,7 +188,7 @@ int linkedlist_indexof_normal(LinkedList* self, void* item) {
 
     // search in items to find item
     int cursor = 0;
-    struct LinkedItem* search_item = linkedlist_->head;
+    struct LinkedItem* search_item = linkedlist_->head->next;
     do {
         // check comperator function is not NULL
         if (linkedlist_->comperator != NULL) {
