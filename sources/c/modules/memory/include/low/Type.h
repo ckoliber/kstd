@@ -25,33 +25,36 @@
 #if defined(APP_WINDOWS)
 
 #include <windows.h>
+#include <float.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // signed fixed size 8, 16, 32, 64 integer
 typedef __int8 int_8;
 typedef __int16 int_16;
 typedef __int32 int_32;
 typedef __int64 int_64;
-#define INT_8_MAX CHAR_MAX
-#define INT_8_MIN CHAR_MIN
-#define INT_16_MAX SHRT_MAX
-#define INT_16_MIN SHRT_MIN
-#define INT_32_MAX INT_MAX
-#define INT_32_MIN INT_MIN
-#define INT_64_MAX _I64_MAX
-#define INT_64_MIN _I64_MIN
+#define INT_8_MAX INT8_MAX
+#define INT_8_MIN INT8_MIN
+#define INT_16_MAX INT16_MAX
+#define INT_16_MIN INT16_MIN
+#define INT_32_MAX INT32_MAX
+#define INT_32_MIN INT32_MIN
+#define INT_64_MAX INT64_MAX
+#define INT_64_MIN INT64_MIN
 
 // unsigned fixed size 8, 16, 32, 64 integer
 typedef unsigned __int8 uint_8;
 typedef unsigned __int16 uint_16;
 typedef unsigned __int32 uint_32;
 typedef unsigned __int64 uint_64;
-#define UINT_8_MAX UCHAR_MAX
+#define UINT_8_MAX UINT8_MAX
 #define UINT_8_MIN 0
-#define UINT_16_MAX USHRT_MAX
+#define UINT_16_MAX UINT16_MAX
 #define UINT_16_MIN 0
-#define UINT_32_MAX UINT_MAX
+#define UINT_32_MAX UINT32_MAX
 #define UINT_32_MIN 0
-#define UINT_64_MAX _UI64_MAX
+#define UINT_64_MAX UINT64_MAX
 #define UINT_64_MIN 0
 
 // (short, long)(signed, unsigned) void, bool, char, tsize, float, double

@@ -297,7 +297,7 @@ tsize string_get_length(char* value) {
 }
 int string_get_compare(char* value, char* data) {
     // get char's compare
-    int result = strcmp(data, value);
+    int result = strcmp(value, data);
 
     return result;
 }

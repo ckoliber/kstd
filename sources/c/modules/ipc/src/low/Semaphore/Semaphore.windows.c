@@ -2,9 +2,7 @@
 
 #if defined(APP_WINDOWS)
 
-#include <low/Date.h>
 #include <low/Heap.h>
-#include <low/Mutex.h>
 #include <low/String.h>
 
 struct Semaphore_ {
@@ -15,7 +13,7 @@ struct Semaphore_ {
     String* name;
 
     // private data
-    HANDLE semaphore;
+    HANDLE semaphore_handle;
 };
 
 // vtable
@@ -31,15 +29,15 @@ int semaphore_get(Semaphore* self);
 int semaphore_wait(Semaphore* self, uint_64 timeout) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
-    // wait the win32 semaphore
+    // wait the wi32 semaphore
     if (timeout == UINT_64_MAX) {
         // infinity
-        if (WaitForSingleObject(semaphore_->semaphore, INFINITE) == WAIT_OBJECT_0) {
+        if (WaitForSingleObject(semaphore_->semaphore_handle, INFINITE) == WAIT_OBJECT_0) {
             return 0;
         }
     } else {
-        // timed
-        if (WaitForSingleObject(semaphore_->semaphore, timeout) == WAIT_OBJECT_0) {
+        // timed, try
+        if (WaitForSingleObject(semaphore_->semaphore_handle, (DWORD) timeout) == WAIT_OBJECT_0) {
             return 0;
         }
     }
@@ -49,8 +47,8 @@ int semaphore_wait(Semaphore* self, uint_64 timeout) {
 int semaphore_post(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
-    // post the win32 semaphore
-    if (ReleaseSemaphore(semaphore_->semaphore, 1, NULL) != 0) {
+    // release the win32 semaphore
+    if (ReleaseSemaphore(semaphore_->semaphore_handle, 1, NULL) != 0) {
         return 0;
     }
 
@@ -61,7 +59,7 @@ int semaphore_get(Semaphore* self) {
 
     // get the win32 semaphore value
     int result = 0;
-    if (ReleaseSemaphore(semaphore_->semaphore, 0, &result) == 0) {
+    if (ReleaseSemaphore(semaphore_->semaphore_handle, 0, (LPLONG) &result) == 0) {
         result = -1;
     }
 
@@ -71,22 +69,21 @@ int semaphore_get(Semaphore* self) {
 // object allocation and deallocation operators
 void semaphore_init() {
     // init vtable
-    semaphore_vtable = heap_alloc(sizeof(Semaphore_VTable));
+    semaphore_vtable = (Semaphore_VTable*)heap_alloc(sizeof(Semaphore_VTable));
     semaphore_vtable->wait = semaphore_wait;
     semaphore_vtable->post = semaphore_post;
     semaphore_vtable->get = semaphore_get;
 }
 Semaphore* semaphore_new() {
-    struct Semaphore_* semaphore_ = heap_alloc(sizeof(struct Semaphore_));
+    struct Semaphore_* semaphore_ = (struct Semaphore_*)heap_alloc(sizeof(struct Semaphore_));
 
     // set vtable
     semaphore_->self.vtable = semaphore_vtable;
 
     // set constructor data
-    semaphore_->name = NULL;
 
     // set private data
-    semaphore_->semaphore = INVALID_HANDLE_VALUE;
+    semaphore_->semaphore_handle = INVALID_HANDLE_VALUE;
 
     return (Semaphore*)semaphore_;
 }
@@ -94,8 +91,8 @@ void semaphore_free(Semaphore* semaphore) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore;
 
     // free private data
-    if (semaphore_->semaphore != INVALID_HANDLE_VALUE) {
-        CloseHandle(semaphore_->semaphore);
+    if (semaphore_->semaphore_handle != INVALID_HANDLE_VALUE) {
+        CloseHandle(semaphore_->semaphore_handle);
     }
 
     // free constructor data
@@ -104,7 +101,7 @@ void semaphore_free(Semaphore* semaphore) {
     }
 
     // free self
-    heap_free(semaphore_);
+    heap_free((uint_8*)semaphore_);
 }
 Semaphore* semaphore_new_object(char* name, int value) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
@@ -115,11 +112,19 @@ Semaphore* semaphore_new_object(char* name, int value) {
     }
 
     // set private data
-    semaphore_->semaphore = CreateSemaphoreA(
-        NULL,
-        value,
-        UINT_32_MAX,
-        semaphore_->name->vtable->value(semaphore_->name));
+    if(name != NULL){
+        semaphore_->semaphore_handle = CreateSemaphoreA(
+                NULL,
+                value,
+                UINT_32_MAX,
+                semaphore_->name->vtable->value(semaphore_->name));
+    }else{
+        semaphore_->semaphore_handle = CreateSemaphoreA(
+                NULL,
+                value,
+                UINT_32_MAX,
+                NULL);
+    }
 
     return (Semaphore*)semaphore_;
 }

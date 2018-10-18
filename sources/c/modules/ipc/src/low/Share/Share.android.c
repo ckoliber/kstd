@@ -153,7 +153,7 @@ Share* share_new_object(char* name, tsize size, tsize offset) {
             critical->vtable->lock(critical, UINT_64_MAX);
         }
 
-        // free named memory
+        // new named memory
         share_->memory = share_named_new(share_->name->vtable->value(share_->name), share_->size, share_->offset);
 
         // try unlock critical
@@ -161,7 +161,7 @@ Share* share_new_object(char* name, tsize size, tsize offset) {
             critical->vtable->unlock(critical);
         }
     } else {
-        // free anonymous memory
+        // new anonymous memory
         share_->memory = share_anonymous_new(share_->size, share_->offset);
     }
 

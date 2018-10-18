@@ -4,8 +4,6 @@
 
 #include <low/Heap.h>
 #include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
 
 struct String_ {
@@ -96,25 +94,29 @@ void string_copy(String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // copy data to string
-    string_->string = heap_realloc(string_->string, string_get_length(data) + 1);
+    string_->string = (char*)heap_realloc((uint_8*)string_->string, string_get_length(data) + 1);
     lstrcpy(string_->string, data);
 }
 void string_concat(String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // concatenate data to string
-    string_->string = heap_realloc(string_->string, string_get_length(string_->string) + string_get_length(data) + 1);
+    string_->string = (char*)heap_realloc((uint_8*)string_->string, string_get_length(string_->string) + string_get_length(data) + 1);
     lstrcat(string_->string, data);
 }
 void string_cut(String* self, int begin, int end) {
     struct String_* string_ = (struct String_*)self;
 
+    // create new string
+    char* cut_string = (char*)heap_alloc((tsize)((end - begin + 1) * sizeof(char)));
+
     // cut data from string
-    string_->string = heap_realloc(string_->string, (tsize)(end - begin + 1));
-    for (int cursor = begin; cursor <= end; cursor++) {
-        string_->string[cursor - begin] = string_->string[cursor];
+    for (int cursor = begin; cursor < end; cursor++) {
+        cut_string[cursor - begin] = string_->string[cursor];
     }
-    string_->string[end - begin + 1] = '\0';
+    cut_string[end - begin + 1] = '\0';
+    heap_free((uint_8*)string_->string);
+    string_->string = cut_string;
 }
 void string_replace(String* self, int begin, int end, char* replace) {
     struct String_* string_ = (struct String_*)self;
@@ -122,15 +124,15 @@ void string_replace(String* self, int begin, int end, char* replace) {
     // split part 1
     String* part_1 = NULL;
     if (begin > 0) {
-        part_1 = string_new_cut(string_->string, 0, begin - 1);
+        part_1 = string_new_cut(string_->string, 0, begin);
     } else {
         part_1 = string_new_copy("");
     }
 
     // split part 2
     String* part_2 = NULL;
-    if (end < string_get_length(string_->string) - 1) {
-        part_2 = string_new_cut(string_->string, end + 1, (int)string_get_length(string_->string));
+    if (end < string_get_length(string_->string)) {
+        part_2 = string_new_cut(string_->string, end, (int)string_get_length(string_->string));
     } else {
         part_2 = string_new_copy("");
     }
@@ -174,7 +176,7 @@ char* string_value(String* self) {
 // object allocation and deallocation operators
 void string_init() {
     // init vtable
-    string_vtable = heap_alloc(sizeof(String_VTable));
+    string_vtable = (String_VTable*)heap_alloc(sizeof(String_VTable));
     string_vtable->to_long = string_to_long;
     string_vtable->to_double = string_to_double;
 
@@ -191,7 +193,7 @@ void string_init() {
     string_vtable->value = string_value;
 }
 String* string_new() {
-    struct String_* string_ = heap_alloc(sizeof(struct String_));
+    struct String_* string_ = (struct String_*)heap_alloc(sizeof(struct String_));
 
     // set vtable
     string_->self.vtable = string_vtable;
@@ -208,11 +210,11 @@ void string_free(String* string) {
 
     // free private data
     if (string_->string != NULL) {
-        heap_free(string_->string);
+        heap_free((uint_8*) string_->string);
     }
 
     // free self
-    heap_free(string_);
+    heap_free((uint_8*)string_);
 }
 String* string_new_printf(char* format, ...) {
     struct String_* string_ = (struct String_*)string_new();
@@ -220,11 +222,13 @@ String* string_new_printf(char* format, ...) {
     // set constructor data
 
     // set private data
-    va_list args;
+    va_list args, args2;
     va_start(args, format);
-    string_->string = heap_alloc(vsnprintf(NULL, 0, format, args) + 1);
-    vsprintf(string_->string, format, args);
+    va_copy(args2, args);
+    string_->string = (char*)heap_alloc((tsize)((vsnprintf(NULL, 0, format, args) + 1) * sizeof(char)));
+    vsprintf(string_->string, format, args2);
     va_end(args);
+    va_end(args2);
 
     return (String*)string_;
 }
@@ -280,7 +284,7 @@ String* string_new_replace(char* value, int begin, int end, char* replace) {
 // local string methods
 tsize string_get_length(char* value) {
     // get char's length
-    tsize result = lstrlen(value);
+    tsize result = (tsize) lstrlen(value);
 
     return result;
 }
