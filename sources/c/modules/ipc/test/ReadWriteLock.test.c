@@ -1,13 +1,12 @@
+#include <kstd.h>
 #include <low/ReadWriteLock.h>
 #include <low/Thread.h>
-#include <kstd.h>
 
 #include <assert.h>
 #include <unistd.h>
-#include <stdio.h>
 
-int function(void* arg){
-    ReadWriteLock* lock = arg;
+int function(uint_8* arg) {
+    ReadWriteLock* lock = (ReadWriteLock *) arg;
 
     assert(lock->vtable->read_lock(lock, 0) == 0);
 
@@ -26,14 +25,14 @@ int function(void* arg){
 
 void test_readwritelock();
 
-void test_readwritelock(){
+void test_readwritelock() {
     ReadWriteLock* lock = readwritelock_new_object(NULL);
 
     assert(lock->vtable->read_lock(lock, 0) == 0);
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, lock);
+    t->vtable->start(t, function, (uint_8*) lock);
 
     sleep(4);
 

@@ -235,7 +235,7 @@ Message* message_new_object(char* name, int max, tsize item) {
         string_free(message_full_name);
 
         // create internal empty semaphore
-        String* message_empty_name = string_new_concat("%s_message_empty", name);
+        String* message_empty_name = string_new_printf("%s_message_empty", name);
         message_->empty_semaphore = semaphore_new_object(message_empty_name->vtable->value(message_empty_name), 0);
         string_free(message_empty_name);
 

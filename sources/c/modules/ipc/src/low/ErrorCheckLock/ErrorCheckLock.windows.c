@@ -1,4 +1,5 @@
-//
-// Created by koliber on 10/17/18.
-//
+#include <low/ErrorCheckLock.h>
 
+#if defined(APP_WINDOWS)
+
+#endif

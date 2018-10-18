@@ -5,8 +5,8 @@
 #include <assert.h>
 #include <unistd.h>
 
-int function(void* arg){
-    ErrorCheckLock* lock = arg;
+int function(uint_8* arg){
+    ErrorCheckLock* lock = (ErrorCheckLock *) arg;
 
     assert(lock->vtable->lock(lock, 3000) == -1);
 
@@ -27,7 +27,7 @@ void test_errorchecklock_lock(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, lock);
+    t->vtable->start(t, function, (uint_8*) lock);
 
     sleep(5);
 
@@ -46,7 +46,7 @@ void test_errorchecklock_unlock(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, lock);
+    t->vtable->start(t, function, (uint_8*) lock);
 
     sleep(5);
 

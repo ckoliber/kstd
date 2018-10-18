@@ -10,7 +10,7 @@ struct Dequeue_ {
 
     // constructor data
     int max;
-    int (*comperator)(void*, void*);
+    int (*comperator)(uint_8*, uint_8*);
 
     // private data
     int size;
@@ -23,7 +23,7 @@ struct Dequeue_ {
 struct DequeueItem {
     struct DequeueItem* next;
     struct DequeueItem* previews;
-    void* item;
+    uint_8* item;
 };
 
 // vtable
@@ -32,26 +32,26 @@ Dequeue_VTable* dequeue_vtable_concurrent;
 Dequeue_VTable* dequeue_vtable_blocking;
 
 // link methods
-int dequeue_enqueue_normal(Dequeue* self, int front, void* item, uint_64 timeout);
-void* dequeue_dequeue_normal(Dequeue* self, int front, uint_64 timeout);
-void* dequeue_get_normal(Dequeue* self, int front);
+int dequeue_enqueue_normal(Dequeue* self, int front, uint_8* item, uint_64 timeout);
+uint_8* dequeue_dequeue_normal(Dequeue* self, int front, uint_64 timeout);
+uint_8* dequeue_get_normal(Dequeue* self, int front);
 int dequeue_size_normal(Dequeue* self);
 
-int dequeue_enqueue_concurrent(Dequeue* self, int front, void* item, uint_64 timeout);
-void* dequeue_dequeue_concurrent(Dequeue* self, int front, uint_64 timeout);
-void* dequeue_get_concurrent(Dequeue* self, int front);
+int dequeue_enqueue_concurrent(Dequeue* self, int front, uint_8* item, uint_64 timeout);
+uint_8* dequeue_dequeue_concurrent(Dequeue* self, int front, uint_64 timeout);
+uint_8* dequeue_get_concurrent(Dequeue* self, int front);
 int dequeue_size_concurrent(Dequeue* self);
 
-int dequeue_enqueue_blocking(Dequeue* self, int front, void* item, uint_64 timeout);
-void* dequeue_dequeue_blocking(Dequeue* self, int front, uint_64 timeout);
-void* dequeue_get_blocking(Dequeue* self, int front);
+int dequeue_enqueue_blocking(Dequeue* self, int front, uint_8* item, uint_64 timeout);
+uint_8* dequeue_dequeue_blocking(Dequeue* self, int front, uint_64 timeout);
+uint_8* dequeue_get_blocking(Dequeue* self, int front);
 int dequeue_size_blocking(Dequeue* self);
 
 // local methods
-struct DequeueItem* dequeueitem_get(Dequeue* dequeue, int front, void* item);
+struct DequeueItem* dequeueitem_get(Dequeue* dequeue, int front, uint_8* item);
 
 // implement methods
-struct DequeueItem* dequeueitem_get(Dequeue* dequeue, int front, void* item) {
+struct DequeueItem* dequeueitem_get(Dequeue* dequeue, int front, uint_8* item) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)dequeue;
 
     // return item before adding position
@@ -73,7 +73,7 @@ struct DequeueItem* dequeueitem_get(Dequeue* dequeue, int front, void* item) {
 }
 
 // normal mode vtable operators
-int dequeue_enqueue_normal(Dequeue* self, int front, void* item, uint_64 timeout) {
+int dequeue_enqueue_normal(Dequeue* self, int front, uint_8* item, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // check dequeue is full
@@ -85,7 +85,7 @@ int dequeue_enqueue_normal(Dequeue* self, int front, void* item, uint_64 timeout
     struct DequeueItem* item_target = dequeueitem_get(self, front, item);
 
     // allocate new dequeueitem and fill it
-    struct DequeueItem* dequeueitem = heap_alloc(sizeof(struct DequeueItem));
+    struct DequeueItem* dequeueitem = (struct DequeueItem*) heap_alloc(sizeof(struct DequeueItem));
     dequeueitem->item = item;
     dequeueitem->next = item_target->next;
     dequeueitem->previews = item_target;
@@ -98,7 +98,7 @@ int dequeue_enqueue_normal(Dequeue* self, int front, void* item, uint_64 timeout
 
     return result;
 }
-void* dequeue_dequeue_normal(Dequeue* self, int front, uint_64 timeout) {
+uint_8* dequeue_dequeue_normal(Dequeue* self, int front, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // check dequeue is not empty
@@ -114,13 +114,13 @@ void* dequeue_dequeue_normal(Dequeue* self, int front, uint_64 timeout) {
     item_target->previews->next = item_target->next;
 
     // remove item
-    void* result = item_target->item;
-    heap_free(item_target);
+    uint_8* result = item_target->item;
+    heap_free((uint_8*) item_target);
     dequeue_->size--;
 
     return result;
 }
-void* dequeue_get_normal(Dequeue* self, int front) {
+uint_8* dequeue_get_normal(Dequeue* self, int front) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // get dequeue item
@@ -140,7 +140,7 @@ int dequeue_size_normal(Dequeue* self) {
 }
 
 // concurrent mode vtable operators
-int dequeue_enqueue_concurrent(Dequeue* self, int front, void* item, uint_64 timeout) {
+int dequeue_enqueue_concurrent(Dequeue* self, int front, uint_8* item, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
@@ -154,28 +154,28 @@ int dequeue_enqueue_concurrent(Dequeue* self, int front, void* item, uint_64 tim
 
     return result;
 }
-void* dequeue_dequeue_concurrent(Dequeue* self, int front, uint_64 timeout) {
+uint_8* dequeue_dequeue_concurrent(Dequeue* self, int front, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent writelock
     dequeue_->readwritelock->vtable->write_lock(dequeue_->readwritelock, UINT_64_MAX);
 
     // normal dequeue
-    void* result = dequeue_dequeue_normal(self, front, timeout);
+    uint_8* result = dequeue_dequeue_normal(self, front, timeout);
 
     // concurrent writeunlock
     dequeue_->readwritelock->vtable->write_unlock(dequeue_->readwritelock);
 
     return result;
 }
-void* dequeue_get_concurrent(Dequeue* self, int front) {
+uint_8* dequeue_get_concurrent(Dequeue* self, int front) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // concurrent readlock
     dequeue_->readwritelock->vtable->read_lock(dequeue_->readwritelock, UINT_64_MAX);
 
     // normal get
-    void* result = dequeue_get_normal(self, front);
+    uint_8* result = dequeue_get_normal(self, front);
 
     // concurrent readunlock
     dequeue_->readwritelock->vtable->read_unlock(dequeue_->readwritelock);
@@ -198,7 +198,7 @@ int dequeue_size_concurrent(Dequeue* self) {
 }
 
 // blocking mode vtable operators
-int dequeue_enqueue_blocking(Dequeue* self, int front, void* item, uint_64 timeout) {
+int dequeue_enqueue_blocking(Dequeue* self, int front, uint_8* item, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on full semaphore
@@ -216,7 +216,7 @@ int dequeue_enqueue_blocking(Dequeue* self, int front, void* item, uint_64 timeo
 
     return result;
 }
-void* dequeue_dequeue_blocking(Dequeue* self, int front, uint_64 timeout) {
+uint_8* dequeue_dequeue_blocking(Dequeue* self, int front, uint_64 timeout) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)self;
 
     // wait on empty semaphore
@@ -225,7 +225,7 @@ void* dequeue_dequeue_blocking(Dequeue* self, int front, uint_64 timeout) {
     }
 
     // concurrent dequeue
-    void* result = dequeue_dequeue_concurrent(self, front, timeout);
+    uint_8* result = dequeue_dequeue_concurrent(self, front, timeout);
 
     // signal on full semaphore
     if (dequeue_->full_semaphore != NULL) {
@@ -234,9 +234,9 @@ void* dequeue_dequeue_blocking(Dequeue* self, int front, uint_64 timeout) {
 
     return result;
 }
-void* dequeue_get_blocking(Dequeue* self, int front) {
+uint_8* dequeue_get_blocking(Dequeue* self, int front) {
     // concurrent get
-    void* result = dequeue_get_concurrent(self, front);
+    uint_8* result = dequeue_get_concurrent(self, front);
 
     return result;
 }
@@ -250,28 +250,28 @@ int dequeue_size_blocking(Dequeue* self) {
 // object allocation and deallocation operators
 void dequeue_init() {
     // init normal vtable
-    dequeue_vtable_normal = heap_alloc(sizeof(Dequeue_VTable));
+    dequeue_vtable_normal = (Dequeue_VTable*) heap_alloc(sizeof(Dequeue_VTable));
     dequeue_vtable_normal->enqueue = dequeue_enqueue_normal;
     dequeue_vtable_normal->dequeue = dequeue_dequeue_normal;
     dequeue_vtable_normal->get = dequeue_get_normal;
     dequeue_vtable_normal->size = dequeue_size_normal;
 
     // init concurrent vtable
-    dequeue_vtable_concurrent = heap_alloc(sizeof(Dequeue_VTable));
+    dequeue_vtable_concurrent = (Dequeue_VTable*) heap_alloc(sizeof(Dequeue_VTable));
     dequeue_vtable_concurrent->enqueue = dequeue_enqueue_concurrent;
     dequeue_vtable_concurrent->dequeue = dequeue_dequeue_concurrent;
     dequeue_vtable_concurrent->get = dequeue_get_concurrent;
     dequeue_vtable_concurrent->size = dequeue_size_concurrent;
 
     // init blocking vtable
-    dequeue_vtable_blocking = heap_alloc(sizeof(Dequeue_VTable));
+    dequeue_vtable_blocking = (Dequeue_VTable*) heap_alloc(sizeof(Dequeue_VTable));
     dequeue_vtable_blocking->enqueue = dequeue_enqueue_blocking;
     dequeue_vtable_blocking->dequeue = dequeue_dequeue_blocking;
     dequeue_vtable_blocking->get = dequeue_get_blocking;
     dequeue_vtable_blocking->size = dequeue_size_blocking;
 }
 Dequeue* dequeue_new(int mode) {
-    struct Dequeue_* dequeue_ = heap_alloc(sizeof(struct Dequeue_));
+    struct Dequeue_* dequeue_ = (struct Dequeue_*) heap_alloc(sizeof(struct Dequeue_));
 
     // set vtable
     switch (mode) {
@@ -312,7 +312,7 @@ void dequeue_free(Dequeue* dequeue) {
     do {
         remove_item = dequeue_->head;
         dequeue_->head = dequeue_->head->next;
-        heap_free(remove_item);
+        heap_free((uint_8*) remove_item);
     } while (dequeue_->head != NULL);
 
     if (dequeue_->readwritelock != NULL) {
@@ -326,9 +326,9 @@ void dequeue_free(Dequeue* dequeue) {
     }
 
     // free self
-    heap_free(dequeue_);
+    heap_free((uint_8*) dequeue_);
 }
-Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(void*, void*)) {
+Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(uint_8*, uint_8*)) {
     struct Dequeue_* dequeue_ = (struct Dequeue_*)dequeue_new(mode);
 
     // set constructor data
@@ -339,7 +339,7 @@ Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(void*, void*)) 
     dequeue_->size = 0;
 
     // init head
-    dequeue_->head = heap_alloc(sizeof(struct DequeueItem));
+    dequeue_->head = (struct DequeueItem*) heap_alloc(sizeof(struct DequeueItem));
     dequeue_->head->next = dequeue_->head;
     dequeue_->head->previews = dequeue_->head;
     dequeue_->head->item = NULL;

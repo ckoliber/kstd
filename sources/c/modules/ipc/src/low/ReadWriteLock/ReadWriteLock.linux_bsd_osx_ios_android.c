@@ -1,6 +1,6 @@
 #include <low/ReadWriteLock.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <low/Share.h>
 #include <low/ReentrantLock.h>
@@ -55,7 +55,7 @@ int readwritelock_read_lock(ReadWriteLock* self, uint_64 timeout) {
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)self;
 
     // get memory address
-    struct ReadWriteLock_Memory* memory = readwritelock_->share->vtable->address(readwritelock_->share);
+    struct ReadWriteLock_Memory* memory = (struct ReadWriteLock_Memory*) readwritelock_->share->vtable->address(readwritelock_->share);
 
     // lock the pthread write mutex
     int result = -1;
@@ -159,7 +159,7 @@ int readwritelock_read_unlock(ReadWriteLock* self) {
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)self;
 
     // get memory address
-    struct ReadWriteLock_Memory* memory = readwritelock_->share->vtable->address(readwritelock_->share);
+    struct ReadWriteLock_Memory* memory = (struct ReadWriteLock_Memory*) readwritelock_->share->vtable->address(readwritelock_->share);
 
     // unlock the pthread write mutex
     int result = -1;
@@ -190,7 +190,7 @@ int readwritelock_write_lock(ReadWriteLock* self, uint_64 timeout) {
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)self;
 
     // get memory address
-    struct ReadWriteLock_Memory* memory = readwritelock_->share->vtable->address(readwritelock_->share);
+    struct ReadWriteLock_Memory* memory = (struct ReadWriteLock_Memory*) readwritelock_->share->vtable->address(readwritelock_->share);
 
     // lock the pthread write mutex
     if (timeout == UINT_64_MAX) {
@@ -233,7 +233,7 @@ int readwritelock_write_unlock(ReadWriteLock* self) {
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)self;
 
     // get memory address
-    struct ReadWriteLock_Memory* memory = readwritelock_->share->vtable->address(readwritelock_->share);
+    struct ReadWriteLock_Memory* memory = (struct ReadWriteLock_Memory*) readwritelock_->share->vtable->address(readwritelock_->share);
 
     // unlock the pthread write mutex
     if(pthread_mutex_unlock(&(memory->write)) == 0){
@@ -246,14 +246,14 @@ int readwritelock_write_unlock(ReadWriteLock* self) {
 // object allocation and deallocation operators
 void readwritelock_init() {
     // init vtable
-    readwritelock_vtable = heap_alloc(sizeof(ReadWriteLock_VTable));
+    readwritelock_vtable = (ReadWriteLock_VTable*) heap_alloc(sizeof(ReadWriteLock_VTable));
     readwritelock_vtable->read_lock = readwritelock_read_lock;
     readwritelock_vtable->read_unlock = readwritelock_read_unlock;
     readwritelock_vtable->write_lock = readwritelock_write_lock;
     readwritelock_vtable->write_unlock = readwritelock_write_unlock;
 }
 ReadWriteLock* readwritelock_new() {
-    struct ReadWriteLock_* readwritelock_ = heap_alloc(sizeof(struct ReadWriteLock_));
+    struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*) heap_alloc(sizeof(struct ReadWriteLock_));
 
     // set vtable
     readwritelock_->self.vtable = readwritelock_vtable;
@@ -272,7 +272,7 @@ void readwritelock_free(ReadWriteLock* readwritelock) {
     if (readwritelock_->share != NULL) {
         // if share connections is 1, destroy
         if(readwritelock_->share->vtable->connections(readwritelock_->share) <= 1){
-            struct ReadWriteLock_Memory* memory = readwritelock_->share->vtable->address(readwritelock_->share);
+            struct ReadWriteLock_Memory* memory = (struct ReadWriteLock_Memory*) readwritelock_->share->vtable->address(readwritelock_->share);
 
             // destroy
             pthread_mutex_destroy(&(memory->critical));
@@ -285,7 +285,7 @@ void readwritelock_free(ReadWriteLock* readwritelock) {
     // free constructor data
 
     // free self
-    heap_free(readwritelock_);
+    heap_free((uint_8*) readwritelock_);
 }
 ReadWriteLock* readwritelock_new_object(char* name) {
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)readwritelock_new();
@@ -307,12 +307,12 @@ ReadWriteLock* readwritelock_new_object(char* name) {
         // if share connections is 1, init share
         if(readwritelock_->share->vtable->connections(readwritelock_->share) <= 1){
             // get memory address
-            struct ReadWriteLock_Memory* memory = readwritelock_->share->vtable->address(readwritelock_->share);
+            struct ReadWriteLock_Memory* memory = (struct ReadWriteLock_Memory*) readwritelock_->share->vtable->address(readwritelock_->share);
 
             // init critical mutex
             pthread_mutexattr_t critical_mattr;
             pthread_mutexattr_init(&critical_mattr);
-            pthread_mutexattr_setpshared(&critical_mattr, 1);
+            pthread_mutexattr_setpshared(&critical_mattr, PTHREAD_PROCESS_SHARED);
             pthread_mutexattr_settype(&critical_mattr, PTHREAD_MUTEX_NORMAL);
             pthread_mutex_init(&(memory->critical), &critical_mattr);
             pthread_mutexattr_destroy(&critical_mattr);
@@ -320,7 +320,7 @@ ReadWriteLock* readwritelock_new_object(char* name) {
             // init write mutex
             pthread_mutexattr_t write_mattr;
             pthread_mutexattr_init(&write_mattr);
-            pthread_mutexattr_setpshared(&write_mattr, 1);
+            pthread_mutexattr_setpshared(&write_mattr, PTHREAD_PROCESS_SHARED);
             pthread_mutexattr_settype(&write_mattr, PTHREAD_MUTEX_NORMAL);
             pthread_mutex_init(&(memory->critical), &write_mattr);
             pthread_mutexattr_destroy(&write_mattr);
@@ -340,12 +340,12 @@ ReadWriteLock* readwritelock_new_object(char* name) {
         // if share connections is 1, init share
         if(readwritelock_->share->vtable->connections(readwritelock_->share) <= 1){
             // get memory address
-            struct ReadWriteLock_Memory* memory = readwritelock_->share->vtable->address(readwritelock_->share);
+            struct ReadWriteLock_Memory* memory = (struct ReadWriteLock_Memory*) readwritelock_->share->vtable->address(readwritelock_->share);
 
             // init critical mutex
             pthread_mutexattr_t critical_mattr;
             pthread_mutexattr_init(&critical_mattr);
-            pthread_mutexattr_setpshared(&critical_mattr, 0);
+            pthread_mutexattr_setpshared(&critical_mattr, PTHREAD_PROCESS_PRIVATE);
             pthread_mutexattr_settype(&critical_mattr, PTHREAD_MUTEX_NORMAL);
             pthread_mutex_init(&(memory->critical), &critical_mattr);
             pthread_mutexattr_destroy(&critical_mattr);
@@ -353,7 +353,7 @@ ReadWriteLock* readwritelock_new_object(char* name) {
             // init write mutex
             pthread_mutexattr_t write_mattr;
             pthread_mutexattr_init(&write_mattr);
-            pthread_mutexattr_setpshared(&write_mattr, 0);
+            pthread_mutexattr_setpshared(&write_mattr, PTHREAD_PROCESS_PRIVATE);
             pthread_mutexattr_settype(&write_mattr, PTHREAD_MUTEX_NORMAL);
             pthread_mutex_init(&(memory->critical), &write_mattr);
             pthread_mutexattr_destroy(&write_mattr);

@@ -13,7 +13,7 @@ struct ThreadPool {
 // vtable
 struct ThreadPool_VTable {
     int (*start)(ThreadPool* self);
-    int (*post)(ThreadPool* self, void (*function)(void*), void* arg);
+    int (*post)(ThreadPool* self, uint_8* item);
     int (*stop)(ThreadPool* self);
 };
 
@@ -27,4 +27,4 @@ ThreadPool* threadpool_new();
 void threadpool_free(ThreadPool* threadpool);
 
 // new threadpool
-ThreadPool* threadpool_new_object(int size, tsize arg);
+ThreadPool* threadpool_new_object(int size, tsize item);

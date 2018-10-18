@@ -17,14 +17,14 @@ struct Queue_ {
 Queue_VTable* queue_vtable;
 
 // link methods
-int queue_enqueue(Queue* self, void* item, uint_64 timeout);
-void* queue_dequeue(Queue* self, uint_64 timeout);
-void* queue_get(Queue* self);
+int queue_enqueue(Queue* self, uint_8* item, uint_64 timeout);
+uint_8* queue_dequeue(Queue* self, uint_64 timeout);
+uint_8* queue_get(Queue* self);
 int queue_size(Queue* self);
 
 // implement methods
 // vtable operators
-int queue_enqueue(Queue* self, void* item, uint_64 timeout) {
+int queue_enqueue(Queue* self, uint_8* item, uint_64 timeout) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // internal dequeue enqueue
@@ -32,19 +32,19 @@ int queue_enqueue(Queue* self, void* item, uint_64 timeout) {
 
     return result;
 }
-void* queue_dequeue(Queue* self, uint_64 timeout) {
+uint_8* queue_dequeue(Queue* self, uint_64 timeout) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // internal dequeue dequeue
-    void* result = queue_->dequeue->vtable->dequeue(queue_->dequeue, 0, timeout);
+    uint_8* result = queue_->dequeue->vtable->dequeue(queue_->dequeue, 0, timeout);
 
     return result;
 }
-void* queue_get(Queue* self) {
+uint_8* queue_get(Queue* self) {
     struct Queue_* queue_ = (struct Queue_*)self;
 
     // internal dequeue get
-    void* result = queue_->dequeue->vtable->get(queue_->dequeue, 0);
+    uint_8* result = queue_->dequeue->vtable->get(queue_->dequeue, 0);
 
     return result;
 }
@@ -60,14 +60,14 @@ int queue_size(Queue* self) {
 // object allocation and deallocation operators
 void queue_init() {
     // init normal vtable
-    queue_vtable = heap_alloc(sizeof(Queue_VTable));
+    queue_vtable = (Queue_VTable*) heap_alloc(sizeof(Queue_VTable));
     queue_vtable->enqueue = queue_enqueue;
     queue_vtable->dequeue = queue_dequeue;
     queue_vtable->get = queue_get;
     queue_vtable->size = queue_size;
 }
 Queue* queue_new(int mode) {
-    struct Queue_* queue_ = heap_alloc(sizeof(struct Queue_));
+    struct Queue_* queue_ = (struct Queue_*) heap_alloc(sizeof(struct Queue_));
 
     // set vtable
     queue_->self.vtable = queue_vtable;
@@ -88,9 +88,9 @@ void queue_free(Queue* queue) {
     }
 
     // free self
-    heap_free(queue_);
+    heap_free((uint_8*) queue_);
 }
-Queue* queue_new_object(int mode, int max, int (*comperator)(void*, void*)) {
+Queue* queue_new_object(int mode, int max, int (*comperator)(uint_8*, uint_8*)) {
     struct Queue_* queue_ = (struct Queue_*)queue_new(mode);
 
     // set constructor data

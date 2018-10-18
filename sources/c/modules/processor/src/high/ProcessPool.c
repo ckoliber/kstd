@@ -11,11 +11,15 @@ struct ProcessPool_ {
 
     // constructor data
     int size;
-    tsize arg;
+    tsize item;
 
     // private data
     Process** pool;
     Message* message;
+};
+
+struct ProcessPool_Message {
+    void (*function)(uint_8* item);
 };
 
 // vtable
@@ -23,7 +27,7 @@ ProcessPool_VTable* processpool_vtable;
 
 // link methods
 int processpool_start(ProcessPool* self);
-int processpool_post(ProcessPool* self, void (*function)(void*), void* arg);
+int processpool_post(ProcessPool* self, uint_8* item);
 int processpool_stop(ProcessPool* self);
 
 // local methods
@@ -35,24 +39,24 @@ int processpool_looper(ProcessPool* self) {
 
     // open parent message queue
     String* message_name = string_new_printf("pool_%d", process_get_parent());
-    Message* message = message_new_object(message_name->vtable->value(message_name), 1024, processpool_->arg);
+    processpool_->message = message_new_object(message_name->vtable->value(message_name), 1024, processpool_->item);
     string_free(message_name);
 
-    // allocate temp for items (function pointer + arg value)
-    void* item = heap_alloc(sizeof(void (*)(void*)) + processpool_->arg);
+    // allocate temp for items (function pointer + arg values)
+    uint_8* item = heap_alloc(processpool_->item);
 
     // start looper
-    while (message->vtable->dequeue(message, item, UINT_64_MAX) == 0) {
-        // get function and arg address
-        void (*function)(void*) = item;
-        void* arg = item + sizeof(void (*)(void*));
+    while (processpool_->message->vtable->dequeue(processpool_->message, item, UINT_64_MAX) == 0) {
+        // get message casted from item
+        struct ProcessPool_Message* message = (struct ProcessPool_Message*)item;
 
-        // run function with arg
-        function(arg);
+        // run function with item
+        message->function(item);
     }
 
     heap_free(item);
-    message_free(message);
+
+    message_free(processpool_->message);
 
     return 0;
 }
@@ -65,28 +69,18 @@ int processpool_start(ProcessPool* self) {
     int result = 0;
     for (int cursor = 0; cursor < processpool_->size; cursor++) {
         // start process
-        if (processpool_->pool[cursor]->vtable->start(processpool_->pool[cursor], (int (*)(void *)) processpool_looper, self) != 0) {
+        if (processpool_->pool[cursor]->vtable->start(processpool_->pool[cursor], (int (*)(uint_8*))processpool_looper, (uint_8*)self) != 0) {
             result = -1;
         }
     }
 
     return result;
 }
-int processpool_post(ProcessPool* self, void (*function)(void*), void* arg) {
+int processpool_post(ProcessPool* self, uint_8* item) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)self;
-
-    // allocate temp for item package
-    void* item = heap_alloc(sizeof(void (*)(void*)) + processpool_->arg);
-
-    // fill temp package item
-    heap_copy(item, function, sizeof(void (*)(void*)));
-    heap_copy(item + sizeof(void (*)(void*)), arg, processpool_->arg);
 
     // post message to queue
     int result = processpool_->message->vtable->enqueue(processpool_->message, item, UINT_64_MAX);
-
-    // free temp package item
-    heap_free(item);
 
     return result;
 }
@@ -108,20 +102,20 @@ int processpool_stop(ProcessPool* self) {
 // object allocation and deallocation operators
 void processpool_init() {
     // init vtable
-    processpool_vtable = heap_alloc(sizeof(ProcessPool_VTable));
+    processpool_vtable = (ProcessPool_VTable*)heap_alloc(sizeof(ProcessPool_VTable));
     processpool_vtable->start = processpool_start;
     processpool_vtable->post = processpool_post;
     processpool_vtable->stop = processpool_stop;
 }
 ProcessPool* processpool_new() {
-    struct ProcessPool_* processpool_ = heap_alloc(sizeof(struct ProcessPool_));
+    struct ProcessPool_* processpool_ = (struct ProcessPool_*)heap_alloc(sizeof(struct ProcessPool_));
 
     // set vtable
     processpool_->self.vtable = processpool_vtable;
 
     // set constructor data
     processpool_->size = 0;
-    processpool_->arg = 0;
+    processpool_->item = 0;
 
     // set private data
     processpool_->pool = NULL;
@@ -139,31 +133,31 @@ void processpool_free(ProcessPool* processpool) {
         for (int cursor = 0; cursor < processpool_->size; cursor++) {
             process_free(processpool_->pool[cursor]);
         }
-        heap_free(processpool_->pool);
+        heap_free((uint_8*)processpool_->pool);
     }
     if (processpool_->message != NULL) {
         message_free(processpool_->message);
     }
 
     // free self
-    heap_free(processpool_);
+    heap_free((uint_8*)processpool_);
 }
-ProcessPool* processpool_new_object(int size, tsize arg) {
+ProcessPool* processpool_new_object(int size, tsize item) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)processpool_new();
 
     // set constructor data
     processpool_->size = size;
-    processpool_->arg = arg;
+    processpool_->item = item;
 
     // set private data
-    processpool_->pool = heap_alloc(sizeof(ProcessPool*) * size);
+    processpool_->pool = (Process**)heap_alloc(sizeof(Process*) * size);
     for (int cursor = 0; cursor < size; cursor++) {
-        processpool_->pool[cursor] = process_new();
+        processpool_->pool[cursor] = process_new_object();
     }
 
     // create message queue
     String* message_name = string_new_printf("pool_%d", process_get_self());
-    processpool_->message = message_new_object(message_name->vtable->value(message_name), 1024, arg);
+    processpool_->message = message_new_object(message_name->vtable->value(message_name), 1024, processpool_->item);
     string_free(message_name);
 
     return (ProcessPool*)processpool_;

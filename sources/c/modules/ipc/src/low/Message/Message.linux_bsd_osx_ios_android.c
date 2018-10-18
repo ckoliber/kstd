@@ -1,12 +1,12 @@
 #include <low/Message.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
+#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
-#include <low/Share.h>
-#include <low/MutexLock.h>
-#include <low/Semaphore.h>
-#include <low/ReentrantLock.h>
 #include <low/Heap.h>
+#include <low/MutexLock.h>
+#include <low/ReentrantLock.h>
+#include <low/Semaphore.h>
+#include <low/Share.h>
 #include <low/String.h>
 
 struct Message_ {
@@ -22,10 +22,9 @@ struct Message_ {
     Semaphore* full;
     Semaphore* empty;
     MutexLock* critical;
-
 };
 
-struct Message_Memory{
+struct Message_Memory {
     int begin;
     int end;
 };
@@ -35,18 +34,18 @@ Message_VTable* message_vtable;
 
 // link methods
 
-int message_enqueue(Message* self, void* item, uint_64 timeout);
-int message_dequeue(Message* self, void* item, uint_64 timeout);
+int message_enqueue(Message* self, uint_8* item, uint_64 timeout);
+int message_dequeue(Message* self, uint_8* item, uint_64 timeout);
 int message_size(Message* self, uint_64 timeout);
 
 // implement methods
 // vtable operators
-int message_enqueue(Message* self, void* item, uint_64 timeout){
+int message_enqueue(Message* self, uint_8* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get memory and queue address
-    struct Message_Memory* memory = message_->share->vtable->address(message_->share);
-    void* queue = memory + sizeof(struct Message_Memory);
+    struct Message_Memory* memory = (struct Message_Memory*)message_->share->vtable->address(message_->share);
+    uint_8* queue = (uint_8*)memory + sizeof(struct Message_Memory);
 
     // wait on full semaphore
     if (message_->full->vtable->wait(message_->full, timeout) == 0) {
@@ -66,12 +65,12 @@ int message_enqueue(Message* self, void* item, uint_64 timeout){
 
     return -1;
 }
-int message_dequeue(Message* self, void* item, uint_64 timeout){
+int message_dequeue(Message* self, uint_8* item, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get memory and queue address
-    struct Message_Memory* memory = message_->share->vtable->address(message_->share);
-    void* queue = memory + sizeof(struct Message_Memory);
+    struct Message_Memory* memory = (struct Message_Memory*)message_->share->vtable->address(message_->share);
+    uint_8* queue = (uint_8*)memory + sizeof(struct Message_Memory);
 
     // wait on empty semaphore
     if (message_->empty->vtable->wait(message_->empty, timeout) == 0) {
@@ -91,11 +90,11 @@ int message_dequeue(Message* self, void* item, uint_64 timeout){
 
     return -1;
 }
-int message_size(Message* self, uint_64 timeout){
+int message_size(Message* self, uint_64 timeout) {
     struct Message_* message_ = (struct Message_*)self;
 
     // get memory and queue address
-    struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+    struct Message_Memory* memory = (struct Message_Memory*)message_->share->vtable->address(message_->share);
 
     // begin critical
     message_->critical->vtable->lock(message_->critical, timeout);
@@ -112,13 +111,13 @@ int message_size(Message* self, uint_64 timeout){
 // object allocation and deallocation operators
 void message_init() {
     // init vtable
-    message_vtable = heap_alloc(sizeof(Message_VTable));
+    message_vtable = (Message_VTable*)heap_alloc(sizeof(Message_VTable));
     message_vtable->enqueue = message_enqueue;
     message_vtable->dequeue = message_dequeue;
     message_vtable->size = message_size;
 }
 Message* message_new() {
-    struct Message_* message_ = heap_alloc(sizeof(struct Message_));
+    struct Message_* message_ = (struct Message_*)heap_alloc(sizeof(struct Message_));
 
     // set vtable
     message_->self.vtable = message_vtable;
@@ -146,7 +145,7 @@ void message_free(Message* message) {
     // free constructor data
 
     // free self
-    heap_free(message_);
+    heap_free((uint_8*)message_);
 }
 Message* message_new_object(char* name, int max, tsize item) {
     struct Message_* message_ = (struct Message_*)message_new();
@@ -163,12 +162,12 @@ Message* message_new_object(char* name, int max, tsize item) {
         string_free(message_full_name);
 
         // open share empty semaphore
-        String* message_empty_name = string_new_concat("%s_message_empty", name);
+        String* message_empty_name = string_new_printf("%s_message_empty", name);
         message_->empty = semaphore_new_object(message_empty_name->vtable->value(message_empty_name), 0);
         string_free(message_empty_name);
 
         // open share critical mutexlock
-        String* message_critical_name = string_new_concat("%s_message_critical", name);
+        String* message_critical_name = string_new_printf("%s_message_critical", name);
         message_->critical = mutexlock_new_object(message_critical_name->vtable->value(message_critical_name));
         string_free(message_critical_name);
 
@@ -183,9 +182,9 @@ Message* message_new_object(char* name, int max, tsize item) {
         string_free(message_name);
 
         // if share connections is 1, init share
-        if(message_->share->vtable->connections(message_->share) <= 1){
+        if (message_->share->vtable->connections(message_->share) <= 1) {
             // get memory address
-            struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+            struct Message_Memory* memory = (struct Message_Memory*)message_->share->vtable->address(message_->share);
 
             // init begin
             memory->begin = 0;
@@ -212,9 +211,9 @@ Message* message_new_object(char* name, int max, tsize item) {
         message_->share = share_new_object(NULL, sizeof(struct Message_Memory) + (message_->max * message_->max), 0);
 
         // if share connections is 1, init share
-        if(message_->share->vtable->connections(message_->share) <= 1){
+        if (message_->share->vtable->connections(message_->share) <= 1) {
             // get memory address
-            struct Message_Memory* memory = message_->share->vtable->address(message_->share);
+            struct Message_Memory* memory = (struct Message_Memory*)message_->share->vtable->address(message_->share);
 
             // init begin
             memory->begin = 0;

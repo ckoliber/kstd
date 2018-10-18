@@ -7,7 +7,6 @@
 // AMB: Print out the parent PID. You can pass in -p <pid> to ask for
 // the parent of a particular process
 #define _WIN32_WINNT 0x0503
-#include <stdio.h>
 #include <windows.h>
 
 #ifdef _MSC_VER

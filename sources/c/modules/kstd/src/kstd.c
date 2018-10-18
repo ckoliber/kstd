@@ -1,4 +1,5 @@
 #include <kstd.h>
+#include <stdlib.h>
 
 // memory module
 #include <low/Heap.h>
@@ -67,7 +68,13 @@ void modules_init() {
 }
 
 void kstd_init() {
+    system("rm -Rf /dev/shm/*_share");
+
     modules_init();
 
+    critical = reentrantlock_new_object("critical");
+}
+
+void kstd_init_child(){
     critical = reentrantlock_new_object("critical");
 }

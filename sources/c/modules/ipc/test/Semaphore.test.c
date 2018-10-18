@@ -5,8 +5,8 @@
 #include <assert.h>
 #include <unistd.h>
 
-int function(void* arg){
-    Semaphore* semaphore = arg;
+int function(uint_8* arg){
+    Semaphore* semaphore = (Semaphore *) arg;
 
     assert(semaphore->vtable->wait(semaphore, 1000) == -1);
 
@@ -24,7 +24,7 @@ void test_semaphore_wait(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, semaphore);
+    t->vtable->start(t, function, (uint_8*) semaphore);
 
     sleep(2);
 
@@ -41,7 +41,7 @@ void test_semaphore_post(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, semaphore);
+    t->vtable->start(t, function, (uint_8*) semaphore);
 
     sleep(5);
 
@@ -58,7 +58,7 @@ void test_semaphore_get(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, semaphore);
+    t->vtable->start(t, function, (uint_8*) semaphore);
 
     sleep(5);
 

@@ -10,7 +10,6 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <stdlib.h>
 
 struct Share_ {
     // self public object
@@ -22,25 +21,25 @@ struct Share_ {
     tsize offset;
 
     // private data
-    void* memory;
+    uint_8* memory;
 };
 
 // vtable
 Share_VTable* share_vtable;
 
 // link methods
-void* share_address(Share* self);
+uint_8* share_address(Share* self);
 int share_connections(Share* self);
 int share_flush(Share* self, tsize size);
 
 // local methods
-void* share_named_new(char* name, tsize size, tsize offset);
-void share_named_free(void* memory, char* name, tsize size, tsize offset);
-void* share_anonymous_new(tsize size, tsize offset);
-void share_anonymous_free(void* memory);
+uint_8* share_named_new(char* name, tsize size, tsize offset);
+void share_named_free(uint_8* memory, char* name, tsize size, tsize offset);
+uint_8* share_anonymous_new(tsize size, tsize offset);
+void share_anonymous_free(uint_8* memory);
 
 // implement methods
-void* share_named_new(char* name, tsize size, tsize offset){
+uint_8* share_named_new(char* name, tsize size, tsize offset){
     // check share memory exists
     bool exists = true;
     int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
@@ -53,7 +52,7 @@ void* share_named_new(char* name, tsize size, tsize offset){
     // allocate share
     int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
     ftruncate(fd, sizeof(int) + size);
-    void* result = mmap(NULL, sizeof(int) + size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+    uint_8* result = mmap(NULL, sizeof(int) + size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
     close(fd);
 
     // check error
@@ -62,7 +61,7 @@ void* share_named_new(char* name, tsize size, tsize offset){
     }
 
     // get connections address
-    int* connections = result;
+    int* connections = (int*) result;
 
     // init connections
     if (!exists) {
@@ -73,9 +72,9 @@ void* share_named_new(char* name, tsize size, tsize offset){
 
     return result;
 }
-void share_named_free(void* memory, char* name, tsize size, tsize offset){
+void share_named_free(uint_8* memory, char* name, tsize size, tsize offset){
     // get connections address
-    int* connections = memory;
+    int* connections = (int*) memory;
 
     if (*connections == 1) {
         // unmap share memory
@@ -93,27 +92,27 @@ void share_named_free(void* memory, char* name, tsize size, tsize offset){
         // dont unlink (it has another connections)
     }
 }
-void* share_anonymous_new(tsize size, tsize offset){
-    void* result = heap_alloc(sizeof(int) + size);
+uint_8* share_anonymous_new(tsize size, tsize offset){
+    uint_8* result = heap_alloc(sizeof(int) + size);
 
     // get connections address
-    int* connections = result;
+    int* connections = (int*) result;
 
     // init connections
     *connections = 1;
 
     return result;
 }
-void share_anonymous_free(void* memory){
+void share_anonymous_free(uint_8* memory){
     heap_free(memory);
 }
 
 // vtable operators
-void* share_address(Share* self){
+uint_8* share_address(Share* self){
     struct Share_* share_ = (struct Share_*)self;
 
     // get memory address
-    void* result = share_->memory + sizeof(int);
+    uint_8* result = share_->memory + sizeof(int);
 
     return result;
 }
@@ -138,17 +137,14 @@ int share_flush(Share* self, tsize size){
 
 // object allocation and deallocation operators
 void share_init() {
-    // unlink critical
-    system("rm /dev/shm/*_share");
-
     // init vtable
-    share_vtable = heap_alloc(sizeof(Share_VTable));
+    share_vtable = (Share_VTable*) heap_alloc(sizeof(Share_VTable));
     share_vtable->address = share_address;
     share_vtable->connections = share_connections;
     share_vtable->flush = share_flush;
 }
 Share* share_new() {
-    struct Share_* share_ = heap_alloc(sizeof(struct Share_));
+    struct Share_* share_ = (struct Share_*) heap_alloc(sizeof(struct Share_));
 
     // set vtable
     share_->self.vtable = share_vtable;
@@ -193,7 +189,7 @@ void share_free(Share* share) {
     }
 
     // free self
-    heap_free(share_);
+    heap_free((uint_8*) share_);
 }
 Share* share_new_object(char* name, tsize size, tsize offset) {
     struct Share_* share_ = (struct Share_*)share_new();

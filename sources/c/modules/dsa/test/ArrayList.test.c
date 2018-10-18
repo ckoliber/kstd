@@ -4,10 +4,9 @@
 #include <low/Heap.h>
 
 #include <assert.h>
-#include <stdio.h>
 
-int test_comperator(void* item1, void* item2){
-    return *(int*) item1 == *(int*) item2;
+int test_comperator(uint_8* item1, uint_8* item2) {
+    return *(int*)item1 == *(int*)item2;
 }
 
 void test_arraylist_add();
@@ -18,18 +17,18 @@ void test_arraylist_get();
 void test_arraylist_indexof();
 void test_arraylist_size();
 
-void test_arraylist_add(){
+void test_arraylist_add() {
     // test normal arraylist
     ArrayList* arraylist_normal = arraylist_new_object(0, 1, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        assert(arraylist_normal->vtable->add(arraylist_normal, item) == cursor);
+        assert(arraylist_normal->vtable->add(arraylist_normal, (uint_8*)item) == cursor);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_normal->vtable->get(arraylist_normal, cursor);
+        int* item = (int*)arraylist_normal->vtable->get(arraylist_normal, cursor);
         assert(*item == cursor);
     }
 
@@ -43,13 +42,13 @@ void test_arraylist_add(){
     ArrayList* arraylist_concurrent = arraylist_new_object(1, 2, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        assert(arraylist_concurrent->vtable->add(arraylist_concurrent, item) == cursor);
+        assert(arraylist_concurrent->vtable->add(arraylist_concurrent, (uint_8*)item) == cursor);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
+        int* item = (int*)arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
         assert(*item == cursor);
     }
 
@@ -59,18 +58,18 @@ void test_arraylist_add(){
 
     arraylist_free(arraylist_concurrent);
 }
-void test_arraylist_addto(){
+void test_arraylist_addto() {
     // test normal arraylist
     ArrayList* arraylist_normal = arraylist_new_object(0, 1, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        assert(arraylist_normal->vtable->addto(arraylist_normal, 0, item) == 0);
+        assert(arraylist_normal->vtable->addto(arraylist_normal, 0, (uint_8*)item) == 0);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_normal->vtable->get(arraylist_normal, cursor);
+        int* item = (int*)arraylist_normal->vtable->get(arraylist_normal, cursor);
         assert(*item == 999 - cursor);
     }
 
@@ -84,13 +83,13 @@ void test_arraylist_addto(){
     ArrayList* arraylist_concurrent = arraylist_new_object(1, 2, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        assert(arraylist_concurrent->vtable->addto(arraylist_concurrent, 0, item) == 0);
+        assert(arraylist_concurrent->vtable->addto(arraylist_concurrent, 0, (uint_8*)item) == 0);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
+        int* item = (int*)arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
         assert(*item == 999 - cursor);
     }
 
@@ -100,24 +99,24 @@ void test_arraylist_addto(){
 
     arraylist_free(arraylist_concurrent);
 }
-void test_arraylist_put(){
+void test_arraylist_put() {
     // test normal arraylist
     ArrayList* arraylist_normal = arraylist_new_object(0, 1, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_normal->vtable->add(arraylist_normal, item);
+        arraylist_normal->vtable->add(arraylist_normal, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = 1418;
-        heap_free(arraylist_normal->vtable->put(arraylist_normal, cursor, item));
+        heap_free(arraylist_normal->vtable->put(arraylist_normal, cursor, (uint_8*)item));
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_normal->vtable->get(arraylist_normal, cursor);
+        int* item = (int*)arraylist_normal->vtable->get(arraylist_normal, cursor);
         assert(*item == 1418);
     }
 
@@ -131,19 +130,19 @@ void test_arraylist_put(){
     ArrayList* arraylist_concurrent = arraylist_new_object(1, 2, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_concurrent->vtable->add(arraylist_concurrent, item);
+        arraylist_concurrent->vtable->add(arraylist_concurrent, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = 1418;
-        heap_free(arraylist_concurrent->vtable->put(arraylist_concurrent, cursor, item));
+        heap_free(arraylist_concurrent->vtable->put(arraylist_concurrent, cursor, (uint_8*)item));
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
+        int* item = (int*)arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
         assert(*item == 1418);
     }
 
@@ -153,20 +152,20 @@ void test_arraylist_put(){
 
     arraylist_free(arraylist_concurrent);
 }
-void test_arraylist_remove(){
+void test_arraylist_remove() {
     // test normal arraylist
     ArrayList* arraylist_normal = arraylist_new_object(0, 1, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_normal->vtable->add(arraylist_normal, item);
+        arraylist_normal->vtable->add(arraylist_normal, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_normal->vtable->remove(arraylist_normal, 0);
+        int* item = (int*)arraylist_normal->vtable->remove(arraylist_normal, 0);
         assert(*item == cursor);
-        heap_free(item);
+        heap_free((uint_8*)item);
     }
 
     arraylist_free(arraylist_normal);
@@ -175,31 +174,31 @@ void test_arraylist_remove(){
     ArrayList* arraylist_concurrent = arraylist_new_object(1, 2, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_concurrent->vtable->add(arraylist_concurrent, item);
+        arraylist_concurrent->vtable->add(arraylist_concurrent, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_concurrent->vtable->remove(arraylist_concurrent, 0);
+        int* item = (int*)arraylist_concurrent->vtable->remove(arraylist_concurrent, 0);
         assert(*item == cursor);
-        heap_free(item);
+        heap_free((uint_8*)item);
     }
 
     arraylist_free(arraylist_concurrent);
 }
-void test_arraylist_get(){
+void test_arraylist_get() {
     // test normal arraylist
     ArrayList* arraylist_normal = arraylist_new_object(0, 1, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_normal->vtable->add(arraylist_normal, item);
+        arraylist_normal->vtable->add(arraylist_normal, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_normal->vtable->get(arraylist_normal, cursor);
+        int* item = (int*)arraylist_normal->vtable->get(arraylist_normal, cursor);
         assert(*item == cursor);
     }
 
@@ -213,13 +212,13 @@ void test_arraylist_get(){
     ArrayList* arraylist_concurrent = arraylist_new_object(1, 2, NULL);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_concurrent->vtable->add(arraylist_concurrent, item);
+        arraylist_concurrent->vtable->add(arraylist_concurrent, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
+        int* item = (int*)arraylist_concurrent->vtable->get(arraylist_concurrent, cursor);
         assert(*item == cursor);
     }
 
@@ -229,18 +228,18 @@ void test_arraylist_get(){
 
     arraylist_free(arraylist_concurrent);
 }
-void test_arraylist_indexof(){
+void test_arraylist_indexof() {
     // test normal arraylist
     ArrayList* arraylist_normal = arraylist_new_object(0, 1, test_comperator);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_normal->vtable->add(arraylist_normal, item);
+        arraylist_normal->vtable->add(arraylist_normal, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        assert(arraylist_normal->vtable->indexof(arraylist_normal, &cursor) == cursor);
+        assert(arraylist_normal->vtable->indexof(arraylist_normal, (uint_8*)&cursor) == cursor);
     }
 
     while (arraylist_normal->vtable->size(arraylist_normal) > 0) {
@@ -253,13 +252,13 @@ void test_arraylist_indexof(){
     ArrayList* arraylist_concurrent = arraylist_new_object(1, 2, test_comperator);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_concurrent->vtable->add(arraylist_concurrent, item);
+        arraylist_concurrent->vtable->add(arraylist_concurrent, (uint_8*)item);
     }
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        assert(arraylist_concurrent->vtable->indexof(arraylist_concurrent, &cursor) == cursor);
+        assert(arraylist_concurrent->vtable->indexof(arraylist_concurrent, (uint_8*)&cursor) == cursor);
     }
 
     while (arraylist_concurrent->vtable->size(arraylist_concurrent) > 0) {
@@ -268,14 +267,14 @@ void test_arraylist_indexof(){
 
     arraylist_free(arraylist_concurrent);
 }
-void test_arraylist_size(){
+void test_arraylist_size() {
     // test normal arraylist
     ArrayList* arraylist_normal = arraylist_new_object(0, 1, test_comperator);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_normal->vtable->add(arraylist_normal, item);
+        arraylist_normal->vtable->add(arraylist_normal, (uint_8*)item);
     }
 
     assert(arraylist_normal->vtable->size(arraylist_normal) == 1000);
@@ -290,9 +289,9 @@ void test_arraylist_size(){
     ArrayList* arraylist_concurrent = arraylist_new_object(1, 2, test_comperator);
 
     for (int cursor = 0; cursor < 1000; cursor++) {
-        int* item = heap_alloc(sizeof(int));
+        int* item = (int*)heap_alloc(sizeof(int));
         *item = cursor;
-        arraylist_concurrent->vtable->add(arraylist_concurrent, item);
+        arraylist_concurrent->vtable->add(arraylist_concurrent, (uint_8*)item);
     }
 
     assert(arraylist_concurrent->vtable->size(arraylist_concurrent) == 1000);

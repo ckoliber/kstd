@@ -12,9 +12,9 @@ struct Stack {
 
 // vtable
 struct Stack_VTable {
-    int (*push)(Stack* self, void* item, uint_64 timeout);
-    void* (*pop)(Stack* self, uint_64 timeout);
-    void* (*get)(Stack* self);
+    int (*push)(Stack* self, uint_8* item, uint_64 timeout);
+    uint_8* (*pop)(Stack* self, uint_64 timeout);
+    uint_8* (*get)(Stack* self);
     int (*size)(Stack* self);
 };
 
@@ -28,4 +28,4 @@ Stack* stack_new(int mode);
 void stack_free(Stack* stack);
 
 // new stack
-Stack* stack_new_object(int mode, int max, int (*comperator)(void*, void*));
+Stack* stack_new_object(int mode, int max, int (*comperator)(uint_8*, uint_8*));

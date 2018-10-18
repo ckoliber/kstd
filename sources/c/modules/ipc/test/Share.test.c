@@ -6,8 +6,8 @@
 #include <assert.h>
 #include <unistd.h>
 
-int function_1(void* arg){
-    Share* share = arg;
+int function_1(uint_8* arg){
+    Share* share = (Share *) arg;
 
     assert(share->vtable->address(share) != NULL);
 
@@ -17,7 +17,7 @@ int function_1(void* arg){
 
     return 0;
 }
-int function_2(void* arg){
+int function_2(uint_8* arg){
     Share* share = share_new_object("test_share", sizeof(int), 0);
 
     assert(share->vtable->address(share) != NULL);
@@ -41,7 +41,7 @@ void share_test_anonymous(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function_1, share);
+    t->vtable->start(t, function_1, (uint_8*) share);
 
     t->vtable->join(t);
 

@@ -5,8 +5,8 @@
 #include <assert.h>
 #include <unistd.h>
 
-int function(void* arg){
-    Monitor* condition = arg;
+int function(uint_8* arg){
+    Monitor* condition = (Monitor *) arg;
 
     assert(condition->vtable->wait(condition, 3000) == -1);
 
@@ -24,7 +24,7 @@ void test_monitor_wait(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, monitor);
+    t->vtable->start(t, function, (uint_8*) monitor);
 
     sleep(5);
 
@@ -41,7 +41,7 @@ void test_monitor_notify(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, monitor);
+    t->vtable->start(t, function, (uint_8*) monitor);
 
     sleep(5);
 
@@ -60,9 +60,9 @@ void test_monitor_notify_all(){
 
     Thread* t2 = thread_new_object(0);
 
-    t1->vtable->start(t1, function, monitor);
+    t1->vtable->start(t1, function, (uint_8*) monitor);
 
-    t2->vtable->start(t2, function, monitor);
+    t2->vtable->start(t2, function, (uint_8*) monitor);
 
     sleep(5);
 

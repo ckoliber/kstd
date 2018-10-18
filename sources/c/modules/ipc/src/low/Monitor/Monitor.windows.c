@@ -247,7 +247,7 @@ Condition* condition_new_object(char* name) {
         string_free(condition_critical_name);
 
         // create internal sleep semaphore
-        String* condition_sleep_name = string_new_concat("%s_condition_sleep", name);
+        String* condition_sleep_name = string_new_printf("%s_condition_sleep", name);
         condition_->sleep_semaphore = semaphore_new_object(condition_sleep_name->vtable->value(condition_sleep_name), 0);
         string_free(condition_sleep_name);
 

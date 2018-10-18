@@ -9,7 +9,6 @@
 #include <errno.h>
 #include <ntdef.h>
 #include <process.h>
-#include <stdio.h>
 #include <windows.h>
 #include <winnt.h>
 

@@ -18,18 +18,18 @@ struct LinkedListIterator {
 
 // vtable
 struct LinkedList_VTable {
-    int (*add)(LinkedList* self, void* item);
-    int (*addto)(LinkedList* self, int position, void* item);
-    void* (*put)(LinkedList* self, int position, void* item);
-    void* (*remove)(LinkedList* self, int position);
-    void* (*get)(LinkedList* self, int position);
-    int (*indexof)(LinkedList* self, void* item);
+    int (*add)(LinkedList* self, uint_8* item);
+    int (*addto)(LinkedList* self, int position, uint_8* item);
+    uint_8* (*put)(LinkedList* self, int position, uint_8* item);
+    uint_8* (*remove)(LinkedList* self, int position);
+    uint_8* (*get)(LinkedList* self, int position);
+    int (*indexof)(LinkedList* self, uint_8* item);
     int (*size)(LinkedList* self);
 };
 
 struct LinkedListIterator_VTable {
     bool (*hasnext)(LinkedListIterator* self);
-    void* (*next)(LinkedListIterator* self);
+    uint_8* (*next)(LinkedListIterator* self);
 };
 
 // init vtable
@@ -45,5 +45,5 @@ void linkedlist_free(LinkedList* linkedlist);
 void linkedlistiterator_free(LinkedListIterator* linkedlistiterator);
 
 // new linkedlist
-LinkedList* linkedlist_new_object(int mode, int (*comperator)(void*, void*));
+LinkedList* linkedlist_new_object(int mode, int (*comperator)(uint_8*, uint_8*));
 LinkedListIterator* linkedlistiterator_new_object(LinkedList* linkedlist);

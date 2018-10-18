@@ -5,16 +5,16 @@
 
 #include <assert.h>
 
-int function(void* arg){
-    Message* message = message_new_object("test_message", 10, sizeof(int));
+int function(uint_8* arg){
+    Message* message = (Message *) arg;
 
-    for(int a = 0 ; a < 1000 ; a++){
+    for(int a = 0 ; a < 10000000 ; a++){
         int x;
-        assert(message->vtable->dequeue(message, &x, 1000) == 0);
+        assert(message->vtable->dequeue(message, (uint_8*) &x, 1000) == 0);
         assert(x == a);
     }
 
-    message_free(message);
+    return 0;
 }
 
 void test_message_enqueue();
@@ -25,26 +25,26 @@ void test_message_enqueue(){
     Message* message = message_new_object(NULL, 1000, sizeof(int));
 
     for(int a = 0 ; a < 500 ; a++){
-        assert(message->vtable->enqueue(message, &a, 0) == 0);
+        assert(message->vtable->enqueue(message, (uint_8*) &a, 0) == 0);
     }
 
     for(int a = 0 ; a < 500 ; a++){
         int x;
-        assert(message->vtable->dequeue(message, &x, 0) == 0);
+        assert(message->vtable->dequeue(message, (uint_8*) &x, 0) == 0);
         assert(x == a);
     }
 
     message_free(message);
 }
 void test_message_dequeue(){
-    Message* message = message_new_object("test_message", 10, sizeof(int));
+    Message* message = message_new_object(NULL, 10, sizeof(int));
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, NULL);
+    t->vtable->start(t, function, (uint_8 *) message);
 
-    for(int a = 0 ; a < 1000 ; a++){
-        assert(message->vtable->enqueue(message, &a, 1000) == 0);
+    for(int a = 0 ; a < 10000000 ; a++){
+        assert(message->vtable->enqueue(message, (uint_8*) &a, 1000) == 0);
     }
 
     t->vtable->join(t);

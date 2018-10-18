@@ -4,10 +4,9 @@
 #include <low/Heap.h>
 
 #include <assert.h>
-#include <stdio.h>
 
-int test_function(void* arg) {
-    assert((int) arg == 4);
+int test_function(uint_8* arg) {
+    assert((int)arg == 4);
 
     return 5;
 }
@@ -17,28 +16,28 @@ void test_process_join();
 void test_process_id();
 void test_process_stop();
 
-void test_process_start(){
+void test_process_start() {
     Process* process = process_new_object();
 
-    assert(process->vtable->start(process, test_function, (void *) 4) == 0);
+    assert(process->vtable->start(process, test_function, (uint_8*) 4) == 0);
 
     process->vtable->join(process);
 
     process_free(process);
 }
-void test_process_join(){
+void test_process_join() {
     Process* process = process_new_object();
 
-    process->vtable->start(process, test_function, (void *) 4);
+    process->vtable->start(process, test_function, (uint_8*) 4);
 
     assert(process->vtable->join(process) == 5);
 
     process_free(process);
 }
-void test_process_id(){
+void test_process_id() {
     Process* process = process_new_object();
 
-    process->vtable->start(process, test_function, (void *) 4);
+    process->vtable->start(process, test_function, (uint_8*) 4);
 
     assert(process->vtable->id(process) > 0);
 
@@ -46,10 +45,10 @@ void test_process_id(){
 
     process_free(process);
 }
-void test_process_stop(){
+void test_process_stop() {
     Process* process = process_new_object();
 
-    process->vtable->start(process, test_function, (void *) 4);
+    process->vtable->start(process, test_function, (uint_8*) 4);
 
     process->vtable->stop(process);
 

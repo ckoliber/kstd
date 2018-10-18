@@ -4,8 +4,8 @@
 
 #include <low/Heap.h>
 #include <stdarg.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 
 struct String_ {
@@ -110,7 +110,7 @@ void string_cut(String* self, int begin, int end) {
     struct String_* string_ = (struct String_*)self;
 
     // cut data from string
-    string_->string = heap_realloc(string_->string, (tsize) (end - begin + 1));
+    string_->string = heap_realloc(string_->string, (tsize)(end - begin + 1));
     for (int cursor = begin; cursor <= end; cursor++) {
         string_->string[cursor - begin] = string_->string[cursor];
     }
@@ -130,7 +130,7 @@ void string_replace(String* self, int begin, int end, char* replace) {
     // split part 2
     String* part_2 = NULL;
     if (end < string_get_length(string_->string) - 1) {
-        part_2 = string_new_cut(string_->string, end + 1, (int) string_get_length(string_->string));
+        part_2 = string_new_cut(string_->string, end + 1, (int)string_get_length(string_->string));
     } else {
         part_2 = string_new_copy("");
     }
