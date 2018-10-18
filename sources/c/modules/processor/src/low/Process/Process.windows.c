@@ -12,9 +12,9 @@
 #define PROCESS_QUERY_LIMITED_INFORMATION 0x1000
 #endif
 
-LONG(WINAPI *NtQueryInformationProcess)
-        (HANDLE ProcessHandle, ULONG ProcessInformationClass,
-         PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength);
+LONG(WINAPI* NtQueryInformationProcess)
+(HANDLE ProcessHandle, ULONG ProcessInformationClass,
+ PVOID ProcessInformation, ULONG ProcessInformationLength, PULONG ReturnLength);
 
 typedef struct _UNICODE_STRING {
     USHORT Length;
@@ -53,8 +53,8 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS {
     UNICODE_STRING RuntimeInfo;
 } RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
-typedef void *PPEB_LDR_DATA;
-typedef void *PPS_POST_PROCESS_INIT_ROUTINE;
+typedef void* PPEB_LDR_DATA;
+typedef void* PPS_POST_PROCESS_INIT_ROUTINE;
 
 typedef struct _PEB {
     BYTE Reserved1[2];
@@ -89,12 +89,6 @@ DWORD GetParentProcessId() {
     }
     return -1;
 }
-
-
-
-
-
-
 
 // Thanks by: https://github.com/kaniini/win32-fork
 
@@ -157,17 +151,14 @@ pid_t ForkProcess(void);
 //    }
 //}
 
-pid_t ForkProcess(void){
+pid_t ForkProcess(void) {
     return -1;
 }
 
-
-
-
 // Process.windows.c body
 
-#include <low/Heap.h>
 #include <kstd.h>
+#include <low/Heap.h>
 
 struct Process_ {
     // self public object
@@ -198,7 +189,7 @@ int process_start(Process* self, int (*function)(uint_8*), uint_8* arg) {
     if (process_->id == 0) {
         // at child process, sucessful fork
         kstd_init_child();
-        ExitProcess((DWORD) function(arg));
+        ExitProcess((DWORD)function(arg));
     } else if (process_->id > 0) {
         // at parent process, sucessful fork
         return 0;
@@ -211,7 +202,7 @@ int process_join(Process* self) {
 
     // join internal child process
     // open process by id
-    HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD) process_->id);
+    HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)process_->id);
     if (process == INVALID_HANDLE_VALUE) {
         return -1;
     }
@@ -224,7 +215,7 @@ int process_join(Process* self) {
 
     // get process exit code
     int result = -1;
-    if (GetExitCodeProcess(process, (PDWORD) &result) == 0) {
+    if (GetExitCodeProcess(process, (PDWORD)&result) == 0) {
         result = -1;
     }
 
@@ -246,13 +237,13 @@ int process_stop(Process* self) {
 
     // stop internal child process
     // open process by id
-    HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD) process_->id);
+    HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)process_->id);
     if (process == INVALID_HANDLE_VALUE) {
         return -1;
     }
 
     // terminate process
-    if (TerminateProcess(process, (DWORD) -1) == 0) {
+    if (TerminateProcess(process, (DWORD)-1) == 0) {
         CloseHandle(process);
         return -1;
     }
@@ -266,14 +257,14 @@ int process_stop(Process* self) {
 // object allocation and deallocation operators
 void process_init() {
     // init vtable
-    process_vtable = (Process_VTable*) heap_alloc(sizeof(Process_VTable));
+    process_vtable = (Process_VTable*)heap_alloc(sizeof(Process_VTable));
     process_vtable->start = process_start;
     process_vtable->join = process_join;
     process_vtable->id = process_id;
     process_vtable->stop = process_stop;
 }
 Process* process_new() {
-    struct Process_* process_ = (struct Process_*) heap_alloc(sizeof(struct Process_));
+    struct Process_* process_ = (struct Process_*)heap_alloc(sizeof(struct Process_));
 
     // set vtable
     process_->self.vtable = process_vtable;
@@ -291,7 +282,7 @@ void process_free(Process* process) {
     // free private data
 
     // free self
-    heap_free((uint_8*) process_);
+    heap_free((uint_8*)process_);
 }
 Process* process_new_object() {
     struct Process_* process_ = (struct Process_*)process_new();

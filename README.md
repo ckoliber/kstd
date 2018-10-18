@@ -1,40 +1,35 @@
 # kstd (KoLiBer Standard Library)
 
-## Product Owner
+__KSTD__ is cross platform library for creating __high performance__ `C` application that can run on multiple OS'es, __without__ any library __dependency__.
+KSTD only depends on OS system calls.
+It's fully modular application, it source code breaked into two level codes, __high level__ codes (depends on low level codes) and __low level__ codes (depends on OS syscalls).
+KSTD was developed over __Object Oriented__ paradigm (OOC) and it is easily expandable.
 
-* [KoLiBer](https://koliber.ir)
+## Building
 
-## Developers
+You can compile KSTD in two modes:
 
-1. [KoLiBer](https://koliber.ir)
+1. __debug (testing)__
+2. __release__
 
-## Start Date (UTC)
+And also you can set link type:
 
-* __Wed, 08 Aug 2018 11:13:41 GMT__
+1. __static__
+2. __dynamic__
 
-## Question
+So let's see the building command:
 
-* How can we code a cross platform application in standard and simple way in high performance C ?
+```bash
+git clone https://github.com/koliberr136a1/kstd.git
 
-## Goal
+cd sources/c
+mkdir build
+cd build
 
-* kstd is a project for standardizing C language in `DSA`, `Network`, `File`, `Security`, etc for __cross platform__ usage (`android`, `ios`, `win32`, `linux`)
+cmake -DBUILD=debug ..
+make -j4
+```
 
-## License
+## Linking
 
-* Project is under __[MIT](LICENSE.md)__ license
-
-![MIT License](https://pre00.deviantart.net/4938/th/pre/f/2016/070/3/b/mit_license_logo_by_excaliburzero-d9ur2lg.png)
-
-## Languages and Frameworks
-
-1. __Client__
-    1. __C-11__
-
-## SDLC (Software Development Life Cycle)
-
-* Project is under __`iterative`__ SDLC
-
-## Links
-
-1. [Github](https://github.com/koliberr136a1/kstd)
+After building library, you can link `.so` or `.a` or `.dll` file to your application and enjoy __KSTD__ :)
