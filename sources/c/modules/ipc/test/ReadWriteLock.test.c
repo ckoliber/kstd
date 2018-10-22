@@ -4,7 +4,6 @@
 
 #include <assert.h>
 #include <unistd.h>
-#include <stdio.h>
 
 int function(uint_8* arg) {
     ReadWriteLock* lock = (ReadWriteLock *) arg;
