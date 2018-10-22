@@ -71,7 +71,7 @@ int process_stop(Process* self) {
     struct Process_* process_ = (struct Process_*)self;
 
     // stop internal child process
-    if (kill(process_->id, SIGKILL) == 0) {
+    if (kill(process_->id, SIGTERM) == 0) {
         return 0;
     }
 

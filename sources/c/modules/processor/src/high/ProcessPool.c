@@ -50,6 +50,11 @@ int processpool_looper(ProcessPool* self) {
         // get message casted from item
         struct ProcessPool_Message* message = (struct ProcessPool_Message*)item;
 
+        // check message is termination
+        if(message->function == NULL){
+            break;
+        }
+
         // run function with item
         message->function(item);
     }
@@ -87,11 +92,16 @@ int processpool_post(ProcessPool* self, uint_8* item) {
 int processpool_stop(ProcessPool* self) {
     struct ProcessPool_* processpool_ = (struct ProcessPool_*)self;
 
-    // stop process pool
+    // enqueue null message and wait for all processes to exit
     int result = 0;
+    struct ProcessPool_Message message = {NULL};
     for (int cursor = 0; cursor < processpool_->size; cursor++) {
-        // stop process
-        if (processpool_->pool[cursor]->vtable->stop(processpool_->pool[cursor]) != 0) {
+        processpool_->message->vtable->enqueue(processpool_->message, (uint_8*) &message, UINT_64_MAX);
+    }
+
+    // wait for processes to stop
+    for (int cursor = 0; cursor < processpool_->size; cursor++) {
+        if(processpool_->pool[cursor]->vtable->join(processpool_->pool[cursor]) != 0){
             result = -1;
         }
     }
