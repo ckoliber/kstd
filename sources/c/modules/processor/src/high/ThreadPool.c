@@ -44,6 +44,11 @@ int threadpool_looper(ThreadPool* self) {
         // get message casted from item
         struct ThreadPool_Message* message = (struct ThreadPool_Message*)item;
 
+        // check message is termination
+        if(message->function == NULL){
+            break;
+        }
+
         // run function with arg
         message->function(item);
     }
@@ -79,11 +84,16 @@ int threadpool_post(ThreadPool* self, uint_8* item) {
 int threadpool_stop(ThreadPool* self) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
-    // stop thread pool
+    // enqueue null message and wait for all threads to exit
     int result = 0;
+    struct ThreadPool_Message message = {NULL};
     for (int cursor = 0; cursor < threadpool_->size; cursor++) {
-        // stop thread
-        if (threadpool_->pool[cursor]->vtable->stop(threadpool_->pool[cursor]) != 0) {
+        threadpool_->message->vtable->enqueue(threadpool_->message, (uint_8*) &message, UINT_64_MAX);
+    }
+
+    // wait for threads to stop
+    for (int cursor = 0; cursor < threadpool_->size; cursor++) {
+        if(threadpool_->pool[cursor]->vtable->join(threadpool_->pool[cursor]) != 0){
             result = -1;
         }
     }
