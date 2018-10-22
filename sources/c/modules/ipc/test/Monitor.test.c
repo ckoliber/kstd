@@ -8,7 +8,7 @@
 int function(uint_8* arg){
     Monitor* condition = (Monitor *) arg;
 
-    assert(condition->vtable->wait(condition, 3000) == -1);
+    assert(condition->vtable->wait(condition, 500) == -1);
 
     assert(condition->vtable->wait(condition, UINT_64_MAX) == 0);
 
@@ -26,7 +26,7 @@ void test_monitor_wait(){
 
     t->vtable->start(t, function, (uint_8*) monitor);
 
-    sleep(5);
+    sleep(1);
 
     monitor->vtable->notify(monitor);
 
@@ -43,7 +43,7 @@ void test_monitor_notify(){
 
     t->vtable->start(t, function, (uint_8*) monitor);
 
-    sleep(5);
+    sleep(1);
 
     assert(monitor->vtable->notify(monitor) == 0);
 
@@ -64,7 +64,7 @@ void test_monitor_notify_all(){
 
     t2->vtable->start(t2, function, (uint_8*) monitor);
 
-    sleep(5);
+    sleep(1);
 
     assert(monitor->vtable->notify_all(monitor) == 0);
 

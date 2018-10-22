@@ -8,7 +8,7 @@
 int function(uint_8* arg){
     ErrorCheckLock* lock = (ErrorCheckLock *) arg;
 
-    assert(lock->vtable->lock(lock, 3000) == -1);
+    assert(lock->vtable->lock(lock, 500) == -1);
 
     assert(lock->vtable->lock(lock, UINT_64_MAX) == 0);
 
@@ -29,7 +29,7 @@ void test_errorchecklock_lock(){
 
     t->vtable->start(t, function, (uint_8*) lock);
 
-    sleep(5);
+    sleep(1);
 
     lock->vtable->unlock(lock);
 
@@ -48,7 +48,7 @@ void test_errorchecklock_unlock(){
 
     t->vtable->start(t, function, (uint_8*) lock);
 
-    sleep(5);
+    sleep(1);
 
     assert(lock->vtable->unlock(lock) == 0);
 

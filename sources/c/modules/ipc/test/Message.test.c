@@ -8,7 +8,7 @@
 int function(uint_8* arg){
     Message* message = (Message *) arg;
 
-    for(int a = 0 ; a < 10000000 ; a++){
+    for(int a = 0 ; a < 100000 ; a++){
         int x;
         assert(message->vtable->dequeue(message, (uint_8*) &x, 1000) == 0);
         assert(x == a);
@@ -43,7 +43,7 @@ void test_message_dequeue(){
 
     t->vtable->start(t, function, (uint_8 *) message);
 
-    for(int a = 0 ; a < 10000000 ; a++){
+    for(int a = 0 ; a < 100000 ; a++){
         assert(message->vtable->enqueue(message, (uint_8*) &a, 1000) == 0);
     }
 

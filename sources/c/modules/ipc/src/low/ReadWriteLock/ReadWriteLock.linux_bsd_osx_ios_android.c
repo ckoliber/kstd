@@ -355,7 +355,7 @@ ReadWriteLock* readwritelock_new_object(char* name) {
             pthread_mutexattr_init(&write_mattr);
             pthread_mutexattr_setpshared(&write_mattr, PTHREAD_PROCESS_PRIVATE);
             pthread_mutexattr_settype(&write_mattr, PTHREAD_MUTEX_NORMAL);
-            pthread_mutex_init(&(memory->critical), &write_mattr);
+            pthread_mutex_init(&(memory->write), &write_mattr);
             pthread_mutexattr_destroy(&write_mattr);
 
             // init readers count

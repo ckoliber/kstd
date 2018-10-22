@@ -1,7 +1,7 @@
 #include <high/ArrayList.h>
 
-#include <low/ReadWriteLock.h>
 #include <low/Heap.h>
+#include <low/ReadWriteLock.h>
 
 struct ArrayList_ {
     // self public object
@@ -60,7 +60,7 @@ int arraylist_addto_normal(ArrayList* self, int position, uint_8* item) {
     // check array have free space or not
     if (arraylist_->cursor >= arraylist_->length) {
         arraylist_->length = (int)(arraylist_->length * arraylist_->factor + 1);
-        arraylist_->array = (uint_8**) heap_realloc((uint_8*) arraylist_->array, arraylist_->length * sizeof(uint_8*));
+        arraylist_->array = (uint_8**)heap_realloc((uint_8*)arraylist_->array, arraylist_->length * sizeof(uint_8*));
     }
 
     // move other items one block next
@@ -112,7 +112,7 @@ uint_8* arraylist_remove_normal(ArrayList* self, int position) {
     if (arraylist_->cursor < arraylist_->length / arraylist_->factor) {
         arraylist_->length = (int)(arraylist_->length / arraylist_->factor);
         arraylist_->length = arraylist_->length ? arraylist_->length : 1;
-        arraylist_->array = (uint_8**) heap_realloc((uint_8*) arraylist_->array, arraylist_->length * sizeof(uint_8*));
+        arraylist_->array = (uint_8**)heap_realloc((uint_8*)arraylist_->array, arraylist_->length * sizeof(uint_8*));
     }
 
     return result;
@@ -281,7 +281,7 @@ int arraylist_size_concurrent(ArrayList* self) {
 // object allocation and deallocation operators
 void arraylist_init() {
     // init normal vtable
-    arraylist_vtable_normal = (ArrayList_VTable*) heap_alloc(sizeof(ArrayList_VTable));
+    arraylist_vtable_normal = (ArrayList_VTable*)heap_alloc(sizeof(ArrayList_VTable));
     arraylist_vtable_normal->add = arraylist_add_normal;
     arraylist_vtable_normal->addto = arraylist_addto_normal;
     arraylist_vtable_normal->put = arraylist_put_normal;
@@ -291,7 +291,7 @@ void arraylist_init() {
     arraylist_vtable_normal->size = arraylist_size_normal;
 
     // init concurrent vtable
-    arraylist_vtable_concurrent = (ArrayList_VTable*) heap_alloc(sizeof(ArrayList_VTable));
+    arraylist_vtable_concurrent = (ArrayList_VTable*)heap_alloc(sizeof(ArrayList_VTable));
     arraylist_vtable_concurrent->add = arraylist_add_concurrent;
     arraylist_vtable_concurrent->addto = arraylist_addto_concurrent;
     arraylist_vtable_concurrent->put = arraylist_put_concurrent;
@@ -301,7 +301,7 @@ void arraylist_init() {
     arraylist_vtable_concurrent->size = arraylist_size_concurrent;
 }
 ArrayList* arraylist_new(int mode) {
-    struct ArrayList_* arraylist_ = (struct ArrayList_*) heap_alloc(sizeof(struct ArrayList_));
+    struct ArrayList_* arraylist_ = (struct ArrayList_*)heap_alloc(sizeof(struct ArrayList_));
 
     // set vtable
     switch (mode) {
@@ -330,14 +330,14 @@ void arraylist_free(ArrayList* arraylist) {
 
     // free private data
     if (arraylist_->array != NULL) {
-        heap_free((uint_8*) arraylist_->array);
+        heap_free((uint_8*)arraylist_->array);
     }
     if (arraylist_->readwritelock != NULL) {
         readwritelock_free(arraylist_->readwritelock);
     }
 
     // free self
-    heap_free((uint_8*) arraylist_);
+    heap_free((uint_8*)arraylist_);
 }
 ArrayList* arraylist_new_object(int mode, float factor, int (*comperator)(uint_8*, uint_8*)) {
     struct ArrayList_* arraylist_ = (struct ArrayList_*)arraylist_new(mode);
@@ -349,11 +349,10 @@ ArrayList* arraylist_new_object(int mode, float factor, int (*comperator)(uint_8
     // set private data
     arraylist_->length = 1;
     arraylist_->cursor = 0;
-    arraylist_->array = (uint_8**) heap_alloc(arraylist_->length * sizeof(uint_8*));
+    arraylist_->array = (uint_8**)heap_alloc(arraylist_->length * sizeof(uint_8*));
     if (mode == 1) {
         arraylist_->readwritelock = readwritelock_new_object(NULL);
     }
 
     return (ArrayList*)arraylist_;
 }
-

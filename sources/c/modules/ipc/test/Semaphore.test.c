@@ -8,7 +8,7 @@
 int function(uint_8* arg){
     Semaphore* semaphore = (Semaphore *) arg;
 
-    assert(semaphore->vtable->wait(semaphore, 1000) == -1);
+    assert(semaphore->vtable->wait(semaphore, 500) == -1);
 
     assert(semaphore->vtable->wait(semaphore, UINT_64_MAX) == 0);
 
@@ -26,7 +26,7 @@ void test_semaphore_wait(){
 
     t->vtable->start(t, function, (uint_8*) semaphore);
 
-    sleep(2);
+    sleep(1);
 
     semaphore->vtable->post(semaphore);
 
@@ -43,7 +43,7 @@ void test_semaphore_post(){
 
     t->vtable->start(t, function, (uint_8*) semaphore);
 
-    sleep(5);
+    sleep(1);
 
     assert(semaphore->vtable->post(semaphore) == 0);
 
@@ -60,7 +60,7 @@ void test_semaphore_get(){
 
     t->vtable->start(t, function, (uint_8*) semaphore);
 
-    sleep(5);
+    sleep(1);
 
     assert(semaphore->vtable->post(semaphore) == 0);
 
