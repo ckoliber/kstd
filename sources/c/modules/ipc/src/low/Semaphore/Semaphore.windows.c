@@ -108,7 +108,7 @@ Semaphore* semaphore_new_object(char* name, int value) {
 
     // set constructor data
     if (name != NULL) {
-        semaphore_->name = string_new_printf("%s_semaphore", name);
+        semaphore_->name = string_new_printf("%s_sm", name);
     }
 
     // set private data

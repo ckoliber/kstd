@@ -1,6 +1,6 @@
 #include <low/Share.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS)
+#if defined(APP_OSX) || defined(APP_IOS)
 
 #include <low/ReentrantLock.h>
 #include <low/Heap.h>
@@ -51,8 +51,10 @@ uint_8* share_named_new(char* name, tsize size, tsize offset){
 
     // allocate share
     int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
-    ftruncate(fd, sizeof(int) + size);
-    uint_8* result = mmap(NULL, sizeof(int) + size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+    if(!exists){
+        ftruncate(fd, sizeof(int) + size);
+    }
+    uint_8* result = mmap(NULL, sizeof(int) + size, PROT_READ | PROT_WRITE , MAP_SHARED, fd, 0);
     close(fd);
 
     // check error
@@ -196,7 +198,7 @@ Share* share_new_object(char* name, tsize size, tsize offset) {
 
     // set constructor data
     if (name != NULL) {
-        share_->name = string_new_printf("%s_share", name);
+        share_->name = string_new_printf("%s_sh", name);
     }
     share_->size = size;
     share_->offset = offset;

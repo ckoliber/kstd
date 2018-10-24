@@ -189,7 +189,7 @@ Semaphore* semaphore_new_object(char* name, int value) {
         }
 
         // open share errorcheck lock
-        String* semaphore_name = string_new_printf("%s_semaphore", name);
+        String* semaphore_name = string_new_printf("%s_sm", name);
         semaphore_->share = share_new_object(semaphore_name->vtable->value(semaphore_name), sizeof(struct Semaphore_Memory), 0);
         string_free(semaphore_name);
 

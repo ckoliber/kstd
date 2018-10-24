@@ -95,7 +95,7 @@ ReentrantLock* reentrantlock_new_object(char* name) {
 
     // set constructor data
     if (name != NULL) {
-        reentrantlock_->name = string_new_printf("%s_reentrantlock", name);
+        reentrantlock_->name = string_new_printf("%s_rl", name);
     }
 
     // set private data

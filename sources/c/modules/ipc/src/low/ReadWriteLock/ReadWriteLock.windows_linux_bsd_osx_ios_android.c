@@ -1,6 +1,6 @@
 #include <low/ReadWriteLock.h>
 
-#if defined(APP_WINDOWS)
+#if defined(APP_WINDOWS) || defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <low/Share.h>
 #include <low/MutexLock.h>
@@ -198,17 +198,17 @@ ReadWriteLock* readwritelock_new_object(char* name) {
         }
 
         // open share critical mutexlock
-        String* readwritelock_critical_name = string_new_printf("%s_readwritelock_critical", name);
+        String* readwritelock_critical_name = string_new_printf("%s_rwl_c", name);
         readwritelock_->critical_lock = mutexlock_new_object(readwritelock_critical_name->vtable->value(readwritelock_critical_name));
         string_free(readwritelock_critical_name);
 
         // open share write mutexlock
-        String* readwritelock_write_name = string_new_printf("%s_readwritelock_write", name);
+        String* readwritelock_write_name = string_new_printf("%s_rwl_w", name);
         readwritelock_->write_lock = mutexlock_new_object(readwritelock_write_name->vtable->value(readwritelock_write_name));
         string_free(readwritelock_write_name);
 
         // open share readers share
-        String* readwritelock_readers_name = string_new_printf("%s_readwritelock_readers", name);
+        String* readwritelock_readers_name = string_new_printf("%s_rwl_r", name);
         readwritelock_->readers_share = share_new_object(readwritelock_readers_name->vtable->value(readwritelock_readers_name), sizeof(int), 0);
         string_free(readwritelock_readers_name);
 

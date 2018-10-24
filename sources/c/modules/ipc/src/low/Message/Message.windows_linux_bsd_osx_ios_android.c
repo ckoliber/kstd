@@ -157,17 +157,17 @@ Message* message_new_object(char* name, int max, tsize item) {
     // set private data
     if (name != NULL) {
         // open share full semaphore
-        String* message_full_name = string_new_printf("%s_message_full", name);
+        String* message_full_name = string_new_printf("%s_ms_f", name);
         message_->full = semaphore_new_object(message_full_name->vtable->value(message_full_name), max);
         string_free(message_full_name);
 
         // open share empty semaphore
-        String* message_empty_name = string_new_printf("%s_message_empty", name);
+        String* message_empty_name = string_new_printf("%s_ms_e", name);
         message_->empty = semaphore_new_object(message_empty_name->vtable->value(message_empty_name), 0);
         string_free(message_empty_name);
 
         // open share critical mutexlock
-        String* message_critical_name = string_new_printf("%s_message_critical", name);
+        String* message_critical_name = string_new_printf("%s_ms_c", name);
         message_->critical = mutexlock_new_object(message_critical_name->vtable->value(message_critical_name));
         string_free(message_critical_name);
 
@@ -177,7 +177,7 @@ Message* message_new_object(char* name, int max, tsize item) {
         }
 
         // open share errorcheck lock
-        String* message_name = string_new_printf("%s_message", name);
+        String* message_name = string_new_printf("%s_ms", name);
         message_->share = share_new_object(message_name->vtable->value(message_name), sizeof(struct Message_Memory) + (message_->max * message_->max), 0);
         string_free(message_name);
 

@@ -1,10 +1,15 @@
 #include <low/Share.h>
 
-#if defined(APP_ANDROID)
+#if defined(APP_LINUX) || defined(APP_BSD)
 
 #include <low/ReentrantLock.h>
 #include <low/Heap.h>
 #include <low/String.h>
+#include <pthread.h>
+#include <sys/time.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 struct Share_ {
     // self public object
@@ -35,12 +40,57 @@ void share_anonymous_free(uint_8* memory);
 
 // implement methods
 uint_8* share_named_new(char* name, tsize size, tsize offset){
-    // android does not implement standard share memory
-    return share_anonymous_new(size, offset);
+    // check share memory exists
+    bool exists = true;
+    int exists_fd = shm_open(name, O_CREAT | O_EXCL, 0660);
+    if (exists_fd > 0) {
+        // not exists, it was created now
+        close(exists_fd);
+        exists = false;
+    }
+
+    // allocate share
+    int fd = shm_open(name, O_CREAT | O_RDWR, 0660);
+    ftruncate(fd, sizeof(int) + size);
+    uint_8* result = mmap(NULL, sizeof(int) + size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED, fd, 0);
+    close(fd);
+
+    // check error
+    if (result == NULL || result == MAP_FAILED) {
+        return NULL;
+    }
+
+    // get connections address
+    int* connections = (int*) result;
+
+    // init connections
+    if (!exists) {
+        *connections = 1;
+    } else {
+        (*connections)++;
+    }
+
+    return result;
 }
 void share_named_free(uint_8* memory, char* name, tsize size, tsize offset){
-    // android does not implement standard share memory
-    share_anonymous_free(memory);
+    // get connections address
+    int* connections = (int*) memory;
+
+    if (*connections == 1) {
+        // unmap share memory
+        munmap(memory, sizeof(int) + size);
+
+        // unlink (it has not any connections)
+        shm_unlink(name);
+    } else {
+        // decrease connections
+        (*connections)--;
+
+        // unmap share memory
+        munmap(memory, sizeof(int) + size);
+
+        // dont unlink (it has another connections)
+    }
 }
 uint_8* share_anonymous_new(tsize size, tsize offset){
     uint_8* result = heap_alloc(sizeof(int) + size);
@@ -75,9 +125,14 @@ int share_connections(Share* self){
     return result;
 }
 int share_flush(Share* self, tsize size){
-    // android does not implement standard share memory
+    struct Share_* share_ = (struct Share_*)self;
 
-    return 0;
+    // flush memory
+    if(msync(share_->memory, size, MS_SYNC) == 0){
+        return 0;
+    }
+
+    return -1;
 }
 
 // object allocation and deallocation operators

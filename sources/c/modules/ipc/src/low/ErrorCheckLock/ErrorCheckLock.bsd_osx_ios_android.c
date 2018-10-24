@@ -1,6 +1,6 @@
 #include <low/ErrorCheckLock.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
+#if defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <low/Heap.h>
 #include <low/ReentrantLock.h>
@@ -8,6 +8,7 @@
 #include <low/String.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <zconf.h>
 
 struct ErrorCheckLock_ {
     // self public object
@@ -48,18 +49,22 @@ int errorchecklock_lock(ErrorCheckLock* self, uint_64 timeout) {
         // timed
 
         // get time_out
-        struct timeval time_now;
-        struct timespec time_out;
-        gettimeofday(&time_now, NULL);
-        time_out.tv_sec = time_now.tv_sec;
-        time_out.tv_nsec = time_now.tv_usec * 1000;
-        time_out.tv_sec += timeout / 1000;
-        time_out.tv_nsec += (timeout % 1000) * 1000000;
+        struct timeval time_start, time_now;
+        gettimeofday(&time_start, NULL);
 
         // timed lock
-        if (pthread_mutex_timedlock(&(memory->mutex), &time_out) == 0) {
-            return 0;
-        }
+        do{
+            // try lock
+            if(pthread_mutex_trylock(&(memory->mutex)) == 0){
+                return 0;
+            }
+
+            // sleep 10 ms
+            usleep(10);
+
+            // get now time
+            gettimeofday(&time_now, NULL);
+        }while(((time_now.tv_sec + time_now.tv_usec / 1000) - (time_start.tv_sec + time_start.tv_usec / 1000)) <= timeout);
     } else {
         // try
         if (pthread_mutex_trylock(&(memory->mutex)) == 0) {
@@ -137,7 +142,7 @@ ErrorCheckLock* errorchecklock_new_object(char* name) {
         }
 
         // open share errorcheck lock
-        String* errorchecklock_name = string_new_printf("%s_errorchecklock", name);
+        String* errorchecklock_name = string_new_printf("%s_el", name);
         errorchecklock_->share = share_new_object(errorchecklock_name->vtable->value(errorchecklock_name), sizeof(struct ErrorCheckLock_Memory), 0);
         string_free(errorchecklock_name);
 

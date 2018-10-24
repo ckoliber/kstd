@@ -95,7 +95,7 @@ MutexLock* mutexlock_new_object(char* name) {
 
     // set constructor data
     if (name != NULL) {
-        mutexlock_->name = string_new_printf("%s_mutexlock", name);
+        mutexlock_->name = string_new_printf("%s_ml", name);
     }
 
     // set private data

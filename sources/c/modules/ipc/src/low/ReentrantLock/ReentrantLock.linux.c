@@ -1,6 +1,6 @@
 #include <low/ReentrantLock.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
+#if defined(APP_LINUX)
 
 #include <low/Share.h>
 #include <low/Heap.h>
@@ -136,7 +136,7 @@ ReentrantLock* reentrantlock_new_object(char* name) {
         }
 
         // open share errorcheck lock
-        String* reentrantlock_name = string_new_printf("%s_reentrantlock", name);
+        String* reentrantlock_name = string_new_printf("%s_rl", name);
         reentrantlock_->share = share_new_object(reentrantlock_name->vtable->value(reentrantlock_name), sizeof(struct ReentrantLock_Memory), 0);
         string_free(reentrantlock_name);
 

@@ -33,9 +33,20 @@
 #include <low/Share.h>
 
 // local methods
+void share_destroy();
 void modules_init();
 
 // implement methods
+void share_destroy(){
+#if defined(APP_LINUX) || defined(APP_BSD)
+    system("rm -Rf /dev/shm/*_share");
+#elif defined(APP_OSX) || defined(APP_IOS)
+
+#include <sys/mman.h>
+    shm_unlink("critical_reentrantlock_share");
+//    system("rm -Rf /dev/shm/*_share");
+#endif
+}
 void modules_init() {
     // init memory module
 
@@ -68,8 +79,7 @@ void modules_init() {
 }
 
 void kstd_init() {
-    system("rm -Rf /dev/shm/*_share");
-
+    share_destroy();
     modules_init();
 
     critical = NULL;

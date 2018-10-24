@@ -158,17 +158,17 @@ Monitor* monitor_new_object(char* name) {
         }
 
         // open share critical mutexlock
-        String* monitor_critical_name = string_new_printf("%s_monitor_critical", name);
+        String* monitor_critical_name = string_new_printf("%s_mo_c", name);
         monitor_->critical_lock = mutexlock_new_object(monitor_critical_name->vtable->value(monitor_critical_name));
         string_free(monitor_critical_name);
 
         // open share sleep semaphore
-        String* monitor_sleep_name = string_new_printf("%s_monitor_sleep", name);
+        String* monitor_sleep_name = string_new_printf("%s_mo_s", name);
         monitor_->sleep_semaphore = semaphore_new_object(monitor_sleep_name->vtable->value(monitor_sleep_name), 0);
         string_free(monitor_sleep_name);
 
         // open share sleepers share
-        String* monitor_sleepers_name = string_new_printf("%s_monitor_sleepers", name);
+        String* monitor_sleepers_name = string_new_printf("%s_mo_ss", name);
         monitor_->sleepers_share = share_new_object(monitor_sleepers_name->vtable->value(monitor_sleepers_name), sizeof(int), 0);
         string_free(monitor_sleepers_name);
 

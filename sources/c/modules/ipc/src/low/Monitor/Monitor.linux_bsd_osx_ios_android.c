@@ -171,7 +171,7 @@ Monitor* monitor_new_object(char* name) {
         }
 
         // open share errorcheck lock
-        String* monitor_name = string_new_printf("%s_monitor", name);
+        String* monitor_name = string_new_printf("%s_mo", name);
         monitor_->share = share_new_object(monitor_name->vtable->value(monitor_name), sizeof(struct Monitor_Memory), 0);
         string_free(monitor_name);
 

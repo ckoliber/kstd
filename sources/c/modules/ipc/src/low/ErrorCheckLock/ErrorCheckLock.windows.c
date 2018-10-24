@@ -95,7 +95,7 @@ ErrorCheckLock* errorchecklock_new_object(char* name) {
 
     // set constructor data
     if (name != NULL) {
-        errorchecklock_->name = string_new_printf("%s_errorchecklock", name);
+        errorchecklock_->name = string_new_printf("%s_el", name);
     }
 
     // set private data

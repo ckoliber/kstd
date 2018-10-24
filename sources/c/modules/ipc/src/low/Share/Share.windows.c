@@ -188,7 +188,7 @@ Share* share_new_object(char* name, tsize size, tsize offset) {
 
     // set constructor data
     if (name != NULL) {
-        share_->name = string_new_printf("%s_share", name);
+        share_->name = string_new_printf("%s_sh", name);
     }
     share_->size = size;
     share_->offset = offset;

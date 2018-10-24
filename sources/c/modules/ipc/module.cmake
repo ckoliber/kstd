@@ -1,7 +1,6 @@
 set(MODULES memory dsa local processor kstd)
-if(ANDROID)
-    set(LIBS "")
-elseif(WIN32)
+
+if(WIN32 OR ANDROID OR APPLE)
     set(LIBS "")
 else()
     set(LIBS "-lrt")
