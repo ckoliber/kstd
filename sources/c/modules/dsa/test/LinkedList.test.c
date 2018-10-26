@@ -306,11 +306,13 @@ void test_linkedlist_size() {
 int main() {
     kstd_init();
 
-    test_linkedlist_add();
-    test_linkedlist_addto();
-    test_linkedlist_put();
-    test_linkedlist_remove();
-    test_linkedlist_get();
-    test_linkedlist_indexof();
-    test_linkedlist_size();
+    for(int a = 0 ; a < 1000 ; a++){
+        test_linkedlist_add();
+        test_linkedlist_addto();
+        test_linkedlist_put();
+        test_linkedlist_remove();
+        test_linkedlist_get();
+        test_linkedlist_indexof();
+        test_linkedlist_size();
+    }
 }

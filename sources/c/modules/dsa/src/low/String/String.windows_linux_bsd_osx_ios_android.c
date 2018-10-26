@@ -1,6 +1,6 @@
 #include <low/String.h>
 
-#if defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
+#if defined(APP_WINDOWS) || defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <ctype.h>
 #include <low/Heap.h>
@@ -111,38 +111,28 @@ void string_concat(String* self, char* data) {
     string_->string = (char*)heap_realloc((uint_8*)string_->string, string_get_length(string_->string) + string_get_length(data) + 1);
     strcat(string_->string, data);
 }
-void string_cut(String* self, int begin, int end) {
+void string_cut(String* self, int begin, int length) {
     struct String_* string_ = (struct String_*)self;
 
     // create new string
-    char* cut_string = (char*)heap_alloc((tsize)((end - begin + 1) * sizeof(char)));
+    char* cut_string = (char*)heap_alloc((tsize)((length + 1) * sizeof(char)));
 
     // cut data from string
-    for (int cursor = begin; cursor < end; cursor++) {
+    for (int cursor = begin; cursor < begin + length; cursor++) {
         cut_string[cursor - begin] = string_->string[cursor];
     }
-    cut_string[end - begin + 1] = '\0';
+    cut_string[length] = '\0';
     heap_free((uint_8*)string_->string);
     string_->string = cut_string;
 }
-void string_replace(String* self, int begin, int end, char* replace) {
+void string_replace(String* self, int begin, int length, char* replace) {
     struct String_* string_ = (struct String_*)self;
 
     // split part 1
-    String* part_1 = NULL;
-    if (begin > 0) {
-        part_1 = string_new_cut(string_->string, 0, begin);
-    } else {
-        part_1 = string_new_copy("");
-    }
+    String* part_1 = string_new_cut(string_->string, 0, begin);
 
     // split part 2
-    String* part_2 = NULL;
-    if (end < string_get_length(string_->string)) {
-        part_2 = string_new_cut(string_->string, end, (int)string_get_length(string_->string));
-    } else {
-        part_2 = string_new_copy("");
-    }
+    String* part_2 = string_new_cut(string_->string, begin + length, (int)string_get_length(string_->string));
 
     // replace parts
     self->vtable->copy(self, part_1->vtable->value(part_1));
@@ -273,17 +263,17 @@ String* string_new_concat(char* value, char* data) {
 
     return string;
 }
-String* string_new_cut(char* value, int begin, int end) {
+String* string_new_cut(char* value, int begin, int length) {
     // init new string then cut
     String* string = string_new_printf("%s", value);
-    string->vtable->cut(string, begin, end);
+    string->vtable->cut(string, begin, length);
 
     return string;
 }
-String* string_new_replace(char* value, int begin, int end, char* replace) {
+String* string_new_replace(char* value, int begin, int length, char* replace) {
     // init new string then replace
     String* string = string_new_printf("%s", value);
-    string->vtable->replace(string, begin, end, replace);
+    string->vtable->replace(string, begin, length, replace);
 
     return string;
 }

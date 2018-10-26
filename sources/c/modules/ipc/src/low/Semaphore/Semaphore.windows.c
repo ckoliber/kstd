@@ -2,6 +2,22 @@
 
 #if defined(APP_WINDOWS)
 
+// nt query semaphore for getting value
+typedef LONG NTSTATUS;
+
+typedef NTSTATUS (NTAPI *_NtQuerySemaphore)(
+        HANDLE SemaphoreHandle,
+        DWORD SemaphoreInformationClass,
+        PVOID SemaphoreInformation,
+        ULONG SemaphoreInformationLength,
+        PULONG ReturnLength OPTIONAL
+);
+
+typedef struct _SEMAPHORE_BASIC_INFORMATION {
+    ULONG CurrentCount;
+    ULONG MaximumCount;
+} SEMAPHORE_BASIC_INFORMATION;
+
 #include <low/Heap.h>
 #include <low/String.h>
 
@@ -31,10 +47,12 @@ int semaphore_wait(Semaphore* self, uint_64 timeout) {
 
     // wait the wi32 semaphore
     if (timeout == UINT_64_MAX) {
+
         // infinity
         if (WaitForSingleObject(semaphore_->semaphore_handle, INFINITE) == WAIT_OBJECT_0) {
             return 0;
         }
+
     } else {
         // timed, try
         if (WaitForSingleObject(semaphore_->semaphore_handle, (DWORD) timeout) == WAIT_OBJECT_0) {
@@ -57,13 +75,16 @@ int semaphore_post(Semaphore* self) {
 int semaphore_get(Semaphore* self) {
     struct Semaphore_* semaphore_ = (struct Semaphore_*)self;
 
-    // get the win32 semaphore value
-    int result = 0;
-    if (ReleaseSemaphore(semaphore_->semaphore_handle, 0, (LPLONG) &result) == 0) {
-        result = -1;
+    // get nt query semaphore proc from nt kernel
+    _NtQuerySemaphore NtQuerySemaphore = (_NtQuerySemaphore)GetProcAddress (GetModuleHandle ("ntdll.dll"), "NtQuerySemaphore");
+    if (NtQuerySemaphore) {
+        SEMAPHORE_BASIC_INFORMATION BasicInfo;
+        if (NtQuerySemaphore(semaphore_->semaphore_handle, 0, &BasicInfo, sizeof (SEMAPHORE_BASIC_INFORMATION), NULL) == ERROR_SUCCESS) {
+            return (int) BasicInfo.CurrentCount;
+        }
     }
 
-    return result;
+    return -1;
 }
 
 // object allocation and deallocation operators
@@ -81,6 +102,7 @@ Semaphore* semaphore_new() {
     semaphore_->self.vtable = semaphore_vtable;
 
     // set constructor data
+    semaphore_->name = NULL;
 
     // set private data
     semaphore_->semaphore_handle = INVALID_HANDLE_VALUE;
@@ -116,13 +138,13 @@ Semaphore* semaphore_new_object(char* name, int value) {
         semaphore_->semaphore_handle = CreateSemaphoreA(
                 NULL,
                 value,
-                UINT_32_MAX,
+                UINT_16_MAX,
                 semaphore_->name->vtable->value(semaphore_->name));
     }else{
         semaphore_->semaphore_handle = CreateSemaphoreA(
                 NULL,
                 value,
-                UINT_32_MAX,
+                UINT_16_MAX,
                 NULL);
     }
 

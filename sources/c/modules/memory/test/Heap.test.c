@@ -1,4 +1,5 @@
 #include <low/Heap.h>
+#include <kstd.h>
 
 #include <assert.h>
 
@@ -75,10 +76,14 @@ void test_heap_set(){
 }
 
 int main() {
-    test_heap_alloc();
-    test_heap_realloc();
-    test_heap_free();
-    test_heap_copy();
-    test_heap_move();
-    test_heap_set();
+    kstd_init();
+
+    for(int a = 0 ; a < 1000 ; a++){
+        test_heap_alloc();
+        test_heap_realloc();
+        test_heap_free();
+        test_heap_copy();
+        test_heap_move();
+        test_heap_set();
+    }
 }

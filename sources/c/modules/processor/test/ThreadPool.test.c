@@ -35,11 +35,13 @@ void test_threadpool_post() {
     threadpool->vtable->start(threadpool);
 
     for (int a = 0; a < 20000; a++) {
+
         struct Message message = {
                 test_function,
                 4
         };
-        threadpool->vtable->post(threadpool, (uint_8*) &message);
+
+        assert(threadpool->vtable->post(threadpool, (uint_8*) &message) == 0);
     }
 
     threadpool->vtable->stop(threadpool);
@@ -59,7 +61,9 @@ void test_threadpool_stop() {
 int main() {
     kstd_init();
 
-    test_threadpool_start();
-    test_threadpool_post();
-    test_threadpool_stop();
+    for(int a = 0 ; a < 10 ; a++){
+        test_threadpool_start();
+        test_threadpool_post();
+        test_threadpool_stop();
+    }
 }

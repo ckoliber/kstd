@@ -68,6 +68,7 @@ MutexLock* mutexlock_new() {
     mutexlock_->self.vtable = mutexlock_vtable;
 
     // set constructor data
+    mutexlock_->name = NULL;
 
     // set private data
     mutexlock_->semaphore_handle = INVALID_HANDLE_VALUE;

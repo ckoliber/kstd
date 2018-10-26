@@ -68,6 +68,7 @@ ErrorCheckLock* errorchecklock_new() {
     errorchecklock_->self.vtable = errorchecklock_vtable;
 
     // set constructor data
+    errorchecklock_->name = NULL;
 
     // set private data
     errorchecklock_->semaphore_handle = INVALID_HANDLE_VALUE;

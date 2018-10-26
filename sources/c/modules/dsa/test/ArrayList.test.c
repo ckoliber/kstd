@@ -306,11 +306,13 @@ void test_arraylist_size() {
 int main() {
     kstd_init();
 
-    test_arraylist_add();
-    test_arraylist_addto();
-    test_arraylist_put();
-    test_arraylist_remove();
-    test_arraylist_get();
-    test_arraylist_indexof();
-    test_arraylist_size();
+    for(int a = 0 ; a < 1000 ; a++){
+        test_arraylist_add();
+        test_arraylist_addto();
+        test_arraylist_put();
+        test_arraylist_remove();
+        test_arraylist_get();
+        test_arraylist_indexof();
+        test_arraylist_size();
+    }
 }

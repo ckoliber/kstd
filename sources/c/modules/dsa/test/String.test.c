@@ -66,7 +66,7 @@ void test_string_cut() {
     string_free(string);
 }
 void test_string_replace() {
-    String* string = string_new_replace("saX", 2, 3, "lam");
+    String* string = string_new_replace("saX", 2, 1, "lam");
 
     assert(string_get_compare(string->vtable->value(string), "salam") == 0);
 
@@ -90,14 +90,16 @@ void test_string_to_double() {
 int main() {
     kstd_init();
 
-    test_string_printf();
-    test_string_lower();
-    test_string_upper();
-    test_string_reverse();
-    test_string_copy();
-    test_string_concat();
-    test_string_cut();
-    test_string_replace();
-    test_string_to_int();
-    test_string_to_double();
+    for(int a = 0 ; a < 1000 ; a++){
+        test_string_printf();
+        test_string_lower();
+        test_string_upper();
+        test_string_reverse();
+        test_string_copy();
+        test_string_concat();
+        test_string_cut();
+        test_string_replace();
+        test_string_to_int();
+        test_string_to_double();
+    }
 }

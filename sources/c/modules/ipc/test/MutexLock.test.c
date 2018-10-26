@@ -3,7 +3,13 @@
 #include <kstd.h>
 
 #include <assert.h>
+
+#if defined(APP_WINDOWS)
+#define sleep(x) Sleep(x*1000)
+#else
 #include <unistd.h>
+#define sleep(x) sleep(x)
+#endif
 
 int function(uint_8* arg){
     MutexLock* lock = (MutexLock *) arg;
@@ -11,6 +17,8 @@ int function(uint_8* arg){
     assert(lock->vtable->lock(lock, 500) == -1);
 
     assert(lock->vtable->lock(lock, UINT_64_MAX) == 0);
+
+    assert(lock->vtable->unlock(lock) == 0);
 
     return 0;
 }
@@ -52,9 +60,9 @@ void test_mutexlock_unlock(){
 
     assert(lock->vtable->unlock(lock) == 0);
 
-    assert(lock->vtable->unlock(lock) == 0);
-
     t->vtable->join(t);
+
+    assert(lock->vtable->unlock(lock) == 0);
 
     thread_free(t);
 
@@ -64,6 +72,8 @@ void test_mutexlock_unlock(){
 int main() {
     kstd_init();
 
-    test_mutexlock_lock();
-    test_mutexlock_unlock();
+    for(int a = 0 ; a < 10 ; a++){
+        test_mutexlock_lock();
+        test_mutexlock_unlock();
+    }
 }

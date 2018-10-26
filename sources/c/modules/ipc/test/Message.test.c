@@ -93,8 +93,10 @@ void test_message_size(){
 int main() {
     kstd_init();
 
-    test_message_enqueue();
-    test_message_dequeue_thread();
-    test_message_dequeue_process();
-    test_message_size();
+    for(int a = 0 ; a < 10 ; a++){
+        test_message_enqueue();
+        test_message_dequeue_thread();
+        test_message_dequeue_process();
+        test_message_size();
+    }
 }

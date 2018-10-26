@@ -68,6 +68,7 @@ ReentrantLock* reentrantlock_new() {
     reentrantlock_->self.vtable = reentrantlock_vtable;
 
     // set constructor data
+    reentrantlock_->name = NULL;
 
     // set private data
     reentrantlock_->mutex_handle = INVALID_HANDLE_VALUE;
@@ -114,6 +115,5 @@ ReentrantLock* reentrantlock_new_object(char* name) {
 
     return (ReentrantLock*)reentrantlock_;
 }
-
 
 #endif

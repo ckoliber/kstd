@@ -1,6 +1,6 @@
 #include <low/Process.h>
 
-#if defined(APP_WINDOWS)
+#if defined(APP_WINDOWS) && defined(APP_WINDOWS_MINGW)
 
 // Thanks by: https://github.com/ambakshi/ppid-win32
 

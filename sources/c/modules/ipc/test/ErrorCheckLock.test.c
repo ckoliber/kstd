@@ -3,7 +3,13 @@
 #include <kstd.h>
 
 #include <assert.h>
+
+#if defined(APP_WINDOWS)
+#define sleep(x) Sleep(x*1000)
+#else
 #include <unistd.h>
+#define sleep(x) sleep(x)
+#endif
 
 int function(uint_8* arg){
     ErrorCheckLock* lock = (ErrorCheckLock *) arg;
@@ -11,6 +17,8 @@ int function(uint_8* arg){
     assert(lock->vtable->lock(lock, 500) == -1);
 
     assert(lock->vtable->lock(lock, UINT_64_MAX) == 0);
+
+    assert(lock->vtable->unlock(lock) == 0);
 
     return 0;
 }
@@ -52,9 +60,9 @@ void test_errorchecklock_unlock(){
 
     assert(lock->vtable->unlock(lock) == 0);
 
-    assert(lock->vtable->unlock(lock) == -1);
-
     t->vtable->join(t);
+
+    assert(lock->vtable->unlock(lock) == -1);
 
     thread_free(t);
 
@@ -64,6 +72,9 @@ void test_errorchecklock_unlock(){
 int main() {
     kstd_init();
 
-    test_errorchecklock_lock();
-    test_errorchecklock_unlock();
+    for(int a = 0 ; a < 10 ; a++){
+        test_errorchecklock_lock();
+        test_errorchecklock_unlock();
+    }
 }
+

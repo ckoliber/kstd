@@ -4,7 +4,13 @@
 #include <kstd.h>
 
 #include <assert.h>
+
+#if defined(APP_WINDOWS)
+#define sleep(x) Sleep(x*1000)
+#else
 #include <unistd.h>
+#define sleep(x) sleep(x)
+#endif
 
 int function_1(uint_8* arg){
     Share* share = (Share *) arg;
@@ -68,6 +74,8 @@ void share_test_named(){
 int main() {
     kstd_init();
 
-    share_test_anonymous();
-    share_test_named();
+    for(int a = 0 ; a < 1000 ; a++){
+        share_test_anonymous();
+        share_test_named();
+    }
 }

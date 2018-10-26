@@ -52,7 +52,7 @@ uint_8* share_named_new(char* name, HANDLE* memory_handle, tsize size, tsize off
             NULL,
             PAGE_EXECUTE_READWRITE,
             0,
-            0,
+            size,
             name);
     uint_8* result = MapViewOfFile(
             handle,

@@ -58,8 +58,10 @@ void test_thread_stop() {
 int main() {
     kstd_init();
 
-    test_thread_start();
-    test_thread_join();
-    test_thread_id();
-    test_thread_stop();
+    for(int a = 0 ; a < 10 ; a++){
+        test_thread_start();
+        test_thread_join();
+        test_thread_id();
+        test_thread_stop();
+    }
 }

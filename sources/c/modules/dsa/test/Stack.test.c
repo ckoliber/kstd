@@ -232,8 +232,10 @@ void test_stack_size() {
 int main() {
     kstd_init();
 
-    test_stack_push();
-    test_stack_pop();
-    test_stack_get();
-    test_stack_size();
+    for(int a = 0 ; a < 1000 ; a++){
+        test_stack_push();
+        test_stack_pop();
+        test_stack_get();
+        test_stack_size();
+    }
 }

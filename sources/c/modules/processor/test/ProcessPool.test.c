@@ -31,16 +31,16 @@ void test_processpool_start() {
 }
 void test_processpool_post() {
     ProcessPool* processpool = processpool_new_object(1, sizeof(struct Message));
+
     processpool->vtable->start(processpool);
+
     for (int a = 0; a < 2000; a++) {
         struct Message message = {
                 test_function,
                 4
         };
-        processpool->vtable->post(processpool, (uint_8*) &message);
+        assert(processpool->vtable->post(processpool, (uint_8*) &message) == 0);
     }
-
-
 
     processpool->vtable->stop(processpool);
 
@@ -59,7 +59,9 @@ void test_processpool_stop() {
 int main() {
     kstd_init();
 
-    test_processpool_start();
-    test_processpool_post();
-    test_processpool_stop();
+    for(int a = 0 ; a < 10 ; a++){
+        test_processpool_start();
+        test_processpool_post();
+        test_processpool_stop();
+    }
 }

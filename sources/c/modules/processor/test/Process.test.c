@@ -58,8 +58,10 @@ void test_process_stop() {
 int main() {
     kstd_init();
 
-    test_process_start();
-    test_process_join();
-    test_process_id();
-    test_process_stop();
+    for(int a = 0 ; a < 10 ; a++){
+        test_process_start();
+        test_process_join();
+        test_process_id();
+        test_process_stop();
+    }
 }

@@ -3,7 +3,13 @@
 #include <kstd.h>
 
 #include <assert.h>
+
+#if defined(APP_WINDOWS)
+#define sleep(x) Sleep(x*1000)
+#else
 #include <unistd.h>
+#define sleep(x) sleep(x)
+#endif
 
 int function(uint_8* arg){
     Monitor* condition = (Monitor *) arg;
@@ -82,7 +88,10 @@ void test_monitor_notify_all(){
 int main() {
     kstd_init();
 
-    test_monitor_wait();
-    test_monitor_notify();
-    test_monitor_notify_all();
+    for(int a = 0 ; a < 10 ; a++){
+        test_monitor_wait();
+        test_monitor_notify();
+        test_monitor_notify_all();
+    }
+
 }

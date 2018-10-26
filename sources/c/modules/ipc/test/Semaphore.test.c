@@ -3,7 +3,13 @@
 #include <kstd.h>
 
 #include <assert.h>
+
+#if defined(APP_WINDOWS)
+#define sleep(x) Sleep(x*1000)
+#else
 #include <unistd.h>
+#define sleep(x) sleep(x)
+#endif
 
 int function(uint_8* arg){
     Semaphore* semaphore = (Semaphore *) arg;
@@ -76,7 +82,9 @@ void test_semaphore_get(){
 int main() {
     kstd_init();
 
-    test_semaphore_wait();
-    test_semaphore_post();
-    test_semaphore_get();
+    for(int a = 0 ; a < 10 ; a++){
+        test_semaphore_wait();
+        test_semaphore_post();
+        test_semaphore_get();
+    }
 }

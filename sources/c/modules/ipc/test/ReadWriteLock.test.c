@@ -3,7 +3,13 @@
 #include <low/Thread.h>
 
 #include <assert.h>
+
+#if defined(APP_WINDOWS)
+#define sleep(x) Sleep(x*1000)
+#else
 #include <unistd.h>
+#define sleep(x) sleep(x)
+#endif
 
 int function(uint_8* arg) {
     ReadWriteLock* lock = (ReadWriteLock *) arg;
@@ -46,6 +52,7 @@ void test_readwritelock() {
 int main() {
     kstd_init();
 
-    test_readwritelock();
-
+    for(int a = 0 ; a < 10 ; a++){
+        test_readwritelock();
+    }
 }

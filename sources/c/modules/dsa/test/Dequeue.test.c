@@ -232,8 +232,10 @@ void test_dequeue_size() {
 int main() {
     kstd_init();
 
-    test_dequeue_enqueue();
-    test_dequeue_dequeue();
-    test_dequeue_get();
-    test_dequeue_size();
+    for(int a = 0 ; a < 1000 ; a++){
+        test_dequeue_enqueue();
+        test_dequeue_dequeue();
+        test_dequeue_get();
+        test_dequeue_size();
+    }
 }

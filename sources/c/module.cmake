@@ -128,7 +128,11 @@ macro(MODULE_OPTIONS)
     message("                                                         ")
 
     # target compiler (-O3, ...)
-    set(MODULE_OPTIONS -Wall -O0 -g -fPIC -Wall -Werror -pedantic -std=c11)
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+        set(MODULE_OPTIONS )
+    else()
+        set(MODULE_OPTIONS -Wall -O0 -g -fPIC -Wall -Werror -pedantic -std=c11)
+    endif()
     target_compile_options(${MODULE_NAME} PRIVATE ${MODULE_OPTIONS})
 
     # message options
