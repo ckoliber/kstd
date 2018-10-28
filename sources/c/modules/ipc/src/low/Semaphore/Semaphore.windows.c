@@ -26,7 +26,6 @@ struct Semaphore_ {
     Semaphore self;
 
     // constructor data
-    String* name;
 
     // private data
     HANDLE semaphore_handle;
@@ -102,7 +101,6 @@ Semaphore* semaphore_new() {
     semaphore_->self.vtable = semaphore_vtable;
 
     // set constructor data
-    semaphore_->name = NULL;
 
     // set private data
     semaphore_->semaphore_handle = INVALID_HANDLE_VALUE;
@@ -118,9 +116,6 @@ void semaphore_free(Semaphore* semaphore) {
     }
 
     // free constructor data
-    if (semaphore_->name != NULL) {
-        string_free(semaphore_->name);
-    }
 
     // free self
     heap_free(semaphore_);
@@ -143,14 +138,15 @@ Semaphore* semaphore_new_named(char* name, int value){
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
 
     // set constructor data
-    semaphore_->name = string_new_printf("%s_sm", name);
 
     // set private data
+    String* semaphore_name = string_new_printf("%s_sm", name);
     semaphore_->semaphore_handle = CreateSemaphoreA(
             NULL,
             value,
             UINT_16_MAX,
-            semaphore_->name->vtable->value(semaphore_->name));
+            semaphore_name->vtable->value(semaphore_name));
+    string_free(semaphore_name);
 
     return (Semaphore*)semaphore_;
 }

@@ -10,7 +10,6 @@ struct ReentrantLock_ {
     ReentrantLock self;
 
     // constructor data
-    String* name;
 
     // private data
     HANDLE mutex_handle;
@@ -68,7 +67,6 @@ ReentrantLock* reentrantlock_new() {
     reentrantlock_->self.vtable = reentrantlock_vtable;
 
     // set constructor data
-    reentrantlock_->name = NULL;
 
     // set private data
     reentrantlock_->mutex_handle = INVALID_HANDLE_VALUE;
@@ -84,9 +82,6 @@ void reentrantlock_free(ReentrantLock* reentrantlock) {
     }
 
     // free constructor data
-    if (reentrantlock_->name != NULL) {
-        string_free(reentrantlock_->name);
-    }
 
     // free self
     heap_free(reentrantlock_);
@@ -108,13 +103,14 @@ ReentrantLock* reentrantlock_new_named(char* name){
     struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*)reentrantlock_new();
 
     // set constructor data
-    reentrantlock_->name = string_new_printf("%s_rl", name);
 
     // set private data
+    String* reentrantlock_name = string_new_printf("%s_rl", name);
     reentrantlock_->mutex_handle = CreateMutexA(
             NULL,
             FALSE,
-            reentrantlock_->name->vtable->value(reentrantlock_->name));
+            reentrantlock_name->vtable->value(reentrantlock_name));
+    string_free(reentrantlock_name);
 
     return (ReentrantLock*)reentrantlock_;
 }

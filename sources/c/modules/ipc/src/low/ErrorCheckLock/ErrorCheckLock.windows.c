@@ -10,7 +10,6 @@ struct ErrorCheckLock_ {
     ErrorCheckLock self;
 
     // constructor data
-    String* name;
 
     // private data
     HANDLE semaphore_handle;
@@ -68,7 +67,6 @@ ErrorCheckLock* errorchecklock_new() {
     errorchecklock_->self.vtable = errorchecklock_vtable;
 
     // set constructor data
-    errorchecklock_->name = NULL;
 
     // set private data
     errorchecklock_->semaphore_handle = INVALID_HANDLE_VALUE;
@@ -84,9 +82,6 @@ void errorchecklock_free(ErrorCheckLock* errorchecklock) {
     }
 
     // free constructor data
-    if (errorchecklock_->name != NULL) {
-        string_free(errorchecklock_->name);
-    }
 
     // free self
     heap_free(errorchecklock_);
@@ -109,14 +104,16 @@ ErrorCheckLock* errorchecklock_new_named(char* name){
     struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)errorchecklock_new();
 
     // set constructor data
-    errorchecklock_->name = string_new_printf("%s_el", name);
+
 
     // set private data
+    String* errorchecklock_name = string_new_printf("%s_el", name);
     errorchecklock_->semaphore_handle = CreateSemaphoreA(
             NULL,
             1,
             1,
-            errorchecklock_->name->vtable->value(errorchecklock_->name));
+            errorchecklock_name->vtable->value(errorchecklock_name));
+    string_free(errorchecklock_name);
 
     return (ErrorCheckLock*)errorchecklock_;
 }
