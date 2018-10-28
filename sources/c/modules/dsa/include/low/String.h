@@ -22,8 +22,8 @@ struct String_VTable {
     void (*reverse)(String* self);
     void (*copy)(String* self, char* data);
     void (*concat)(String* self, char* data);
-    void (*cut)(String* self, int begin, int end);
-    void (*replace)(String* self, int begin, int end, char* replace);
+    void (*cut)(String* self, int begin, int length);
+    void (*replace)(String* self, int begin, int length, char* replace);
 
     // information operators
     tsize (*length)(String* self);
@@ -47,8 +47,8 @@ String* string_new_upper(char* value);
 String* string_new_reverse(char* value);
 String* string_new_copy(char* value);
 String* string_new_concat(char* value, char* data);
-String* string_new_cut(char* value, int begin, int end);
-String* string_new_replace(char* value, int begin, int end, char* replace);
+String* string_new_cut(char* value, int begin, int length);
+String* string_new_replace(char* value, int begin, int length, char* replace);
 
 // local string methods
 tsize string_get_length(char* value);

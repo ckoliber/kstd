@@ -57,12 +57,12 @@ int reentrantlock_unlock(ReentrantLock* self) {
 // object allocation and deallocation operators
 void reentrantlock_init() {
     // init vtable
-    reentrantlock_vtable = (ReentrantLock_VTable*) heap_alloc(sizeof(ReentrantLock_VTable));
+    reentrantlock_vtable = heap_alloc(sizeof(ReentrantLock_VTable));
     reentrantlock_vtable->lock = reentrantlock_lock;
     reentrantlock_vtable->unlock = reentrantlock_unlock;
 }
 ReentrantLock* reentrantlock_new() {
-    struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*) heap_alloc(sizeof(struct ReentrantLock_));
+    struct ReentrantLock_* reentrantlock_ = heap_alloc(sizeof(struct ReentrantLock_));
 
     // set vtable
     reentrantlock_->self.vtable = reentrantlock_vtable;
@@ -89,29 +89,32 @@ void reentrantlock_free(ReentrantLock* reentrantlock) {
     }
 
     // free self
-    heap_free((uint_8*) reentrantlock_);
+    heap_free(reentrantlock_);
 }
-ReentrantLock* reentrantlock_new_object(char* name) {
+ReentrantLock* reentrantlock_new_anonymous(){
     struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*)reentrantlock_new();
 
     // set constructor data
-    if (name != NULL) {
-        reentrantlock_->name = string_new_printf("%s_rl", name);
-    }
 
     // set private data
-    if(name != NULL){
-        reentrantlock_->mutex_handle = CreateMutexA(
-                NULL,
-                FALSE,
-                reentrantlock_->name->vtable->value(reentrantlock_->name));
-    }else{
-        reentrantlock_->mutex_handle = CreateMutexA(
-                NULL,
-                FALSE,
-                NULL);
-    }
+    reentrantlock_->mutex_handle = CreateMutexA(
+            NULL,
+            FALSE,
+            NULL);
 
+    return (ReentrantLock*)reentrantlock_;
+}
+ReentrantLock* reentrantlock_new_named(char* name){
+    struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*)reentrantlock_new();
+
+    // set constructor data
+    reentrantlock_->name = string_new_printf("%s_rl", name);
+
+    // set private data
+    reentrantlock_->mutex_handle = CreateMutexA(
+            NULL,
+            FALSE,
+            reentrantlock_->name->vtable->value(reentrantlock_->name));
 
     return (ReentrantLock*)reentrantlock_;
 }

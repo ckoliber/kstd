@@ -12,7 +12,7 @@ struct Process {
 
 // vtable
 struct Process_VTable {
-    int (*start)(Process* self, int (*function)(uint_8*), uint_8* arg);
+    int (*start)(Process* self, int (*function)(void*), void* arg);
     int (*join)(Process* self);
     uint_64 (*id)(Process* self);
     int (*stop)(Process* self);

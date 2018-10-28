@@ -5,32 +5,32 @@
 #include <memory.h>
 #include <stdlib.h>
 
-uint_8* heap_alloc(tsize size) {
-    uint_8* result = NULL;
+void* heap_alloc(tsize size) {
+    void* result = NULL;
     while (result == NULL) {
         result = malloc(size);
     }
     return result;
 }
-uint_8* heap_realloc(uint_8* address, tsize size) {
-    uint_8* result = NULL;
+void* heap_realloc(void* address, tsize size) {
+    void* result = NULL;
     while (result == NULL) {
         result = realloc(address, size);
     }
     return result;
 }
-void heap_free(uint_8* address) {
+void heap_free(void* address) {
     if (address != NULL) {
         free(address);
     }
 }
-void heap_copy(uint_8* address, uint_8* source, tsize size) {
+void heap_copy(void* address, void* source, tsize size) {
     memcpy(address, source, size);
 }
-void heap_move(uint_8* address, uint_8* source, tsize size) {
+void heap_move(void* address, void* source, tsize size) {
     memmove(address, source, size);
 }
-void heap_set(uint_8* address, uint_8 source, tsize size) {
+void heap_set(void* address, int source, tsize size) {
     memset(address, source, size);
 }
 

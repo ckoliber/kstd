@@ -16,15 +16,15 @@ struct Thread_ {
 };
 
 struct Thread_Arg{
-    int (*function)(uint_8* arg);
-    uint_8* arg;
+    int (*function)(void* arg);
+    void* arg;
 };
 
 // vtable
 Thread_VTable* thread_vtable;
 
 // link methods
-int thread_start(Thread* self, int (*function)(uint_8*), uint_8* arg);
+int thread_start(Thread* self, int (*function)(void*), void* arg);
 int thread_join(Thread* self);
 uint_64 thread_id(Thread* self);
 int thread_stop(Thread* self);
@@ -38,17 +38,17 @@ DWORD WINAPI thread_function(LPVOID arg){
 
     DWORD result = (DWORD) thread_arg->function(thread_arg->arg);
 
-    heap_free((uint_8*) thread_arg);
+    heap_free(thread_arg);
 
     return result;
 }
 
 // vtable operators
-int thread_start(Thread* self, int (*function)(uint_8*), uint_8* arg) {
+int thread_start(Thread* self, int (*function)(void*), void* arg) {
     struct Thread_* thread_ = (struct Thread_*)self;
 
     // create thread arg
-    struct Thread_Arg* thread_arg = (struct Thread_Arg*) heap_alloc(sizeof(struct Thread_Arg));
+    struct Thread_Arg* thread_arg = heap_alloc(sizeof(struct Thread_Arg));
     thread_arg->function = function;
     thread_arg->arg = arg;
 
@@ -106,14 +106,14 @@ int thread_stop(Thread* self) {
 // object allocation and deallocation operators
 void thread_init() {
     // init vtable
-    thread_vtable = (Thread_VTable*) heap_alloc(sizeof(Thread_VTable));
+    thread_vtable = heap_alloc(sizeof(Thread_VTable));
     thread_vtable->start = thread_start;
     thread_vtable->join = thread_join;
     thread_vtable->id = thread_id;
     thread_vtable->stop = thread_stop;
 }
 Thread* thread_new() {
-    struct Thread_* thread_ = (struct Thread_*) heap_alloc(sizeof(struct Thread_));
+    struct Thread_* thread_ = heap_alloc(sizeof(struct Thread_));
 
     // set vtable
     thread_->self.vtable = thread_vtable;
@@ -135,7 +135,7 @@ void thread_free(Thread* thread) {
     }
 
     // free self
-    heap_free((uint_8*) thread_);
+    heap_free(thread_);
 }
 Thread* thread_new_object(tsize stack) {
     struct Thread_* thread_ = (struct Thread_*)thread_new();

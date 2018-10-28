@@ -50,7 +50,7 @@ int readwritelock_read_lock(ReadWriteLock* self, uint_64 timeout) {
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)self;
 
     // get readers count address
-    int* readers = (int*) readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
+    int* readers = readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
 
     // lock the write mutex
     int result = -1;
@@ -95,7 +95,7 @@ int readwritelock_read_unlock(ReadWriteLock* self) {
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)self;
 
     // get readers count address
-    int* readers = (int*) readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
+    int* readers = readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
 
     // unlock the write mutex
     int result = -1;
@@ -145,14 +145,14 @@ int readwritelock_write_unlock(ReadWriteLock* self) {
 // object allocation and deallocation operators
 void readwritelock_init() {
     // init vtable
-    readwritelock_vtable = (ReadWriteLock_VTable*) heap_alloc(sizeof(ReadWriteLock_VTable));
+    readwritelock_vtable = heap_alloc(sizeof(ReadWriteLock_VTable));
     readwritelock_vtable->read_lock = readwritelock_read_lock;
     readwritelock_vtable->read_unlock = readwritelock_read_unlock;
     readwritelock_vtable->write_lock = readwritelock_write_lock;
     readwritelock_vtable->write_unlock = readwritelock_write_unlock;
 }
 ReadWriteLock* readwritelock_new() {
-    struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*) heap_alloc(sizeof(struct ReadWriteLock_));
+    struct ReadWriteLock_* readwritelock_ = heap_alloc(sizeof(struct ReadWriteLock_));
 
     // set vtable
     readwritelock_->self.vtable = readwritelock_vtable;
@@ -183,66 +183,72 @@ void readwritelock_free(ReadWriteLock* readwritelock) {
     // free constructor data
 
     // free self
-    heap_free((uint_8*) readwritelock_);
+    heap_free(readwritelock_);
 }
-ReadWriteLock* readwritelock_new_object(char* name) {
+ReadWriteLock* readwritelock_new_anonymous(){
     struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)readwritelock_new();
 
     // set constructor data
 
     // set private data
-    if (name != NULL) {
-        // try lock critical
-        if (critical != NULL) {
-            critical->vtable->lock(critical, UINT_64_MAX);
-        }
+    // open critical mutexlock
+    readwritelock_->critical_lock = mutexlock_new_anonymous();
 
-        // open share critical mutexlock
-        String* readwritelock_critical_name = string_new_printf("%s_rwl_c", name);
-        readwritelock_->critical_lock = mutexlock_new_object(readwritelock_critical_name->vtable->value(readwritelock_critical_name));
-        string_free(readwritelock_critical_name);
+    // open write mutexlock
+    readwritelock_->write_lock = mutexlock_new_anonymous();
 
-        // open share write mutexlock
-        String* readwritelock_write_name = string_new_printf("%s_rwl_w", name);
-        readwritelock_->write_lock = mutexlock_new_object(readwritelock_write_name->vtable->value(readwritelock_write_name));
-        string_free(readwritelock_write_name);
+    // open readers share
+    readwritelock_->readers_share = share_new_anonymous(sizeof(int), 0);
 
-        // open share readers share
-        String* readwritelock_readers_name = string_new_printf("%s_rwl_r", name);
-        readwritelock_->readers_share = share_new_object(readwritelock_readers_name->vtable->value(readwritelock_readers_name), sizeof(int), 0);
-        string_free(readwritelock_readers_name);
+    // if connections is 1, init share
+    if(readwritelock_->readers_share->vtable->connections(readwritelock_->readers_share) <= 1){
+        // get readers count address
+        int* readers = readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
 
-        // if share connections is 1, init share
-        if(readwritelock_->readers_share->vtable->connections(readwritelock_->readers_share) <= 1){
-            // get readers count address
-            int* readers = (int*) readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
+        // init readers
+        (*readers) = 0;
+    }
 
-            // init readers
-            (*readers) = 0;
-        }
+    return (ReadWriteLock*)readwritelock_;
+}
+ReadWriteLock* readwritelock_new_named(char* name){
+    struct ReadWriteLock_* readwritelock_ = (struct ReadWriteLock_*)readwritelock_new();
 
-        // try unlock critical
-        if (critical != NULL) {
-            critical->vtable->unlock(critical);
-        }
-    } else {
-        // open critical mutexlock
-        readwritelock_->critical_lock = mutexlock_new_object(NULL);
+    // set constructor data
 
-        // open write mutexlock
-        readwritelock_->write_lock = mutexlock_new_object(NULL);
+    // set private data
+    // try lock critical
+    if (critical != NULL) {
+        critical->vtable->lock(critical, UINT_64_MAX);
+    }
 
-        // open readers share
-        readwritelock_->readers_share = share_new_object(NULL, sizeof(int), 0);
+    // open share critical mutexlock
+    String* readwritelock_critical_name = string_new_printf("%s_rwl_c", name);
+    readwritelock_->critical_lock = mutexlock_new_named(readwritelock_critical_name->vtable->value(readwritelock_critical_name));
+    string_free(readwritelock_critical_name);
 
-        // if connections is 1, init share
-        if(readwritelock_->readers_share->vtable->connections(readwritelock_->readers_share) <= 1){
-            // get readers count address
-            int* readers = (int*) readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
+    // open share write mutexlock
+    String* readwritelock_write_name = string_new_printf("%s_rwl_w", name);
+    readwritelock_->write_lock = mutexlock_new_named(readwritelock_write_name->vtable->value(readwritelock_write_name));
+    string_free(readwritelock_write_name);
 
-            // init readers
-            (*readers) = 0;
-        }
+    // open share readers share
+    String* readwritelock_readers_name = string_new_printf("%s_rwl_r", name);
+    readwritelock_->readers_share = share_new_named(readwritelock_readers_name->vtable->value(readwritelock_readers_name), sizeof(int), 0);
+    string_free(readwritelock_readers_name);
+
+    // if share connections is 1, init share
+    if(readwritelock_->readers_share->vtable->connections(readwritelock_->readers_share) <= 1){
+        // get readers count address
+        int* readers = readwritelock_->readers_share->vtable->address(readwritelock_->readers_share);
+
+        // init readers
+        (*readers) = 0;
+    }
+
+    // try unlock critical
+    if (critical != NULL) {
+        critical->vtable->unlock(critical);
     }
 
     return (ReadWriteLock*)readwritelock_;

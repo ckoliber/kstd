@@ -11,8 +11,8 @@
 #define sleep(x) sleep(x)
 #endif
 
-int function(uint_8* arg){
-    ReentrantLock* lock = (ReentrantLock *) arg;
+int function(void* arg){
+    ReentrantLock* lock = arg;
 
     assert(lock->vtable->lock(lock, 500) == -1);
 
@@ -27,7 +27,7 @@ void test_reentrantlock_lock();
 void test_reentrantlock_unlock();
 
 void test_reentrantlock_lock(){
-    ReentrantLock* lock = reentrantlock_new_object(NULL);
+    ReentrantLock* lock = reentrantlock_new_anonymous();
 
     assert(lock->vtable->lock(lock, 0) == 0);
 
@@ -35,7 +35,7 @@ void test_reentrantlock_lock(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) lock);
+    t->vtable->start(t, function, lock);
 
     sleep(1);
 
@@ -50,13 +50,13 @@ void test_reentrantlock_lock(){
     reentrantlock_free(lock);
 }
 void test_reentrantlock_unlock(){
-    ReentrantLock* lock = reentrantlock_new_object(NULL);
+    ReentrantLock* lock = reentrantlock_new_anonymous();
 
     lock->vtable->lock(lock, 0);
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) lock);
+    t->vtable->start(t, function, lock);
 
     sleep(1);
 

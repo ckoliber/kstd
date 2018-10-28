@@ -12,12 +12,12 @@ struct ArrayList {
 
 // vtable
 struct ArrayList_VTable {
-    int (*add)(ArrayList* self, uint_8* item);
-    int (*addto)(ArrayList* self, int position, uint_8* item);
-    uint_8* (*put)(ArrayList* self, int position, uint_8* item);
-    uint_8* (*remove)(ArrayList* self, int position);
-    uint_8* (*get)(ArrayList* self, int position);
-    int (*indexof)(ArrayList* self, uint_8* item);
+    int (*add)(ArrayList* self, void* item);
+    int (*addto)(ArrayList* self, int position, void* item);
+    void* (*put)(ArrayList* self, int position, void* item);
+    void* (*remove)(ArrayList* self, int position);
+    void* (*get)(ArrayList* self, int position);
+    int (*indexof)(ArrayList* self, void* item);
     int (*size)(ArrayList* self);
 };
 
@@ -31,4 +31,4 @@ ArrayList* arraylist_new(int mode);
 void arraylist_free(ArrayList* arraylist);
 
 // new arraylist
-ArrayList* arraylist_new_object(int mode, float factor, int (*comperator)(uint_8*, uint_8*));
+ArrayList* arraylist_new_object(int mode, float factor, int (*comperator)(void*, void*));

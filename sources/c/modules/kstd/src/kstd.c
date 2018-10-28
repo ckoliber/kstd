@@ -83,10 +83,10 @@ void kstd_init() {
     modules_init();
 
     critical = NULL;
-    critical = reentrantlock_new_object("critical");
+    critical = reentrantlock_new_named("critical");
 }
 
 void kstd_init_child(){
     critical = NULL;
-    critical = reentrantlock_new_object("critical");
+    critical = reentrantlock_new_named("critical");
 }

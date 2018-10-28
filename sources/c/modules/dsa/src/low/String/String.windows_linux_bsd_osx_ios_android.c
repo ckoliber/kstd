@@ -33,8 +33,8 @@ void string_upper(String* self);
 void string_reverse(String* self);
 void string_copy(String* self, char* data);
 void string_concat(String* self, char* data);
-void string_cut(String* self, int begin, int end);
-void string_replace(String* self, int begin, int end, char* replace);
+void string_cut(String* self, int begin, int length);
+void string_replace(String* self, int begin, int length, char* replace);
 
 // information operators
 tsize string_length(String* self);
@@ -101,28 +101,28 @@ void string_copy(String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // copy data to string
-    string_->string = (char*)heap_realloc((uint_8*)string_->string, string_get_length(data) + 1);
+    string_->string = heap_realloc(string_->string, string_get_length(data) + 1);
     strcpy(string_->string, data);
 }
 void string_concat(String* self, char* data) {
     struct String_* string_ = (struct String_*)self;
 
     // concatenate data to string
-    string_->string = (char*)heap_realloc((uint_8*)string_->string, string_get_length(string_->string) + string_get_length(data) + 1);
+    string_->string = heap_realloc(string_->string, string_get_length(string_->string) + string_get_length(data) + 1);
     strcat(string_->string, data);
 }
 void string_cut(String* self, int begin, int length) {
     struct String_* string_ = (struct String_*)self;
 
     // create new string
-    char* cut_string = (char*)heap_alloc((tsize)((length + 1) * sizeof(char)));
+    char* cut_string = heap_alloc((length + 1) * sizeof(char));
 
     // cut data from string
     for (int cursor = begin; cursor < begin + length; cursor++) {
         cut_string[cursor - begin] = string_->string[cursor];
     }
     cut_string[length] = '\0';
-    heap_free((uint_8*)string_->string);
+    heap_free(string_->string);
     string_->string = cut_string;
 }
 void string_replace(String* self, int begin, int length, char* replace) {
@@ -173,7 +173,7 @@ char* string_value(String* self) {
 // object allocation and deallocation operators
 void string_init() {
     // init vtable
-    string_vtable = (String_VTable*)heap_alloc(sizeof(String_VTable));
+    string_vtable = heap_alloc(sizeof(String_VTable));
     string_vtable->to_long = string_to_long;
     string_vtable->to_double = string_to_double;
 
@@ -190,7 +190,7 @@ void string_init() {
     string_vtable->value = string_value;
 }
 String* string_new() {
-    struct String_* string_ = (struct String_*)heap_alloc(sizeof(struct String_));
+    struct String_* string_ = heap_alloc(sizeof(struct String_));
 
     // set vtable
     string_->self.vtable = string_vtable;
@@ -207,11 +207,11 @@ void string_free(String* string) {
 
     // free private data
     if (string_->string != NULL) {
-        heap_free((uint_8*)string_->string);
+        heap_free(string_->string);
     }
 
     // free self
-    heap_free((uint_8*)string_);
+    heap_free(string_);
 }
 String* string_new_printf(char* format, ...) {
     struct String_* string_ = (struct String_*)string_new();
@@ -222,7 +222,7 @@ String* string_new_printf(char* format, ...) {
     va_list args, args2;
     va_start(args, format);
     va_copy(args2, args);
-    string_->string = (char*)heap_alloc((tsize)((vsnprintf(NULL, 0, format, args) + 1) * sizeof(char)));
+    string_->string = heap_alloc((vsnprintf(NULL, 0, format, args) + 1) * sizeof(char));
     vsprintf(string_->string, format, args2);
     va_end(args);
     va_end(args2);

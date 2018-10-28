@@ -57,12 +57,12 @@ int mutexlock_unlock(MutexLock* self) {
 // object allocation and deallocation operators
 void mutexlock_init() {
     // init vtable
-    mutexlock_vtable = (MutexLock_VTable*)heap_alloc(sizeof(MutexLock_VTable));
+    mutexlock_vtable = heap_alloc(sizeof(MutexLock_VTable));
     mutexlock_vtable->lock = mutexlock_lock;
     mutexlock_vtable->unlock = mutexlock_unlock;
 }
 MutexLock* mutexlock_new() {
-    struct MutexLock_* mutexlock_ = (struct MutexLock_*)heap_alloc(sizeof(struct MutexLock_));
+    struct MutexLock_* mutexlock_ = heap_alloc(sizeof(struct MutexLock_));
 
     // set vtable
     mutexlock_->self.vtable = mutexlock_vtable;
@@ -89,30 +89,34 @@ void mutexlock_free(MutexLock* mutexlock) {
     }
 
     // free self
-    heap_free((uint_8*)mutexlock_);
+    heap_free(mutexlock_);
 }
-MutexLock* mutexlock_new_object(char* name) {
+MutexLock* mutexlock_new_anonymous(){
     struct MutexLock_* mutexlock_ = (struct MutexLock_*)mutexlock_new();
 
     // set constructor data
-    if (name != NULL) {
-        mutexlock_->name = string_new_printf("%s_ml", name);
-    }
 
     // set private data
-    if(name != NULL){
-        mutexlock_->semaphore_handle = CreateSemaphoreA(
-                NULL,
-                1,
-                1,
-                mutexlock_->name->vtable->value(mutexlock_->name));
-    }else{
-        mutexlock_->semaphore_handle = CreateSemaphoreA(
-                NULL,
-                1,
-                1,
-                NULL);
-    }
+    mutexlock_->semaphore_handle = CreateSemaphoreA(
+            NULL,
+            1,
+            1,
+            NULL);
+
+    return (MutexLock*)mutexlock_;
+}
+MutexLock* mutexlock_new_named(char* name){
+    struct MutexLock_* mutexlock_ = (struct MutexLock_*)mutexlock_new();
+
+    // set constructor data
+    mutexlock_->name = string_new_printf("%s_ml", name);
+
+    // set private data
+    mutexlock_->semaphore_handle = CreateSemaphoreA(
+            NULL,
+            1,
+            1,
+            mutexlock_->name->vtable->value(mutexlock_->name));
 
     return (MutexLock*)mutexlock_;
 }

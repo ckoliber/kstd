@@ -11,8 +11,8 @@
 #define sleep(x) sleep(x)
 #endif
 
-int function(uint_8* arg){
-    Semaphore* semaphore = (Semaphore *) arg;
+int function(void* arg){
+    Semaphore* semaphore = arg;
 
     assert(semaphore->vtable->wait(semaphore, 500) == -1);
 
@@ -26,11 +26,11 @@ void test_semaphore_post();
 void test_semaphore_get();
 
 void test_semaphore_wait(){
-    Semaphore* semaphore = semaphore_new_object(NULL, 0);
+    Semaphore* semaphore = semaphore_new_anonymous(0);
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) semaphore);
+    t->vtable->start(t, function, semaphore);
 
     sleep(1);
 
@@ -43,11 +43,11 @@ void test_semaphore_wait(){
     semaphore_free(semaphore);
 }
 void test_semaphore_post(){
-    Semaphore* semaphore = semaphore_new_object(NULL, 0);
+    Semaphore* semaphore = semaphore_new_anonymous(0);
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) semaphore);
+    t->vtable->start(t, function, semaphore);
 
     sleep(1);
 
@@ -60,11 +60,11 @@ void test_semaphore_post(){
     semaphore_free(semaphore);
 }
 void test_semaphore_get(){
-    Semaphore* semaphore = semaphore_new_object(NULL, 0);
+    Semaphore* semaphore = semaphore_new_anonymous(0);
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) semaphore);
+    t->vtable->start(t, function, semaphore);
 
     sleep(1);
 

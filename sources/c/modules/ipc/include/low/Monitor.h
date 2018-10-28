@@ -27,4 +27,5 @@ Monitor* monitor_new();
 void monitor_free(Monitor* monitor);
 
 // new monitor
-Monitor* monitor_new_object(char* name);
+Monitor* monitor_new_anonymous();
+Monitor* monitor_new_named(char* name);

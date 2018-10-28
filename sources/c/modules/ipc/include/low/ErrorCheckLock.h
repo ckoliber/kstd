@@ -26,4 +26,5 @@ ErrorCheckLock* errorchecklock_new();
 void errorchecklock_free(ErrorCheckLock* errorchecklock);
 
 // new errorcheck lock
-ErrorCheckLock* errorchecklock_new_object(char* name);
+ErrorCheckLock* errorchecklock_new_anonymous();
+ErrorCheckLock* errorchecklock_new_named(char* name);

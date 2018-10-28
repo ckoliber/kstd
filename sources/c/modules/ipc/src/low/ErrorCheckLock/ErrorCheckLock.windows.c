@@ -57,12 +57,12 @@ int errorchecklock_unlock(ErrorCheckLock* self) {
 // object allocation and deallocation operators
 void errorchecklock_init() {
     // init vtable
-    errorchecklock_vtable = (ErrorCheckLock_VTable*)heap_alloc(sizeof(ErrorCheckLock_VTable));
+    errorchecklock_vtable = heap_alloc(sizeof(ErrorCheckLock_VTable));
     errorchecklock_vtable->lock = errorchecklock_lock;
     errorchecklock_vtable->unlock = errorchecklock_unlock;
 }
 ErrorCheckLock* errorchecklock_new() {
-    struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)heap_alloc(sizeof(struct ErrorCheckLock_));
+    struct ErrorCheckLock_* errorchecklock_ = heap_alloc(sizeof(struct ErrorCheckLock_));
 
     // set vtable
     errorchecklock_->self.vtable = errorchecklock_vtable;
@@ -89,30 +89,34 @@ void errorchecklock_free(ErrorCheckLock* errorchecklock) {
     }
 
     // free self
-    heap_free((uint_8*)errorchecklock_);
+    heap_free(errorchecklock_);
 }
-ErrorCheckLock* errorchecklock_new_object(char* name) {
+ErrorCheckLock* errorchecklock_new_anonymous(){
     struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)errorchecklock_new();
 
     // set constructor data
-    if (name != NULL) {
-        errorchecklock_->name = string_new_printf("%s_el", name);
-    }
 
     // set private data
-    if(name != NULL){
-        errorchecklock_->semaphore_handle = CreateSemaphoreA(
-                NULL,
-                1,
-                1,
-                errorchecklock_->name->vtable->value(errorchecklock_->name));
-    }else{
-        errorchecklock_->semaphore_handle = CreateSemaphoreA(
-                NULL,
-                1,
-                1,
-                NULL);
-    }
+    errorchecklock_->semaphore_handle = CreateSemaphoreA(
+            NULL,
+            1,
+            1,
+            NULL);
+
+    return (ErrorCheckLock*)errorchecklock_;
+}
+ErrorCheckLock* errorchecklock_new_named(char* name){
+    struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)errorchecklock_new();
+
+    // set constructor data
+    errorchecklock_->name = string_new_printf("%s_el", name);
+
+    // set private data
+    errorchecklock_->semaphore_handle = CreateSemaphoreA(
+            NULL,
+            1,
+            1,
+            errorchecklock_->name->vtable->value(errorchecklock_->name));
 
     return (ErrorCheckLock*)errorchecklock_;
 }

@@ -90,13 +90,13 @@ int semaphore_get(Semaphore* self) {
 // object allocation and deallocation operators
 void semaphore_init() {
     // init vtable
-    semaphore_vtable = (Semaphore_VTable*)heap_alloc(sizeof(Semaphore_VTable));
+    semaphore_vtable = heap_alloc(sizeof(Semaphore_VTable));
     semaphore_vtable->wait = semaphore_wait;
     semaphore_vtable->post = semaphore_post;
     semaphore_vtable->get = semaphore_get;
 }
 Semaphore* semaphore_new() {
-    struct Semaphore_* semaphore_ = (struct Semaphore_*)heap_alloc(sizeof(struct Semaphore_));
+    struct Semaphore_* semaphore_ = heap_alloc(sizeof(struct Semaphore_));
 
     // set vtable
     semaphore_->self.vtable = semaphore_vtable;
@@ -123,30 +123,34 @@ void semaphore_free(Semaphore* semaphore) {
     }
 
     // free self
-    heap_free((uint_8*)semaphore_);
+    heap_free(semaphore_);
 }
-Semaphore* semaphore_new_object(char* name, int value) {
+Semaphore* semaphore_new_anonymous(int value){
     struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
 
     // set constructor data
-    if (name != NULL) {
-        semaphore_->name = string_new_printf("%s_sm", name);
-    }
 
     // set private data
-    if(name != NULL){
-        semaphore_->semaphore_handle = CreateSemaphoreA(
-                NULL,
-                value,
-                UINT_16_MAX,
-                semaphore_->name->vtable->value(semaphore_->name));
-    }else{
-        semaphore_->semaphore_handle = CreateSemaphoreA(
-                NULL,
-                value,
-                UINT_16_MAX,
-                NULL);
-    }
+    semaphore_->semaphore_handle = CreateSemaphoreA(
+            NULL,
+            value,
+            UINT_16_MAX,
+            NULL);
+
+    return (Semaphore*)semaphore_;
+}
+Semaphore* semaphore_new_named(char* name, int value){
+    struct Semaphore_* semaphore_ = (struct Semaphore_*)semaphore_new();
+
+    // set constructor data
+    semaphore_->name = string_new_printf("%s_sm", name);
+
+    // set private data
+    semaphore_->semaphore_handle = CreateSemaphoreA(
+            NULL,
+            value,
+            UINT_16_MAX,
+            semaphore_->name->vtable->value(semaphore_->name));
 
     return (Semaphore*)semaphore_;
 }

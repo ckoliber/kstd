@@ -28,4 +28,5 @@ ReadWriteLock* readwritelock_new();
 void readwritelock_free(ReadWriteLock* readwritelock);
 
 // new readwrite
-ReadWriteLock* readwritelock_new_object(char* name);
+ReadWriteLock* readwritelock_new_anonymous();
+ReadWriteLock* readwritelock_new_named(char* name);

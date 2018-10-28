@@ -6,12 +6,12 @@
 #include <assert.h>
 
 struct Message{
-    void (*function)(uint_8*);
+    void (*function)(void*);
     int arg;
 };
 
-void test_function(uint_8* arg) {
-    struct Message* message = (struct Message*) arg;
+void test_function(void* arg) {
+    struct Message* message = arg;
 
     assert(message->arg == 4);
 }
@@ -39,7 +39,7 @@ void test_processpool_post() {
                 test_function,
                 4
         };
-        assert(processpool->vtable->post(processpool, (uint_8*) &message) == 0);
+        assert(processpool->vtable->post(processpool, &message) == 0);
     }
 
     processpool->vtable->stop(processpool);

@@ -12,7 +12,7 @@ struct Share {
 
 // vtable
 struct Share_VTable {
-    uint_8* (*address)(Share* self);
+    void* (*address)(Share* self);
     int (*connections)(Share* self);
     int (*flush)(Share* self, tsize size);
 };
@@ -27,4 +27,5 @@ Share* share_new();
 void share_free(Share* share);
 
 // new share
-Share* share_new_object(char* name, tsize size, tsize offset);
+Share* share_new_anonymous(tsize size, tsize offset);
+Share* share_new_named(char* name, tsize size, tsize offset);

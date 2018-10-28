@@ -27,4 +27,5 @@ Semaphore* semaphore_new();
 void semaphore_free(Semaphore* semaphore);
 
 // new semaphore
-Semaphore* semaphore_new_object(char* name, int value);
+Semaphore* semaphore_new_anonymous(int value);
+Semaphore* semaphore_new_named(char* name, int value);

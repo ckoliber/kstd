@@ -18,7 +18,7 @@ struct ThreadPool_ {
 };
 
 struct ThreadPool_Message {
-    void (*function)(uint_8* item);
+    void (*function)(void* item);
 };
 
 // vtable
@@ -26,7 +26,7 @@ ThreadPool_VTable* threadpool_vtable;
 
 // link methods
 int threadpool_start(ThreadPool* self);
-int threadpool_post(ThreadPool* self, uint_8* item);
+int threadpool_post(ThreadPool* self, void* item);
 int threadpool_stop(ThreadPool* self);
 
 // local methods
@@ -37,20 +37,17 @@ int threadpool_looper(ThreadPool* self) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // allocate temp for items (function pointer + arg value)
-    uint_8* item = heap_alloc(threadpool_->item);
+    struct ThreadPool_Message* item = heap_alloc(threadpool_->item);
 
     // start looper
     while (threadpool_->message->vtable->dequeue(threadpool_->message, item, UINT_64_MAX) == 0) {
-        // get message casted from item
-        struct ThreadPool_Message* message = (struct ThreadPool_Message*)item;
-
         // check message is termination
-        if(message->function == NULL){
+        if(item->function == NULL){
             break;
         }
 
         // run function with arg
-        message->function(item);
+        item->function(item);
     }
 
     heap_free(item);
@@ -66,14 +63,14 @@ int threadpool_start(ThreadPool* self) {
     int result = 0;
     for (int cursor = 0; cursor < threadpool_->size; cursor++) {
         // start thread
-        if (threadpool_->pool[cursor]->vtable->start(threadpool_->pool[cursor], (int (*)(uint_8*))threadpool_looper, (uint_8*)self) != 0) {
+        if (threadpool_->pool[cursor]->vtable->start(threadpool_->pool[cursor], (int (*)(void*))threadpool_looper, self) != 0) {
             result = -1;
         }
     }
 
     return result;
 }
-int threadpool_post(ThreadPool* self, uint_8* item) {
+int threadpool_post(ThreadPool* self, void* item) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)self;
 
     // post message to queue
@@ -88,7 +85,7 @@ int threadpool_stop(ThreadPool* self) {
     int result = 0;
     struct ThreadPool_Message message = {NULL};
     for (int cursor = 0; cursor < threadpool_->size; cursor++) {
-        threadpool_->message->vtable->enqueue(threadpool_->message, (uint_8*) &message, UINT_64_MAX);
+        threadpool_->message->vtable->enqueue(threadpool_->message, &message, UINT_64_MAX);
     }
 
     // wait for threads to stop
@@ -104,13 +101,13 @@ int threadpool_stop(ThreadPool* self) {
 // object allocation and deallocation operators
 void threadpool_init() {
     // init vtable
-    threadpool_vtable = (ThreadPool_VTable*)heap_alloc(sizeof(ThreadPool_VTable));
+    threadpool_vtable = heap_alloc(sizeof(ThreadPool_VTable));
     threadpool_vtable->start = threadpool_start;
     threadpool_vtable->post = threadpool_post;
     threadpool_vtable->stop = threadpool_stop;
 }
 ThreadPool* threadpool_new() {
-    struct ThreadPool_* threadpool_ = (struct ThreadPool_*)heap_alloc(sizeof(struct ThreadPool_));
+    struct ThreadPool_* threadpool_ = heap_alloc(sizeof(struct ThreadPool_));
 
     // set vtable
     threadpool_->self.vtable = threadpool_vtable;
@@ -135,14 +132,14 @@ void threadpool_free(ThreadPool* threadpool) {
         for (int cursor = 0; cursor < threadpool_->size; cursor++) {
             thread_free(threadpool_->pool[cursor]);
         }
-        heap_free((uint_8*)threadpool_->pool);
+        heap_free(threadpool_->pool);
     }
     if (threadpool_->message != NULL) {
         message_free(threadpool_->message);
     }
 
     // free self
-    heap_free((uint_8*)threadpool_);
+    heap_free(threadpool_);
 }
 ThreadPool* threadpool_new_object(int size, tsize item) {
     struct ThreadPool_* threadpool_ = (struct ThreadPool_*)threadpool_new();
@@ -152,13 +149,13 @@ ThreadPool* threadpool_new_object(int size, tsize item) {
     threadpool_->item = item;
 
     // set private data
-    threadpool_->pool = (Thread**)heap_alloc(sizeof(Thread*) * size);
+    threadpool_->pool = heap_alloc(sizeof(Thread*) * size);
     for (int cursor = 0; cursor < size; cursor++) {
         threadpool_->pool[cursor] = thread_new_object(0);
     }
 
     // create message queue
-    threadpool_->message = message_new_object(NULL, 1024, threadpool_->item);
+    threadpool_->message = message_new_anonymous(1024, threadpool_->item);
 
     return (ThreadPool*)threadpool_;
 }

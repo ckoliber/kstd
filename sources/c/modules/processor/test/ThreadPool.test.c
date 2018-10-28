@@ -6,12 +6,12 @@
 #include <assert.h>
 
 struct Message{
-    void (*function)(uint_8*);
+    void (*function)(void*);
     int arg;
 };
 
-void test_function(uint_8* arg) {
-    struct Message* message = (struct Message*) arg;
+void test_function(void* arg) {
+    struct Message* message = arg;
 
     assert(message->arg == 4);
 }
@@ -41,7 +41,7 @@ void test_threadpool_post() {
                 4
         };
 
-        assert(threadpool->vtable->post(threadpool, (uint_8*) &message) == 0);
+        assert(threadpool->vtable->post(threadpool, &message) == 0);
     }
 
     threadpool->vtable->stop(threadpool);

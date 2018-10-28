@@ -5,23 +5,23 @@
 
 #include <assert.h>
 
-int function_1(uint_8* arg){
-    Message* message = (Message *) arg;
+int function_1(void* arg){
+    Message* message = arg;
 
     for(int a = 0 ; a < 100000 ; a++){
         int x;
-        assert(message->vtable->dequeue(message, (uint_8*) &x, 1000) == 0);
+        assert(message->vtable->dequeue(message, &x, 1000) == 0);
         assert(x == a);
     }
 
     return 0;
 }
-int function_2(uint_8* arg){
-    Message* message = message_new_object("test_message", 1024, sizeof(int));
+int function_2(void* arg){
+    Message* message = message_new_named("test_message", 1024, sizeof(int));
 
     for(int a = 0 ; a < 100000 ; a++){
         int x;
-        assert(message->vtable->dequeue(message, (uint_8*) &x, 1000) == 0);
+        assert(message->vtable->dequeue(message, &x, 1000) == 0);
         assert(x == a);
     }
 
@@ -36,29 +36,29 @@ void test_message_dequeue_process();
 void test_message_size();
 
 void test_message_enqueue(){
-    Message* message = message_new_object(NULL, 1000, sizeof(int));
+    Message* message = message_new_anonymous(1000, sizeof(int));
 
     for(int a = 0 ; a < 500 ; a++){
-        assert(message->vtable->enqueue(message, (uint_8*) &a, 0) == 0);
+        assert(message->vtable->enqueue(message, &a, 0) == 0);
     }
 
     for(int a = 0 ; a < 500 ; a++){
         int x;
-        assert(message->vtable->dequeue(message, (uint_8*) &x, 0) == 0);
+        assert(message->vtable->dequeue(message, &x, 0) == 0);
         assert(x == a);
     }
 
     message_free(message);
 }
 void test_message_dequeue_thread(){
-    Message* message = message_new_object(NULL, 10, sizeof(int));
+    Message* message = message_new_anonymous(10, sizeof(int));
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function_1, (uint_8 *) message);
+    t->vtable->start(t, function_1, message);
 
     for(int a = 0 ; a < 100000 ; a++){
-        assert(message->vtable->enqueue(message, (uint_8*) &a, 1000) == 0);
+        assert(message->vtable->enqueue(message, &a, 1000) == 0);
     }
 
     t->vtable->join(t);
@@ -68,14 +68,14 @@ void test_message_dequeue_thread(){
     message_free(message);
 }
 void test_message_dequeue_process(){
-    Message* message = message_new_object("test_message", 1024, sizeof(int));
+    Message* message = message_new_named("test_message", 1024, sizeof(int));
 
     Process* p = process_new_object();
 
     p->vtable->start(p, function_2, NULL);
 
     for(int a = 0 ; a < 100000 ; a++){
-        assert(message->vtable->enqueue(message, (uint_8*) &a, 1000) == 0);
+        assert(message->vtable->enqueue(message, &a, 1000) == 0);
     }
 
     p->vtable->join(p);
@@ -85,7 +85,7 @@ void test_message_dequeue_process(){
     message_free(message);
 }
 void test_message_size(){
-    Message* message = message_new_object(NULL, 10, sizeof(int));
+    Message* message = message_new_anonymous(10, sizeof(int));
 
     message_free(message);
 }

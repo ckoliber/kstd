@@ -11,8 +11,8 @@
 #define sleep(x) sleep(x)
 #endif
 
-int function(uint_8* arg){
-    ErrorCheckLock* lock = (ErrorCheckLock *) arg;
+int function(void* arg){
+    ErrorCheckLock* lock = arg;
 
     assert(lock->vtable->lock(lock, 500) == -1);
 
@@ -27,7 +27,7 @@ void test_errorchecklock_lock();
 void test_errorchecklock_unlock();
 
 void test_errorchecklock_lock(){
-    ErrorCheckLock* lock = errorchecklock_new_object(NULL);
+    ErrorCheckLock* lock = errorchecklock_new_anonymous();
 
     assert(lock->vtable->lock(lock, 0) == 0);
 
@@ -35,7 +35,7 @@ void test_errorchecklock_lock(){
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) lock);
+    t->vtable->start(t, function, lock);
 
     sleep(1);
 
@@ -48,13 +48,13 @@ void test_errorchecklock_lock(){
     errorchecklock_free(lock);
 }
 void test_errorchecklock_unlock(){
-    ErrorCheckLock* lock = errorchecklock_new_object(NULL);
+    ErrorCheckLock* lock = errorchecklock_new_anonymous();
 
     lock->vtable->lock(lock, 0);
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) lock);
+    t->vtable->start(t, function, lock);
 
     sleep(1);
 

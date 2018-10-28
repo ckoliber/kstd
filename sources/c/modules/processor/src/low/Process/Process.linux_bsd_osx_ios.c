@@ -24,14 +24,14 @@ struct Process_ {
 Process_VTable* process_vtable;
 
 // link methods
-int process_start(Process* self, int (*function)(uint_8*), uint_8* arg);
+int process_start(Process* self, int (*function)(void*), void* arg);
 int process_join(Process* self);
 uint_64 process_id(Process* self);
 int process_stop(Process* self);
 
 // implement methods
 // vtable operators
-int process_start(Process* self, int (*function)(uint_8*), uint_8* arg) {
+int process_start(Process* self, int (*function)(void*), void* arg) {
     struct Process_* process_ = (struct Process_*)self;
 
     // start internal child process
@@ -81,14 +81,14 @@ int process_stop(Process* self) {
 // object allocation and deallocation operators
 void process_init() {
     // init vtable
-    process_vtable = (Process_VTable*) heap_alloc(sizeof(Process_VTable));
+    process_vtable = heap_alloc(sizeof(Process_VTable));
     process_vtable->start = process_start;
     process_vtable->join = process_join;
     process_vtable->id = process_id;
     process_vtable->stop = process_stop;
 }
 Process* process_new() {
-    struct Process_* process_ = (struct Process_*) heap_alloc(sizeof(struct Process_));
+    struct Process_* process_ = heap_alloc(sizeof(struct Process_));
 
     // set vtable
     process_->self.vtable = process_vtable;
@@ -106,7 +106,7 @@ void process_free(Process* process) {
     // free private data
 
     // free self
-    heap_free((uint_8*) process_);
+    heap_free(process_);
 }
 Process* process_new_object() {
     struct Process_* process_ = (struct Process_*)process_new();

@@ -12,7 +12,7 @@ struct Thread {
 
 // vtable
 struct Thread_VTable {
-    int (*start)(Thread* self, int (*function)(uint_8*), uint_8* arg);
+    int (*start)(Thread* self, int (*function)(void*), void* arg);
     int (*join)(Thread* self);
     uint_64 (*id)(Thread* self);
     int (*stop)(Thread* self);

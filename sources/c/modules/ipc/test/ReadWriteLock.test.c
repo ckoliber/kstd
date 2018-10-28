@@ -11,8 +11,8 @@
 #define sleep(x) sleep(x)
 #endif
 
-int function(uint_8* arg) {
-    ReadWriteLock* lock = (ReadWriteLock *) arg;
+int function(void* arg) {
+    ReadWriteLock* lock = arg;
 
     assert(lock->vtable->read_lock(lock, 0) == 0);
 
@@ -30,13 +30,13 @@ int function(uint_8* arg) {
 void test_readwritelock();
 
 void test_readwritelock() {
-    ReadWriteLock* lock = readwritelock_new_object(NULL);
+    ReadWriteLock* lock = readwritelock_new_anonymous();
 
     assert(lock->vtable->read_lock(lock, 0) == 0);
 
     Thread* t = thread_new_object(0);
 
-    t->vtable->start(t, function, (uint_8*) lock);
+    t->vtable->start(t, function, lock);
 
     sleep(1);
 

@@ -16,7 +16,7 @@ struct Share_ {
     tsize offset;
 
     // private data
-    uint_8* memory;
+    void* memory;
     HANDLE memory_handle;
     int connections;
 };
@@ -25,18 +25,18 @@ struct Share_ {
 Share_VTable* share_vtable;
 
 // link methods
-uint_8* share_address(Share* self);
+void* share_address(Share* self);
 int share_connections(Share* self);
 int share_flush(Share* self, tsize size);
 
 // local methods
-uint_8* share_named_new(char* name, HANDLE* memory_handle, tsize size, tsize offset, int* connections);
-void share_named_free(uint_8* memory, HANDLE memory_handle);
-uint_8* share_anonymous_new(tsize size, tsize offset, int* connections);
-void share_anonymous_free(uint_8* memory);
+void* share_named_new(char* name, HANDLE* memory_handle, tsize size, tsize offset, int* connections);
+void share_named_free(void* memory, HANDLE memory_handle);
+void* share_anonymous_new(tsize size, tsize offset, int* connections);
+void share_anonymous_free(void* memory);
 
 // implement methods
-uint_8* share_named_new(char* name, HANDLE* memory_handle, tsize size, tsize offset, int* connections){
+void* share_named_new(char* name, HANDLE* memory_handle, tsize size, tsize offset, int* connections){
     // check share memory exists
     bool exists = false;
     HANDLE exists_handle = OpenFileMappingA(0, FALSE, name);
@@ -54,7 +54,7 @@ uint_8* share_named_new(char* name, HANDLE* memory_handle, tsize size, tsize off
             0,
             size,
             name);
-    uint_8* result = MapViewOfFile(
+    void* result = MapViewOfFile(
             handle,
             FILE_MAP_ALL_ACCESS,
             0,
@@ -78,31 +78,31 @@ uint_8* share_named_new(char* name, HANDLE* memory_handle, tsize size, tsize off
 
     return result;
 }
-void share_named_free(uint_8* memory, HANDLE memory_handle){
+void share_named_free(void* memory, HANDLE memory_handle){
     // unmap share memory
     UnmapViewOfFile(memory);
 
     // close share memory
     CloseHandle(memory_handle);
 }
-uint_8* share_anonymous_new(tsize size, tsize offset, int* connections){
-    uint_8* result = heap_alloc(sizeof(int) + size);
+void* share_anonymous_new(tsize size, tsize offset, int* connections){
+    void* result = heap_alloc(sizeof(int) + size);
 
     // init connections
     *connections = 1;
 
     return result;
 }
-void share_anonymous_free(uint_8* memory){
+void share_anonymous_free(void* memory){
     heap_free(memory);
 }
 
 // vtable operators
-uint_8* share_address(Share* self){
+void* share_address(Share* self){
     struct Share_* share_ = (struct Share_*)self;
 
     // get memory address
-    uint_8* result = share_->memory;
+    void* result = share_->memory;
 
     return result;
 }
@@ -128,13 +128,13 @@ int share_flush(Share* self, tsize size){
 // object allocation and deallocation operators
 void share_init() {
     // init vtable
-    share_vtable = (Share_VTable*) heap_alloc(sizeof(Share_VTable));
+    share_vtable = heap_alloc(sizeof(Share_VTable));
     share_vtable->address = share_address;
     share_vtable->connections = share_connections;
     share_vtable->flush = share_flush;
 }
 Share* share_new() {
-    struct Share_* share_ = (struct Share_*) heap_alloc(sizeof(struct Share_));
+    struct Share_* share_ = heap_alloc(sizeof(struct Share_));
 
     // set vtable
     share_->self.vtable = share_vtable;
@@ -181,35 +181,41 @@ void share_free(Share* share) {
     }
 
     // free self
-    heap_free((uint_8*) share_);
+    heap_free(share_);
 }
-Share* share_new_object(char* name, tsize size, tsize offset) {
+Share* share_new_anonymous(tsize size, tsize offset){
     struct Share_* share_ = (struct Share_*)share_new();
 
     // set constructor data
-    if (name != NULL) {
-        share_->name = string_new_printf("%s_sh", name);
-    }
     share_->size = size;
     share_->offset = offset;
 
     // set private data
-    if (name != NULL) {
-        // try lock critical
-        if (critical != NULL) {
-            critical->vtable->lock(critical, UINT_64_MAX);
-        }
+    // new anonymous memory
+    share_->memory = share_anonymous_new(share_->size, share_->offset, &share_->connections);
 
-        // new named memory
-        share_->memory = share_named_new(share_->name->vtable->value(share_->name), &(share_->memory_handle), share_->size, share_->offset, &share_->connections);
+    return (Share*)share_;
+}
+Share* share_new_named(char* name, tsize size, tsize offset){
+    struct Share_* share_ = (struct Share_*)share_new();
 
-        // try unlock critical
-        if (critical != NULL) {
-            critical->vtable->unlock(critical);
-        }
-    } else {
-        // new anonymous memory
-        share_->memory = share_anonymous_new(share_->size, share_->offset, &share_->connections);
+    // set constructor data
+    share_->name = string_new_printf("%s_sh", name);
+    share_->size = size;
+    share_->offset = offset;
+
+    // set private data
+    // try lock critical
+    if (critical != NULL) {
+        critical->vtable->lock(critical, UINT_64_MAX);
+    }
+
+    // new named memory
+    share_->memory = share_named_new(share_->name->vtable->value(share_->name), &(share_->memory_handle), share_->size, share_->offset, &share_->connections);
+
+    // try unlock critical
+    if (critical != NULL) {
+        critical->vtable->unlock(critical);
     }
 
     return (Share*)share_;

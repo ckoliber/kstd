@@ -12,8 +12,8 @@ struct Message {
 
 // vtable
 struct Message_VTable {
-    int (*enqueue)(Message* self, uint_8* item, uint_64 timeout);
-    int (*dequeue)(Message* self, uint_8* item, uint_64 timeout);
+    int (*enqueue)(Message* self, void* item, uint_64 timeout);
+    int (*dequeue)(Message* self, void* item, uint_64 timeout);
     int (*size)(Message* self, uint_64 timeout);
 };
 
@@ -27,4 +27,5 @@ Message* message_new();
 void message_free(Message* message);
 
 // new message
-Message* message_new_object(char* name, int max, tsize item);
+Message* message_new_anonymous(int max, tsize item);
+Message* message_new_named(char* name, int max, tsize item);

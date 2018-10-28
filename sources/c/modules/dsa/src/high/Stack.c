@@ -17,14 +17,14 @@ struct Stack_ {
 Stack_VTable* stack_vtable;
 
 // link methods
-int stack_push(Stack* self, uint_8* item, uint_64 timeout);
-uint_8* stack_pop(Stack* self, uint_64 timeout);
-uint_8* stack_get(Stack* self);
+int stack_push(Stack* self, void* item, uint_64 timeout);
+void* stack_pop(Stack* self, uint_64 timeout);
+void* stack_get(Stack* self);
 int stack_size(Stack* self);
 
 // implement methods
 // vtable operators
-int stack_push(Stack* self, uint_8* item, uint_64 timeout) {
+int stack_push(Stack* self, void* item, uint_64 timeout) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // internal dequeue enqueue
@@ -32,19 +32,19 @@ int stack_push(Stack* self, uint_8* item, uint_64 timeout) {
 
     return result;
 }
-uint_8* stack_pop(Stack* self, uint_64 timeout) {
+void* stack_pop(Stack* self, uint_64 timeout) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // internal dequeue dequeue
-    uint_8* result = stack_->dequeue->vtable->dequeue(stack_->dequeue, 0, timeout);
+    void* result = stack_->dequeue->vtable->dequeue(stack_->dequeue, 0, timeout);
 
     return result;
 }
-uint_8* stack_get(Stack* self) {
+void* stack_get(Stack* self) {
     struct Stack_* stack_ = (struct Stack_*)self;
 
     // internal dequeue get
-    uint_8* result = stack_->dequeue->vtable->get(stack_->dequeue, 0);
+    void* result = stack_->dequeue->vtable->get(stack_->dequeue, 0);
 
     return result;
 }
@@ -60,14 +60,14 @@ int stack_size(Stack* self) {
 // object allocation and deallocation operators
 void stack_init() {
     // init normal vtable
-    stack_vtable = (Stack_VTable*) heap_alloc(sizeof(Stack_VTable));
+    stack_vtable = heap_alloc(sizeof(Stack_VTable));
     stack_vtable->push = stack_push;
     stack_vtable->pop = stack_pop;
     stack_vtable->get = stack_get;
     stack_vtable->size = stack_size;
 }
 Stack* stack_new(int mode) {
-    struct Stack_* stack_ = (struct Stack_*) heap_alloc(sizeof(struct Stack_));
+    struct Stack_* stack_ = heap_alloc(sizeof(struct Stack_));
 
     // set vtable
     stack_->self.vtable = stack_vtable;
@@ -88,9 +88,9 @@ void stack_free(Stack* stack) {
     }
 
     // free self
-    heap_free((uint_8*) stack_);
+    heap_free(stack_);
 }
-Stack* stack_new_object(int mode, int max, int (*comperator)(uint_8*, uint_8*)) {
+Stack* stack_new_object(int mode, int max, int (*comperator)(void*, void*)) {
     struct Stack_* stack_ = (struct Stack_*)stack_new(mode);
 
     // set constructor data

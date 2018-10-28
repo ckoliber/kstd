@@ -12,9 +12,9 @@ struct Queue {
 
 // vtable
 struct Queue_VTable {
-    int (*enqueue)(Queue* self, uint_8* item, uint_64 timeout);
-    uint_8* (*dequeue)(Queue* self, uint_64 timeout);
-    uint_8* (*get)(Queue* self);
+    int (*enqueue)(Queue* self, void* item, uint_64 timeout);
+    void* (*dequeue)(Queue* self, uint_64 timeout);
+    void* (*get)(Queue* self);
     int (*size)(Queue* self);
 };
 
@@ -28,4 +28,4 @@ Queue* queue_new(int mode);
 void queue_free(Queue* queue);
 
 // new queue
-Queue* queue_new_object(int mode, int max, int (*comperator)(uint_8*, uint_8*));
+Queue* queue_new_object(int mode, int max, int (*comperator)(void*, void*));

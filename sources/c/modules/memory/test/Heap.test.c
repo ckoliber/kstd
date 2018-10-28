@@ -11,14 +11,14 @@ void test_heap_move();
 void test_heap_set();
 
 void test_heap_alloc(){
-    uint_8* heap = heap_alloc(1024);
+    void* heap = heap_alloc(1024);
 
     assert(heap != NULL);
 
     heap_free(heap);
 }
 void test_heap_realloc(){
-    uint_8* heap = heap_alloc(1024);
+    void* heap = heap_alloc(1024);
 
     heap = heap_realloc(heap, 2048);
 
@@ -34,45 +34,45 @@ void test_heap_free(){
     assert(heap != NULL);
 }
 void test_heap_copy(){
-    int* heap = (int*) heap_alloc(sizeof(int) * 1024);
+    int* heap = heap_alloc(sizeof(int) * 1024);
 
-    int* heap2 = (int*) heap_alloc(sizeof(int) * 1024);
+    int* heap2 = heap_alloc(sizeof(int) * 1024);
 
-    heap_copy((uint_8 *) heap, (uint_8 *) heap2, sizeof(int) * 1024);
+    heap_copy(heap, heap2, sizeof(int) * 1024);
 
     for(int cursor = 0 ; cursor < 1024 ; cursor++){
         assert(heap[cursor] == heap2[cursor]);
     }
 
-    heap_free((uint_8 *) heap);
+    heap_free(heap);
 
-    heap_free((uint_8 *) heap2);
+    heap_free(heap2);
 }
 void test_heap_move(){
-    int* heap = (int *) heap_alloc(sizeof(int) * 1024);
+    int* heap = heap_alloc(sizeof(int) * 1024);
 
-    int* heap2 = (int *) heap_alloc(sizeof(int) * 1024);
+    int* heap2 = heap_alloc(sizeof(int) * 1024);
 
-    heap_move((uint_8 *) heap, (uint_8 *) heap2, sizeof(int) * 1024);
+    heap_move(heap, heap2, sizeof(int) * 1024);
 
     for(int cursor = 0 ; cursor < 1024 ; cursor++){
         assert(heap[cursor] == heap2[cursor]);
     }
 
-    heap_free((uint_8 *) heap);
+    heap_free(heap);
 
-    heap_free((uint_8 *) heap2);
+    heap_free(heap2);
 }
 void test_heap_set(){
-    char* heap = (char *) heap_alloc(sizeof(char) * 1024);
+    char* heap = heap_alloc(sizeof(char) * 1024);
 
-    heap_set((uint_8 *) heap, 5, 1024);
+    heap_set(heap, 5, 1024);
 
     for(int cursor = 0 ; cursor < 1024 ; cursor++){
         assert(heap[cursor] == 5);
     }
 
-    heap_free((uint_8 *) heap);
+    heap_free(heap);
 }
 
 int main() {

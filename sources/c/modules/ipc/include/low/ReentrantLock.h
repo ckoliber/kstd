@@ -26,7 +26,8 @@ ReentrantLock* reentrantlock_new();
 void reentrantlock_free(ReentrantLock* reentrantlock);
 
 // new reentrant lock
-ReentrantLock* reentrantlock_new_object(char* name);
+ReentrantLock* reentrantlock_new_anonymous();
+ReentrantLock* reentrantlock_new_named(char* name);
 
 // public critical variable
 ReentrantLock* critical;

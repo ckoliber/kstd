@@ -12,9 +12,9 @@ struct Dequeue {
 
 // vtable
 struct Dequeue_VTable {
-    int (*enqueue)(Dequeue* self, int front, uint_8* item, uint_64 timeout);
-    uint_8* (*dequeue)(Dequeue* self, int front, uint_64 timeout);
-    uint_8* (*get)(Dequeue* self, int front);
+    int (*enqueue)(Dequeue* self, int front, void* item, uint_64 timeout);
+    void* (*dequeue)(Dequeue* self, int front, uint_64 timeout);
+    void* (*get)(Dequeue* self, int front);
     int (*size)(Dequeue* self);
 };
 
@@ -28,4 +28,4 @@ Dequeue* dequeue_new(int mode);
 void dequeue_free(Dequeue* dequeue);
 
 // new dequeue
-Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(uint_8*, uint_8*));
+Dequeue* dequeue_new_object(int mode, int max, int (*comperator)(void*, void*));

@@ -131,7 +131,7 @@ macro(MODULE_OPTIONS)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
         set(MODULE_OPTIONS )
     else()
-        set(MODULE_OPTIONS -Wall -O0 -g -fPIC -Wall -Werror -pedantic -std=c11)
+        set(MODULE_OPTIONS -O0 -g -fPIC -Wall -Werror -pedantic -std=c11)
     endif()
     target_compile_options(${MODULE_NAME} PRIVATE ${MODULE_OPTIONS})
 

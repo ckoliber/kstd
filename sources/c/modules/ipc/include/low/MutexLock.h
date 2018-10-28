@@ -26,4 +26,5 @@ MutexLock* mutexlock_new();
 void mutexlock_free(MutexLock* mutexlock);
 
 // new mutex lock
-MutexLock* mutexlock_new_object(char* name);
+MutexLock* mutexlock_new_anonymous();
+MutexLock* mutexlock_new_named(char* name);

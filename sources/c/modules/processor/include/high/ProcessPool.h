@@ -13,7 +13,7 @@ struct ProcessPool {
 // vtable
 struct ProcessPool_VTable {
     int (*start)(ProcessPool* self);
-    int (*post)(ProcessPool* self, uint_8* item);
+    int (*post)(ProcessPool* self, void* item);
     int (*stop)(ProcessPool* self);
 };
 
