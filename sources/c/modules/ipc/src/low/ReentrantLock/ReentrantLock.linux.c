@@ -35,7 +35,7 @@ int reentrantlock_lock(ReentrantLock* self, uint_64 timeout) {
     struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*)self;
 
     // get memory address
-    struct ReentrantLock_Memory* memory = (struct ReentrantLock_Memory*) reentrantlock_->share->vtable->address(reentrantlock_->share);
+    struct ReentrantLock_Memory* memory = reentrantlock_->share->vtable->address(reentrantlock_->share);
 
     // lock the pthread mutex
     if (timeout == UINT_64_MAX) {
@@ -72,7 +72,7 @@ int reentrantlock_unlock(ReentrantLock* self) {
     struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*)self;
 
     // get memory address
-    struct ReentrantLock_Memory* memory = (struct ReentrantLock_Memory*) reentrantlock_->share->vtable->address(reentrantlock_->share);
+    struct ReentrantLock_Memory* memory = reentrantlock_->share->vtable->address(reentrantlock_->share);
 
     // unlock the pthread mutex
     if (pthread_mutex_unlock(&(memory->mutex)) == 0) {
@@ -85,12 +85,12 @@ int reentrantlock_unlock(ReentrantLock* self) {
 // object allocation and deallocation operators
 void reentrantlock_init() {
     // init vtable
-    reentrantlock_vtable = (ReentrantLock_VTable*) heap_alloc(sizeof(ReentrantLock_VTable));
+    reentrantlock_vtable = heap_alloc(sizeof(ReentrantLock_VTable));
     reentrantlock_vtable->lock = reentrantlock_lock;
     reentrantlock_vtable->unlock = reentrantlock_unlock;
 }
 ReentrantLock* reentrantlock_new() {
-    struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*) heap_alloc(sizeof(struct ReentrantLock_));
+    struct ReentrantLock_* reentrantlock_ = heap_alloc(sizeof(struct ReentrantLock_));
 
     // set vtable
     reentrantlock_->self.vtable = reentrantlock_vtable;
@@ -109,7 +109,7 @@ void reentrantlock_free(ReentrantLock* reentrantlock) {
     if (reentrantlock_->share != NULL) {
         // if share connections is 1, destroy
         if(reentrantlock_->share->vtable->connections(reentrantlock_->share) <= 1){
-            struct ReentrantLock_Memory* memory = (struct ReentrantLock_Memory*) reentrantlock_->share->vtable->address(reentrantlock_->share);
+            struct ReentrantLock_Memory* memory = reentrantlock_->share->vtable->address(reentrantlock_->share);
 
             // destroy
             pthread_mutex_destroy(&(memory->mutex));
@@ -121,60 +121,67 @@ void reentrantlock_free(ReentrantLock* reentrantlock) {
     // free constructor data
 
     // free self
-    heap_free((uint_8*) reentrantlock_);
+    heap_free(reentrantlock_);
 }
-ReentrantLock* reentrantlock_new_object(char* name) {
+ReentrantLock* reentrantlock_new_anonymous(){
     struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*)reentrantlock_new();
 
     // set constructor data
 
     // set private data
-    if (name != NULL) {
-        // try lock critical
-        if (critical != NULL) {
-            critical->vtable->lock(critical, UINT_64_MAX);
-        }
+    // open errorcheck lock
+    reentrantlock_->share = share_new_anonymous(sizeof(struct ReentrantLock_Memory), 0);
 
-        // open share errorcheck lock
-        String* reentrantlock_name = string_new_printf("%s_rl", name);
-        reentrantlock_->share = share_new_object(reentrantlock_name->vtable->value(reentrantlock_name), sizeof(struct ReentrantLock_Memory), 0);
-        string_free(reentrantlock_name);
+    // if share connections is 1, init share
+    if(reentrantlock_->share->vtable->connections(reentrantlock_->share) <= 1){
+        // get memory address
+        struct ReentrantLock_Memory* memory = reentrantlock_->share->vtable->address(reentrantlock_->share);
 
-        // if share connections is 1, init share
-        if(reentrantlock_->share->vtable->connections(reentrantlock_->share) <= 1){
-            // get memory address
-            struct ReentrantLock_Memory* memory = (struct ReentrantLock_Memory*) reentrantlock_->share->vtable->address(reentrantlock_->share);
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
+    }
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
-        }
+    return (ReentrantLock*)reentrantlock_;
+}
+ReentrantLock* reentrantlock_new_named(char* name){
+    struct ReentrantLock_* reentrantlock_ = (struct ReentrantLock_*)reentrantlock_new();
 
-        // try unlock critical
-        if (critical != NULL) {
-            critical->vtable->unlock(critical);
-        }
-    } else {
-        // open errorcheck lock
-        reentrantlock_->share = share_new_object(NULL, sizeof(struct ReentrantLock_Memory), 0);
+    // set constructor data
 
-        // if share connections is 1, init share
-        if(reentrantlock_->share->vtable->connections(reentrantlock_->share) <= 1){
-            // get memory address
-            struct ReentrantLock_Memory* memory = (struct ReentrantLock_Memory*) reentrantlock_->share->vtable->address(reentrantlock_->share);
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
-        }
+    // set private data
+    // try lock critical
+    if (critical != NULL) {
+        critical->vtable->lock(critical, UINT_64_MAX);
+    }
+
+    // open share errorcheck lock
+    String* reentrantlock_name = string_new_printf("%s_rl", name);
+    reentrantlock_->share = share_new_named(reentrantlock_name->vtable->value(reentrantlock_name), sizeof(struct ReentrantLock_Memory), 0);
+    string_free(reentrantlock_name);
+
+    // if share connections is 1, init share
+    if(reentrantlock_->share->vtable->connections(reentrantlock_->share) <= 1){
+        // get memory address
+        struct ReentrantLock_Memory* memory = reentrantlock_->share->vtable->address(reentrantlock_->share);
+
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_RECURSIVE);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
+    }
+
+    // try unlock critical
+    if (critical != NULL) {
+        critical->vtable->unlock(critical);
     }
 
     return (ReentrantLock*)reentrantlock_;

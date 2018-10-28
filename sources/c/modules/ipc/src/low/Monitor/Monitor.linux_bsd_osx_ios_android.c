@@ -38,7 +38,7 @@ int monitor_wait(Monitor* self, uint_64 timeout) {
     struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get memory address
-    struct Monitor_Memory* memory = (struct Monitor_Memory*) monitor_->share->vtable->address(monitor_->share);
+    struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
     // wait the pthread cond
     int result = -1;
@@ -78,7 +78,7 @@ int monitor_notify(Monitor* self) {
     struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get memory address
-    struct Monitor_Memory* memory = (struct Monitor_Memory*) monitor_->share->vtable->address(monitor_->share);
+    struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
     // notify the pthread cond
     int result = -1;
@@ -98,7 +98,7 @@ int monitor_notify_all(Monitor* self) {
     struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get memory address
-    struct Monitor_Memory* memory = (struct Monitor_Memory*) monitor_->share->vtable->address(monitor_->share);
+    struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
     // notify all the pthread cond
     int result = -1;
@@ -118,13 +118,13 @@ int monitor_notify_all(Monitor* self) {
 // object allocation and deallocation operators
 void monitor_init() {
     // init vtable
-    monitor_vtable = (Monitor_VTable*) heap_alloc(sizeof(Monitor_VTable));
+    monitor_vtable = heap_alloc(sizeof(Monitor_VTable));
     monitor_vtable->wait = monitor_wait;
     monitor_vtable->notify = monitor_notify;
     monitor_vtable->notify_all = monitor_notify_all;
 }
 Monitor* monitor_new() {
-    struct Monitor_* monitor_ = (struct Monitor_*) heap_alloc(sizeof(struct Monitor_));
+    struct Monitor_* monitor_ = heap_alloc(sizeof(struct Monitor_));
 
     // set vtable
     monitor_->self.vtable = monitor_vtable;
@@ -143,7 +143,7 @@ void monitor_free(Monitor* monitor) {
     if (monitor_->share != NULL) {
         // if share connections is 1, destroy
         if(monitor_->share->vtable->connections(monitor_->share) <= 1){
-            struct Monitor_Memory* memory = (struct Monitor_Memory*) monitor_->share->vtable->address(monitor_->share);
+            struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
             // destroy
             pthread_mutex_destroy(&(memory->mutex));
@@ -156,74 +156,80 @@ void monitor_free(Monitor* monitor) {
     // free constructor data
 
     // free self
-    heap_free((uint_8*) monitor_);
+    heap_free(monitor_);
 }
-Monitor* monitor_new_object(char* name) {
+Monitor* monitor_new_anonymous(){
     struct Monitor_* monitor_ = (struct Monitor_*)monitor_new();
 
     // set constructor data
 
     // set private data
-    if (name != NULL) {
-        // try lock critical
-        if (critical != NULL) {
-            critical->vtable->lock(critical, UINT_64_MAX);
-        }
+    // open errorcheck lock
+    monitor_->share = share_new_anonymous(sizeof(struct Monitor_Memory), 0);
 
-        // open share errorcheck lock
-        String* monitor_name = string_new_printf("%s_mo", name);
-        monitor_->share = share_new_object(monitor_name->vtable->value(monitor_name), sizeof(struct Monitor_Memory), 0);
-        string_free(monitor_name);
+    // if share connections is 1, init share
+    if(monitor_->share->vtable->connections(monitor_->share) <= 1){
+        // get memory address
+        struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
 
-        // if share connections is 1, init share
-        if(monitor_->share->vtable->connections(monitor_->share) <= 1){
-            // get memory address
-            struct Monitor_Memory* memory = (struct Monitor_Memory*) monitor_->share->vtable->address(monitor_->share);
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
+        // init cond
+        pthread_condattr_t cattr;
+        pthread_condattr_init(&cattr);
+        pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE);
+        pthread_cond_init(&(memory->cond), &cattr);
+        pthread_condattr_destroy(&cattr);
+    }
 
-            // init cond
-            pthread_condattr_t cattr;
-            pthread_condattr_init(&cattr);
-            pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_SHARED);
-            pthread_cond_init(&(memory->cond), &cattr);
-            pthread_condattr_destroy(&cattr);
-        }
+    return (Monitor*)monitor_;
+}
+Monitor* monitor_new_named(char* name){
+    struct Monitor_* monitor_ = (struct Monitor_*)monitor_new();
 
-        // try unlock critical
-        if (critical != NULL) {
-            critical->vtable->unlock(critical);
-        }
-    } else {
-        // open errorcheck lock
-        monitor_->share = share_new_object(NULL, sizeof(struct Monitor_Memory), 0);
+    // set constructor data
 
-        // if share connections is 1, init share
-        if(monitor_->share->vtable->connections(monitor_->share) <= 1){
-            // get memory address
-            struct Monitor_Memory* memory = (struct Monitor_Memory*) monitor_->share->vtable->address(monitor_->share);
+    // set private data
+    // try lock critical
+    if (critical != NULL) {
+        critical->vtable->lock(critical, UINT_64_MAX);
+    }
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
+    // open share errorcheck lock
+    String* monitor_name = string_new_printf("%s_mo", name);
+    monitor_->share = share_new_named(monitor_name->vtable->value(monitor_name), sizeof(struct Monitor_Memory), 0);
+    string_free(monitor_name);
 
-            // init cond
-            pthread_condattr_t cattr;
-            pthread_condattr_init(&cattr);
-            pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_PRIVATE);
-            pthread_cond_init(&(memory->cond), &cattr);
-            pthread_condattr_destroy(&cattr);
-        }
+    // if share connections is 1, init share
+    if(monitor_->share->vtable->connections(monitor_->share) <= 1){
+        // get memory address
+        struct Monitor_Memory* memory = monitor_->share->vtable->address(monitor_->share);
+
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
+
+        // init cond
+        pthread_condattr_t cattr;
+        pthread_condattr_init(&cattr);
+        pthread_condattr_setpshared(&cattr, PTHREAD_PROCESS_SHARED);
+        pthread_cond_init(&(memory->cond), &cattr);
+        pthread_condattr_destroy(&cattr);
+    }
+
+    // try unlock critical
+    if (critical != NULL) {
+        critical->vtable->unlock(critical);
     }
 
     return (Monitor*)monitor_;

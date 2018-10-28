@@ -36,7 +36,7 @@ int errorchecklock_lock(ErrorCheckLock* self, uint_64 timeout) {
     struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)self;
 
     // get memory address
-    struct ErrorCheckLock_Memory* memory = (struct ErrorCheckLock_Memory*)errorchecklock_->share->vtable->address(errorchecklock_->share);
+    struct ErrorCheckLock_Memory* memory = errorchecklock_->share->vtable->address(errorchecklock_->share);
 
     // lock the pthread mutex
     if (timeout == UINT_64_MAX) {
@@ -73,7 +73,7 @@ int errorchecklock_unlock(ErrorCheckLock* self) {
     struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)self;
 
     // get memory address
-    struct ErrorCheckLock_Memory* memory = (struct ErrorCheckLock_Memory*)errorchecklock_->share->vtable->address(errorchecklock_->share);
+    struct ErrorCheckLock_Memory* memory = errorchecklock_->share->vtable->address(errorchecklock_->share);
 
     // unlock the pthread mutex
     if (pthread_mutex_unlock(&(memory->mutex)) == 0) {
@@ -86,12 +86,12 @@ int errorchecklock_unlock(ErrorCheckLock* self) {
 // object allocation and deallocation operators
 void errorchecklock_init() {
     // init vtable
-    errorchecklock_vtable = (ErrorCheckLock_VTable*)heap_alloc(sizeof(ErrorCheckLock_VTable));
+    errorchecklock_vtable = heap_alloc(sizeof(ErrorCheckLock_VTable));
     errorchecklock_vtable->lock = errorchecklock_lock;
     errorchecklock_vtable->unlock = errorchecklock_unlock;
 }
 ErrorCheckLock* errorchecklock_new() {
-    struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)heap_alloc(sizeof(struct ErrorCheckLock_));
+    struct ErrorCheckLock_* errorchecklock_ = heap_alloc(sizeof(struct ErrorCheckLock_));
 
     // set vtable
     errorchecklock_->self.vtable = errorchecklock_vtable;
@@ -110,7 +110,7 @@ void errorchecklock_free(ErrorCheckLock* errorchecklock) {
     if (errorchecklock_->share != NULL) {
         // if share connections is 1, destroy
         if (errorchecklock_->share->vtable->connections(errorchecklock_->share) <= 1) {
-            struct ErrorCheckLock_Memory* memory = (struct ErrorCheckLock_Memory*)errorchecklock_->share->vtable->address(errorchecklock_->share);
+            struct ErrorCheckLock_Memory* memory = errorchecklock_->share->vtable->address(errorchecklock_->share);
 
             // destroy
             pthread_mutex_destroy(&(memory->mutex));
@@ -122,60 +122,66 @@ void errorchecklock_free(ErrorCheckLock* errorchecklock) {
     // free constructor data
 
     // free self
-    heap_free((uint_8*)errorchecklock_);
+    heap_free(errorchecklock_);
 }
-ErrorCheckLock* errorchecklock_new_object(char* name) {
+ErrorCheckLock* errorchecklock_new_anonymous(){
     struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)errorchecklock_new();
 
     // set constructor data
 
     // set private data
-    if (name != NULL) {
-        // try lock critical
-        if (critical != NULL) {
-            critical->vtable->lock(critical, UINT_64_MAX);
-        }
+    // open errorcheck lock
+    errorchecklock_->share = share_new_anonymous(sizeof(struct ErrorCheckLock_Memory), 0);
 
-        // open share errorcheck lock
-        String* errorchecklock_name = string_new_printf("%s_el", name);
-        errorchecklock_->share = share_new_object(errorchecklock_name->vtable->value(errorchecklock_name), sizeof(struct ErrorCheckLock_Memory), 0);
-        string_free(errorchecklock_name);
+    // if share connections is 1, init share
+    if (errorchecklock_->share->vtable->connections(errorchecklock_->share) <= 1) {
+        // get memory address
+        struct ErrorCheckLock_Memory* memory = errorchecklock_->share->vtable->address(errorchecklock_->share);
 
-        // if share connections is 1, init share
-        if (errorchecklock_->share->vtable->connections(errorchecklock_->share) <= 1) {
-            // get memory address
-            struct ErrorCheckLock_Memory* memory = (struct ErrorCheckLock_Memory*)errorchecklock_->share->vtable->address(errorchecklock_->share);
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_ERRORCHECK);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
+    }
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_ERRORCHECK);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
-        }
+    return (ErrorCheckLock*)errorchecklock_;
+}
+ErrorCheckLock* errorchecklock_new_named(char* name){
+    struct ErrorCheckLock_* errorchecklock_ = (struct ErrorCheckLock_*)errorchecklock_new();
 
-        // try unlock critical
-        if (critical != NULL) {
-            critical->vtable->unlock(critical);
-        }
-    } else {
-        // open errorcheck lock
-        errorchecklock_->share = share_new_object(NULL, sizeof(struct ErrorCheckLock_Memory), 0);
+    // set constructor data
 
-        // if share connections is 1, init share
-        if (errorchecklock_->share->vtable->connections(errorchecklock_->share) <= 1) {
-            // get memory address
-            struct ErrorCheckLock_Memory* memory = (struct ErrorCheckLock_Memory*)errorchecklock_->share->vtable->address(errorchecklock_->share);
+    // set private data
+    // try lock critical
+    if (critical != NULL) {
+        critical->vtable->lock(critical, UINT_64_MAX);
+    }
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_ERRORCHECK);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
-        }
+    // open share errorcheck lock
+    String* errorchecklock_name = string_new_printf("%s_el", name);
+    errorchecklock_->share = share_new_named(errorchecklock_name->vtable->value(errorchecklock_name), sizeof(struct ErrorCheckLock_Memory), 0);
+    string_free(errorchecklock_name);
+
+    // if share connections is 1, init share
+    if (errorchecklock_->share->vtable->connections(errorchecklock_->share) <= 1) {
+        // get memory address
+        struct ErrorCheckLock_Memory* memory = errorchecklock_->share->vtable->address(errorchecklock_->share);
+
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_ERRORCHECK);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
+    }
+
+    // try unlock critical
+    if (critical != NULL) {
+        critical->vtable->unlock(critical);
     }
 
     return (ErrorCheckLock*)errorchecklock_;

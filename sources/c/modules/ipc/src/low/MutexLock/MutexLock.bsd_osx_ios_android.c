@@ -37,7 +37,7 @@ int mutexlock_lock(MutexLock* self, uint_64 timeout) {
     struct MutexLock_* mutexlock_ = (struct MutexLock_*)self;
 
     // get memory address
-    struct MutexLock_Memory* memory = (struct MutexLock_Memory*) mutexlock_->share->vtable->address(mutexlock_->share);
+    struct MutexLock_Memory* memory = mutexlock_->share->vtable->address(mutexlock_->share);
 
     // lock the pthread mutex
     if (timeout == UINT_64_MAX) {
@@ -78,7 +78,7 @@ int mutexlock_unlock(MutexLock* self) {
     struct MutexLock_* mutexlock_ = (struct MutexLock_*)self;
 
     // get memory address
-    struct MutexLock_Memory* memory = (struct MutexLock_Memory*) mutexlock_->share->vtable->address(mutexlock_->share);
+    struct MutexLock_Memory* memory = mutexlock_->share->vtable->address(mutexlock_->share);
 
     // unlock the pthread mutex
     if (pthread_mutex_unlock(&(memory->mutex)) == 0) {
@@ -91,12 +91,12 @@ int mutexlock_unlock(MutexLock* self) {
 // object allocation and deallocation operators
 void mutexlock_init() {
     // init vtable
-    mutexlock_vtable = (MutexLock_VTable*) heap_alloc(sizeof(MutexLock_VTable));
+    mutexlock_vtable = heap_alloc(sizeof(MutexLock_VTable));
     mutexlock_vtable->lock = mutexlock_lock;
     mutexlock_vtable->unlock = mutexlock_unlock;
 }
 MutexLock* mutexlock_new() {
-    struct MutexLock_* mutexlock_ = (struct MutexLock_*) heap_alloc(sizeof(struct MutexLock_));
+    struct MutexLock_* mutexlock_ = heap_alloc(sizeof(struct MutexLock_));
 
     // set vtable
     mutexlock_->self.vtable = mutexlock_vtable;
@@ -115,7 +115,7 @@ void mutexlock_free(MutexLock* mutexlock) {
     if (mutexlock_->share != NULL) {
         // if share connections is 1, destroy
         if(mutexlock_->share->vtable->connections(mutexlock_->share) <= 1){
-            struct MutexLock_Memory* memory = (struct MutexLock_Memory*) mutexlock_->share->vtable->address(mutexlock_->share);
+            struct MutexLock_Memory* memory = mutexlock_->share->vtable->address(mutexlock_->share);
 
             // destroy
             pthread_mutex_destroy(&(memory->mutex));
@@ -127,60 +127,66 @@ void mutexlock_free(MutexLock* mutexlock) {
     // free constructor data
 
     // free self
-    heap_free((uint_8*) mutexlock_);
+    heap_free(mutexlock_);
 }
-MutexLock* mutexlock_new_object(char* name) {
+MutexLock* mutexlock_new_anonymous(){
     struct MutexLock_* mutexlock_ = (struct MutexLock_*)mutexlock_new();
 
     // set constructor data
 
     // set private data
-    if (name != NULL) {
-        // try lock critical
-        if (critical != NULL) {
-            critical->vtable->lock(critical, UINT_64_MAX);
-        }
+    // open errorcheck lock
+    mutexlock_->share = share_new_anonymous(sizeof(struct MutexLock_Memory), 0);
 
-        // open share errorcheck lock
-        String* mutexlock_name = string_new_printf("%s_ml", name);
-        mutexlock_->share = share_new_object(mutexlock_name->vtable->value(mutexlock_name), sizeof(struct MutexLock_Memory), 0);
-        string_free(mutexlock_name);
+    // if share connections is 1, init share
+    if(mutexlock_->share->vtable->connections(mutexlock_->share) <= 1){
+        // get memory address
+        struct MutexLock_Memory* memory = mutexlock_->share->vtable->address(mutexlock_->share);
 
-        // if share connections is 1, init share
-        if(mutexlock_->share->vtable->connections(mutexlock_->share) <= 1){
-            // get memory address
-            struct MutexLock_Memory* memory = (struct MutexLock_Memory*) mutexlock_->share->vtable->address(mutexlock_->share);
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
+    }
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
-        }
+    return (MutexLock*)mutexlock_;
+}
+MutexLock* mutexlock_new_named(char* name){
+    struct MutexLock_* mutexlock_ = (struct MutexLock_*)mutexlock_new();
 
-        // try unlock critical
-        if (critical != NULL) {
-            critical->vtable->unlock(critical);
-        }
-    } else {
-        // open errorcheck lock
-        mutexlock_->share = share_new_object(NULL, sizeof(struct MutexLock_Memory), 0);
+    // set constructor data
 
-        // if share connections is 1, init share
-        if(mutexlock_->share->vtable->connections(mutexlock_->share) <= 1){
-            // get memory address
-            struct MutexLock_Memory* memory = (struct MutexLock_Memory*) mutexlock_->share->vtable->address(mutexlock_->share);
+    // set private data
+    // try lock critical
+    if (critical != NULL) {
+        critical->vtable->lock(critical, UINT_64_MAX);
+    }
 
-            // init mutex
-            pthread_mutexattr_t mattr;
-            pthread_mutexattr_init(&mattr);
-            pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_PRIVATE);
-            pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
-            pthread_mutex_init(&(memory->mutex), &mattr);
-            pthread_mutexattr_destroy(&mattr);
-        }
+    // open share errorcheck lock
+    String* mutexlock_name = string_new_printf("%s_ml", name);
+    mutexlock_->share = share_new_named(mutexlock_name->vtable->value(mutexlock_name), sizeof(struct MutexLock_Memory), 0);
+    string_free(mutexlock_name);
+
+    // if share connections is 1, init share
+    if(mutexlock_->share->vtable->connections(mutexlock_->share) <= 1){
+        // get memory address
+        struct MutexLock_Memory* memory = mutexlock_->share->vtable->address(mutexlock_->share);
+
+        // init mutex
+        pthread_mutexattr_t mattr;
+        pthread_mutexattr_init(&mattr);
+        pthread_mutexattr_setpshared(&mattr, PTHREAD_PROCESS_SHARED);
+        pthread_mutexattr_settype(&mattr, PTHREAD_MUTEX_NORMAL);
+        pthread_mutex_init(&(memory->mutex), &mattr);
+        pthread_mutexattr_destroy(&mattr);
+    }
+
+    // try unlock critical
+    if (critical != NULL) {
+        critical->vtable->unlock(critical);
     }
 
     return (MutexLock*)mutexlock_;
