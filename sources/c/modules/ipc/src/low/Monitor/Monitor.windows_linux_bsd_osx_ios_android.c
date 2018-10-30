@@ -1,6 +1,6 @@
 #include <low/Monitor.h>
 
-#if defined(APP_WINDOWS)
+#if defined(APP_WINDOWS) || defined(APP_LINUX) || defined(APP_BSD) || defined(APP_OSX) || defined(APP_IOS) || defined(APP_ANDROID)
 
 #include <low/Share.h>
 #include <low/ReentrantLock.h>
@@ -16,9 +16,9 @@ struct Monitor_ {
     // constructor data
 
     // private data
+    Share* share;
     MutexLock* critical_lock;
     Semaphore* sleep_semaphore;
-    Share* sleepers_share;
 };
 
 // vtable
@@ -32,10 +32,22 @@ int monitor_notify_all(Monitor* self);
 // implement methods
 // vtable operators
 int monitor_wait(Monitor* self, uint_64 timeout) {
+    /*  Algorithm:
+     *
+     *      lock(critical)
+     *      sleepers++;
+     *      unlock(critical)
+     *      if(wait(semaphore) == 0){
+     *          return 0;
+     *      }else{
+     *          return -1;
+     *      }
+     *
+     */
     struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get sleepers address
-    int* sleepers = monitor_->sleepers_share->vtable->address(monitor_->sleepers_share);
+    int* sleepers = monitor_->share->vtable->address(monitor_->share);
 
     // lock the critical mutex
     monitor_->critical_lock->vtable->lock(monitor_->critical_lock, UINT_64_MAX);
@@ -54,24 +66,37 @@ int monitor_wait(Monitor* self, uint_64 timeout) {
     return -1;
 }
 int monitor_notify(Monitor* self) {
+    /*  Algorithm:
+     *
+     *      lock(critical)
+     *      result = -1
+     *      if(sleepers > 0){
+     *          post(semaphore)
+     *          sleepers--
+     *          result = 0
+     *      }
+     *      unlock(critical)
+     *      return result
+     *
+     */
     struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get sleepers address
-    int* sleepers = monitor_->sleepers_share->vtable->address(monitor_->sleepers_share);
+    int* sleepers = monitor_->share->vtable->address(monitor_->share);
 
     // lock the critical mutex
     monitor_->critical_lock->vtable->lock(monitor_->critical_lock, UINT_64_MAX);
 
     // signal
-    int result = 0;
-    if (*sleepers > 0) {
+    int result = -1;
+    if ((*sleepers) > 0) {
         // signal to wake up
-        if(monitor_->sleep_semaphore->vtable->post(monitor_->sleep_semaphore) == 0){
-            // reduce sleepers
-            (*sleepers)--;
-        }else{
-            result = -1;
-        }
+        monitor_->sleep_semaphore->vtable->post(monitor_->sleep_semaphore);
+
+        // reduce sleepers
+        (*sleepers)--;
+
+        result = 0;
     }
 
     // unlock the critical mutex
@@ -80,27 +105,43 @@ int monitor_notify(Monitor* self) {
     return result;
 }
 int monitor_notify_all(Monitor* self) {
+    /*  Algorithm:
+     *
+     *      lock(critical)
+     *      result = -1
+     *      while(sleepers > 0){
+     *          post(semaphore)
+     *          sleepers--
+     *          result = 0
+     *      }
+     *      unlock(critical)
+     *      return result
+     *
+     */
     struct Monitor_* monitor_ = (struct Monitor_*)self;
 
     // get sleepers address
-    int* sleepers = monitor_->sleepers_share->vtable->address(monitor_->sleepers_share);
+    int* sleepers = monitor_->share->vtable->address(monitor_->share);
 
     // lock the critical mutex
     monitor_->critical_lock->vtable->lock(monitor_->critical_lock, UINT_64_MAX);
 
     // broadcast
+    int result = -1;
     while ((*sleepers) > 0) {
         // signal to wake up
         monitor_->sleep_semaphore->vtable->post(monitor_->sleep_semaphore);
 
         // reduce sleepers
         (*sleepers)--;
+
+        result = 0;
     }
 
     // unlock the critical mutex
     monitor_->critical_lock->vtable->unlock(monitor_->critical_lock);
 
-    return 0;
+    return result;
 }
 
 // object allocation and deallocation operators
@@ -120,9 +161,9 @@ Monitor* monitor_new() {
     // set constructor data
 
     // set private data
+    monitor_->share = NULL;
     monitor_->critical_lock = NULL;
     monitor_->sleep_semaphore = NULL;
-    monitor_->sleepers_share = NULL;
 
     return (Monitor*)monitor_;
 }
@@ -130,14 +171,14 @@ void monitor_free(Monitor* monitor) {
     struct Monitor_* monitor_ = (struct Monitor_*)monitor;
 
     // free private data
+    if(monitor_->share != NULL){
+        share_free(monitor_->share);
+    }
     if(monitor_->critical_lock != NULL){
         mutexlock_free(monitor_->critical_lock);
     }
     if(monitor_->sleep_semaphore != NULL){
         semaphore_free(monitor_->sleep_semaphore);
-    }
-    if(monitor_->sleepers_share != NULL){
-        share_free(monitor_->sleepers_share);
     }
 
     // free constructor data
@@ -151,23 +192,23 @@ Monitor* monitor_new_anonymous(){
     // set constructor data
 
     // set private data
+    // open sleepers share
+    monitor_->share = share_new_anonymous(sizeof(int), 0);
+
+    // if connections is 1, init share
+    if(monitor_->share->vtable->connections(monitor_->share) <= 1){
+        // get sleepers address
+        int* sleepers = monitor_->share->vtable->address(monitor_->share);
+
+        // init readers
+        (*sleepers) = 0;
+    }
+
     // open critical mutexlock
     monitor_->critical_lock = mutexlock_new_anonymous();
 
     // open sleep semaphore
     monitor_->sleep_semaphore = semaphore_new_anonymous(0);
-
-    // open sleepers share
-    monitor_->sleepers_share = share_new_anonymous(sizeof(int), 0);
-
-    // if connections is 1, init share
-    if(monitor_->sleepers_share->vtable->connections(monitor_->sleepers_share) <= 1){
-        // get sleepers address
-        int* sleepers = monitor_->sleepers_share->vtable->address(monitor_->sleepers_share);
-
-        // init readers
-        (*sleepers) = 0;
-    }
 
     return (Monitor*)monitor_;
 }
@@ -182,6 +223,20 @@ Monitor* monitor_new_named(char* name){
         critical->vtable->lock(critical, UINT_64_MAX);
     }
 
+    // open share sleepers share
+    String* monitor_sleepers_name = string_new_printf("%s_mo_ss", name);
+    monitor_->share = share_new_named(monitor_sleepers_name->vtable->value(monitor_sleepers_name), sizeof(int), 0);
+    string_free(monitor_sleepers_name);
+
+    // if share connections is 1, init share
+    if(monitor_->share->vtable->connections(monitor_->share) <= 1){
+        // get sleepers address
+        int* sleepers = monitor_->share->vtable->address(monitor_->share);
+
+        // init readers
+        (*sleepers) = 0;
+    }
+
     // open share critical mutexlock
     String* monitor_critical_name = string_new_printf("%s_mo_c", name);
     monitor_->critical_lock = mutexlock_new_named(monitor_critical_name->vtable->value(monitor_critical_name));
@@ -191,20 +246,6 @@ Monitor* monitor_new_named(char* name){
     String* monitor_sleep_name = string_new_printf("%s_mo_s", name);
     monitor_->sleep_semaphore = semaphore_new_named(monitor_sleep_name->vtable->value(monitor_sleep_name), 0);
     string_free(monitor_sleep_name);
-
-    // open share sleepers share
-    String* monitor_sleepers_name = string_new_printf("%s_mo_ss", name);
-    monitor_->sleepers_share = share_new_named(monitor_sleepers_name->vtable->value(monitor_sleepers_name), sizeof(int), 0);
-    string_free(monitor_sleepers_name);
-
-    // if share connections is 1, init share
-    if(monitor_->sleepers_share->vtable->connections(monitor_->sleepers_share) <= 1){
-        // get sleepers address
-        int* sleepers = monitor_->sleepers_share->vtable->address(monitor_->sleepers_share);
-
-        // init readers
-        (*sleepers) = 0;
-    }
 
     // try unlock critical
     if (critical != NULL) {
