@@ -30,12 +30,12 @@ struct Barrier_Memory{
 Barrier_VTable* barrier_vtable;
 
 // link methods
-int barrier_await(Barrier* self);
+int barrier_wait(Barrier* self, uint_64 timeout);
 int barrier_get(Barrier* self);
 
 // implement methods
 // vtable operators
-int barrier_await(Barrier* self){
+int barrier_wait(Barrier* self, uint_64 timeout){
     /*  Algorithm:
      *
      *      lock(critical)
@@ -72,7 +72,16 @@ int barrier_await(Barrier* self){
     barrier_->critical_lock->vtable->unlock(barrier_->critical_lock);
 
     // wait on barrier semaphore
-    barrier_->barrier_semaphore->vtable->wait(barrier_->barrier_semaphore, UINT_64_MAX);
+    if(barrier_->barrier_semaphore->vtable->wait(barrier_->barrier_semaphore, timeout) != 0){
+        // waiting timeout
+
+        // safe decrease waiters
+        barrier_->critical_lock->vtable->lock(barrier_->critical_lock, UINT_64_MAX);
+        memory->waiters = (memory->waiters - 1) % memory->value;    // decrease waiters
+        barrier_->critical_lock->vtable->unlock(barrier_->critical_lock);
+
+        return -1;
+    }
 
     return 0;
 }
@@ -92,7 +101,7 @@ int barrier_get(Barrier* self){
 void barrier_init() {
     // init vtable
     barrier_vtable = heap_alloc(sizeof(Barrier_VTable));
-    barrier_vtable->await = barrier_await;
+    barrier_vtable->wait = barrier_wait;
     barrier_vtable->get = barrier_get;
 }
 Barrier* barrier_new() {

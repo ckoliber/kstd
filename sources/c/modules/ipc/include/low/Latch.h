@@ -12,10 +12,9 @@ struct Latch {
 
 // vtable
 struct Latch_VTable {
-    int (*await)(Latch* self, uint_64 timeout);
+    int (*wait)(Latch* self, uint_64 timeout);
     int (*down)(Latch* self);
     int (*get)(Latch* self);
-    int (*reset)(Latch* self);
 };
 
 // init vtable
@@ -28,5 +27,5 @@ Latch* latch_new();
 void latch_free(Latch* latch);
 
 // new latch
-Latch* latch_new_anonymous(int count);
-Latch* latch_new_named(char* name, int count);
+Latch* latch_new_anonymous(int value);
+Latch* latch_new_named(char* name, int value);

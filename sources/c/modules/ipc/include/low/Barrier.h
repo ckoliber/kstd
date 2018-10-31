@@ -12,7 +12,7 @@ struct Barrier {
 
 // vtable
 struct Barrier_VTable {
-    int (*await)(Barrier* self);
+    int (*wait)(Barrier* self, uint_64 timeout);
     int (*get)(Barrier* self);
 };
 

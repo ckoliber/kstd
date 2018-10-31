@@ -11,66 +11,68 @@
 #define sleep(x) sleep(x)
 #endif
 
-int function(void* arg){
+int function_1(void* arg){
     Barrier* barrier = arg;
 
+    for(int a = 0 ; a < 5 ; a++){
+        assert(barrier->vtable->wait(barrier, 500) == -1);
 
+        assert(barrier->vtable->wait(barrier, UINT_64_MAX) == 0);
+    }
 
     return 0;
 }
 
-void test_errorchecklock_await();
-void test_errorchecklock_get();
+int function_2(void* arg){
+    Barrier* barrier = arg;
 
-void test_errorchecklock_lock(){
-    Barrier* barrier = barrier_new_anonymous(1);
+    for(int a = 0 ; a < 5 ; a++){
+        sleep(1);
 
-    assert(lock->vtable->lock(lock, 0) == 0);
+        assert(barrier->vtable->wait(barrier, UINT_64_MAX) == 0);
+    }
 
-    assert(lock->vtable->lock(lock, 0) == -1);
-
-    Thread* t = thread_new_object(0);
-
-    t->vtable->start(t, function, lock);
-
-    sleep(1);
-
-    lock->vtable->unlock(lock);
-
-    t->vtable->join(t);
-
-    thread_free(t);
-
-    errorchecklock_free(lock);
+    return 0;
 }
-void test_errorchecklock_unlock(){
-    ErrorCheckLock* lock = errorchecklock_new_anonymous();
 
-    lock->vtable->lock(lock, 0);
+void test_barrier_wait();
+void test_barrier_get();
 
-    Thread* t = thread_new_object(0);
+void test_barrier_wait(){
+    Barrier* barrier = barrier_new_anonymous(2);
 
-    t->vtable->start(t, function, lock);
+    Thread* t1 = thread_new_object(0);
 
-    sleep(1);
+    Thread* t2 = thread_new_object(0);
 
-    assert(lock->vtable->unlock(lock) == 0);
+    t1->vtable->start(t1, function_1, barrier);
 
-    t->vtable->join(t);
+    t2->vtable->start(t2, function_2, barrier);
 
-    assert(lock->vtable->unlock(lock) == -1);
+    t1->vtable->join(t1);
 
-    thread_free(t);
+    t2->vtable->join(t2);
 
-    errorchecklock_free(lock);
+    thread_free(t1);
+
+    thread_free(t2);
+
+    barrier_free(barrier);
+}
+void test_barrier_get(){
+    Barrier* barrier = barrier_new_anonymous(2);
+
+    assert(barrier->vtable->get(barrier) == 0);
+
+    barrier_free(barrier);
 }
 
 int main() {
     kstd_init();
 
-    for(int a = 0 ; a < 10 ; a++){
-        test_errorchecklock_lock();
-        test_errorchecklock_unlock();
+    for(int a = 0 ; a < 2 ; a++){
+        test_barrier_wait();
+        test_barrier_get();
     }
 }
 

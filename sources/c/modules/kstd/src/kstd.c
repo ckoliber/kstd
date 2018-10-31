@@ -23,7 +23,9 @@
 #include <low/Thread.h>
 
 // ipc module
+#include <low/Barrier.h>
 #include <low/ErrorCheckLock.h>
+#include <low/Latch.h>
 #include <low/Message.h>
 #include <low/Monitor.h>
 #include <low/MutexLock.h>
@@ -68,7 +70,9 @@ void modules_init() {
     thread_init();
 
     // init ipc module
+    barrier_init();
     errorchecklock_init();
+    latch_init();
     message_init();
     monitor_init();
     mutexlock_init();
