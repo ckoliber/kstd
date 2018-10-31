@@ -10,7 +10,6 @@ struct MutexLock_ {
     MutexLock self;
 
     // constructor data
-    String* name;
 
     // private data
     HANDLE semaphore_handle;
@@ -68,7 +67,6 @@ MutexLock* mutexlock_new() {
     mutexlock_->self.vtable = mutexlock_vtable;
 
     // set constructor data
-    mutexlock_->name = NULL;
 
     // set private data
     mutexlock_->semaphore_handle = INVALID_HANDLE_VALUE;
@@ -84,9 +82,6 @@ void mutexlock_free(MutexLock* mutexlock) {
     }
 
     // free constructor data
-    if (mutexlock_->name != NULL) {
-        string_free(mutexlock_->name);
-    }
 
     // free self
     heap_free(mutexlock_);
@@ -109,14 +104,15 @@ MutexLock* mutexlock_new_named(char* name){
     struct MutexLock_* mutexlock_ = (struct MutexLock_*)mutexlock_new();
 
     // set constructor data
-    mutexlock_->name = string_new_printf("%s_ml", name);
 
     // set private data
+    String* mutexlock_name = string_new_printf("%s_ml", name);
     mutexlock_->semaphore_handle = CreateSemaphoreA(
             NULL,
             1,
             1,
-            mutexlock_->name->vtable->value(mutexlock_->name));
+            mutexlock_name->vtable->value(mutexlock_name));
+    string_free(mutexlock_name);
 
     return (MutexLock*)mutexlock_;
 }
