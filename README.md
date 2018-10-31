@@ -72,6 +72,10 @@ cmake -DBUILD=debug ..
 make -j4
 ```
 
+## Testing
+
+[![asciicast](https://asciinema.org/a/4eH4c6deCDChJbZ47pBfKYRwZ.png)](https://asciinema.org/a/4eH4c6deCDChJbZ47pBfKYRwZ)
+
 ## Linking
 
 After building library, you can link `.so` or `.a` or `.dll` file to your application and enjoy __KSTD__ :)
